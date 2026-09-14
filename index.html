@@ -88,13 +88,11 @@
   /* ---- app top bar ---- */
   .appbar {
     position: sticky; top: 0; z-index: 40;
-    background: var(--mu-white);
+    background: var(--mu-bg);           /* match the page bg exactly (opaque) → seamless + no see-through */
     padding: 20px 28px 14px;
     margin: 0 -28px 4px;
     display: flex; align-items: center; gap: 12px;
   }
-  /* always solid (100% opaque) so content never shows through when scrolling; matches page bg per theme */
-  #screen.scrolled .appbar { background: var(--mu-white); }
   .appbar-title { font-size: 30px; font-weight: 700; letter-spacing: -0.028em; line-height: 1.25em; }
   .appbar-sub { font-size: 13px; color: var(--mu-ink-3); margin-top: 0; }
   .appbar-back {
@@ -710,8 +708,8 @@
     --mu-gray-900:#ececf2; --mu-border:#3a3a44;
   }
   html[data-theme="dark"] body { background:#0e0e11; }
-  html[data-theme="dark"] .appbar,
-  html[data-theme="dark"] #screen.scrolled .appbar { background: #0e0e11; }
+  /* native dark: the screen is #0e0e11, so match it there; desktop dark uses --mu-bg (#17171b) via the base rule */
+  html[data-theme="dark"].is-native .appbar { background: #0e0e11; }
   html[data-theme="dark"] .tabbar { background: rgba(24,24,28,.8); }
   html[data-theme="dark"] .focus-actions { background: rgba(42,42,50,.85); }
   html[data-theme="dark"] .sortchips > button[data-sort].is-active { color:#17171b; }
@@ -2769,8 +2767,8 @@ function renderProfile() {
     </div>
     <div class="stat-grid">
       <div class="stat"><div class="stat-num">8 ${t("days")}</div><div class="stat-lbl">${t("Practiced in 2026")}</div></div>
-      <div class="stat"><div class="stat-num">8</div><div class="stat-lbl">${t("Pieces")}</div></div>
-      <div class="stat"><div class="stat-num">5</div><div class="stat-lbl">${t("Composers")}</div></div>
+      <div class="stat"><div class="stat-num">${S.saved.length}</div><div class="stat-lbl">${t("Pieces")}</div></div>
+      <div class="stat"><div class="stat-num">${new Set(S.saved.map(id=>(pieceById(id)||{}).c).filter(Boolean)).size}</div><div class="stat-lbl">${t("Composers")}</div></div>
     </div>
 
     ${inProgress.length ? `<div class="sec">
