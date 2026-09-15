@@ -271,6 +271,10 @@
     transform: rotate(-5deg);
   }
   .cav-photo img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 12%; filter: grayscale(1); }
+  /* "All pieces" avatar — rounded square, upright, matches photo footprint */
+  .cav-all { border-radius: 15%; }
+  .ccard-all { grid-column: 1 / -1; }
+  .phero .cav-all svg { width: 34px; height: 34px; }
   .ccard .cav { width: 48px; height: 48px; flex-shrink: 0; }
   .ccard-text { flex: 1; min-width: 0; }
   .ccard-name { font-size: 16px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.25em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1109,7 +1113,7 @@ const CALENDAR = window.MUSIC_CALENDAR || [
    Persistent state (localStorage)
    ================================================================ */
 const LS_KEY = "pp_v1";
-const DEFAULT_STATE = { progress:{}, practiceSec:{}, saved:[], recent:["rav-menuet-haydn","cho-pre284"], lang:"en", theme:"light", keepAwake:10, entitlement:"free", installedAt:null };
+const DEFAULT_STATE = { progress:{}, practiceSec:{}, saved:[], recent:["rav-menuet-haydn","cho-pre284"], lang:"en", theme:"light", keepAwake:10, entitlement:"free", installedAt:null, activeDays:[] };
 function applyTheme(){
   const dark = (S.theme==="dark");
   document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -1131,7 +1135,7 @@ const wakeLabel = v => (WAKE_OPTS.find(o=>String(o[0])===String(v))||["10","10 m
 const TL = {
   "zh-Hant": {
     "Home":"首頁","Library":"曲庫","Playlist":"播放清單","You":"我的",
-    "Your playlist":"我的播放清單","Your practice":"練習概況","Practiced in 2026":"2026 年練習","days":"天",
+    "Your playlist":"我的播放清單","Your practice":"練習概況","Practiced in 2026":"2026 年練習","days":"天","day":"天",
     "On this day":"歷史上的今天","View composer":"查看作曲家","Sort":"排序","Composer":"作曲家","Jump into the library":"進入曲庫","See all":"查看全部","Nothing played yet.":"尚無彈奏紀錄",
     "Search":"搜尋","Composers":"作曲家","Pieces":"樂曲","pieces":"首","piece":"首",
     "Saved":"已收藏","No saved pieces yet":"尚未收藏樂曲","Tap the bookmark on any piece to keep it here.":"點擊任一樂曲的書籤即可收藏。",
@@ -1141,11 +1145,12 @@ const TL = {
     "Intermediate":"中階","Advanced":"進階","Early-virtuoso":"準演奏級","Virtuoso":"演奏級",
     "marked":"已收藏","saved":"已收藏","Practice":"練習","Date added":"加入日期","Find your next piece to master":"尋找你想精通的下一首樂曲",
     "composers":"位作曲家","Your account and settings":"你的帳戶與設定","Sort by":"排序方式","Asc":"升序","Desc":"降序",
-    "Search composers or pieces":"搜尋作曲家或樂曲"
+    "Search composers or pieces":"搜尋作曲家或樂曲",
+    "All pieces":"全部樂曲","Every composer in one list":"所有作曲家，一份清單"
   },
   "zh-Hans": {
     "Home":"首页","Library":"曲库","Playlist":"播放列表","You":"我的",
-    "Your playlist":"我的播放列表","Your practice":"练习概况","Practiced in 2026":"2026 年练习","days":"天",
+    "Your playlist":"我的播放列表","Your practice":"练习概况","Practiced in 2026":"2026 年练习","days":"天","day":"天",
     "On this day":"历史上的今天","View composer":"查看作曲家","Sort":"排序","Composer":"作曲家","Jump into the library":"进入曲库","See all":"查看全部","Nothing played yet.":"尚无弹奏记录",
     "Search":"搜索","Composers":"作曲家","Pieces":"乐曲","pieces":"首","piece":"首",
     "Saved":"已收藏","No saved pieces yet":"尚未收藏乐曲","Tap the bookmark on any piece to keep it here.":"点击任一乐曲的书签即可收藏。",
@@ -1155,7 +1160,8 @@ const TL = {
     "Intermediate":"中阶","Advanced":"进阶","Early-virtuoso":"准演奏级","Virtuoso":"演奏级",
     "marked":"已收藏","saved":"已收藏","Practice":"练习","Date added":"加入日期","Find your next piece to master":"寻找你想精通的下一首乐曲",
     "composers":"位作曲家","Your account and settings":"你的账户与设置","Sort by":"排序方式","Asc":"升序","Desc":"降序",
-    "Search composers or pieces":"搜索作曲家或乐曲"
+    "Search composers or pieces":"搜索作曲家或乐曲",
+    "All pieces":"全部乐曲","Every composer in one list":"所有作曲家，一份列表"
   }
 };
 function t(s){ const m = TL[S.lang]; return (m && m[s]) || s; }
@@ -1219,7 +1225,7 @@ const SCORES = {
 const SCORE_PAGE = {};  // per-movement PDFs now start at page 1 — no anchors needed
 // Pieces that should show the PDF score even if MusicXML/notes exist (user preference)
 const FORCE_PDF = new Set(["rav-menuet-haydn"]);
-const SCORE_VER = "20260913m";  // bump whenever a PDF is replaced in-place, to bust browser cache
+const SCORE_VER = "20260915a";  // bump whenever a PDF is replaced in-place, to bust browser cache
 function pdfSrc(id, params){
   const pg = SCORE_PAGE[id] ? "page=" + SCORE_PAGE[id] : "";
   const q = [pg, params].filter(Boolean).join("&");
@@ -1276,9 +1282,16 @@ const Store = {
 function showPaywall(){ /* future: render an "Upgrade to Piano Practice Pro" screen */ }
 // stamp first-launch date so early adopters can be grandfathered when Pro arrives
 if (!S.installedAt) { S.installedAt = new Date().toISOString().slice(0,10); save(); }
+// record each distinct day the app is opened → drives the "days practiced this year" stat
+(function(){ const today = new Date().toISOString().slice(0,10);
+  if (!Array.isArray(S.activeDays)) S.activeDays = [];
+  if (!S.activeDays.includes(today)) { S.activeDays.push(today); save(); } })();
+function activeDaysThisYear(){ const y = String(new Date().getFullYear()); return (S.activeDays||[]).filter(d => d.slice(0,4) === y).length; }
+function practicedLabel(){ const y = new Date().getFullYear(); return S.lang==='en' ? `Practiced in ${y}` : `${y} ${S.lang==='zh-Hant'?'年練習':'年练习'}`; }
+function daysCountLabel(){ const n = activeDaysThisYear(); return `${n} ${t(n===1?"day":"days")}`; }
 
 const pieceById = id => PIECES.find(p => p.id === id);
-const piecesOf = cId => PIECES.filter(p => p.c === cId);
+const piecesOf = cId => cId === "__all" ? PIECES.slice() : PIECES.filter(p => p.c === cId);
 const modeOf = p => /minor/i.test(p.key) ? "minor" : "major";
 const pctOf = id => S.progress[id] || 0;
 const secOf = id => S.practiceSec[id] || 0;
@@ -1570,7 +1583,7 @@ function setHash(h) {
 }
 function routeTo(hash) {
   const [seg, arg] = (hash || "").replace(/^#\/?/, "").split("/");
-  if (seg === "composer" && COMPOSERS[arg]) openPianist(arg);
+  if (seg === "composer" && (arg === "__all" || COMPOSERS[arg])) openPianist(arg);
   else if (seg === "piece" && pieceById(arg)) openSheet(arg);
   else if (seg === "library") { renderLibrary(); show("library","library"); }
   else if (seg === "saved") { renderSaved(); show("saved","saved"); }
@@ -1595,6 +1608,7 @@ document.getElementById("tabbar").addEventListener("click", e => {
    ================================================================ */
 const IC = {
   search: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>`,
+  layers: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>`,
   music: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
   awake: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
   back: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`,
@@ -1758,7 +1772,7 @@ function renderHomeBody(q) {
         <div class="home-block-title">${t("Your practice")}</div>
         <div class="home-card practice-card">
           <div class="side-stats">
-            <div class="side-stat"><div class="side-num">8 ${t("days")}</div><div class="side-lbl">${t("Practiced in 2026")}</div></div>
+            <div class="side-stat"><div class="side-num">${daysCountLabel()}</div><div class="side-lbl">${practicedLabel()}</div></div>
           </div>
         </div>
         <div class="home-block-title" style="margin-top:20px">${t("On this day")}</div>
@@ -1824,6 +1838,16 @@ function todayCalendar() {
   return { dateLabel, events: events.length ? events : [{ composer:null, year:"", title:"A quiet day", text:"No milestone today — a clear page for your own practice." }] };
 }
 
+function allCard() {
+  return `<div class="ccard ccard-all" data-composer="__all">
+    <div class="cav cav-all">${IC.layers}</div>
+    <div class="ccard-text">
+      <div class="ccard-name">${t("All pieces")}</div>
+      <div class="ccard-era">${t("Every composer in one list")}</div>
+    </div>
+    <div class="ccard-count">${PIECES.length}<span>${t("pieces")}</span></div>
+  </div>`;
+}
 function composerCard(id) {
   const c = COMPOSERS[id];
   return `<div class="ccard" data-composer="${id}">
@@ -1881,7 +1905,7 @@ function renderLibraryBody(q) {
   const body = document.getElementById("libBody");
   body.innerHTML = q
     ? renderSearchResults(q)
-    : `<div class="cgrid">${Object.keys(COMPOSERS).map(composerCard).join("")}</div>`;
+    : `<div class="cgrid">${allCard()}${Object.keys(COMPOSERS).map(composerCard).join("")}</div>`;
   wirePieceRows(body);
   body.querySelectorAll("[data-composer]").forEach(c => c.addEventListener("click",()=>openPianist(c.dataset.composer)));
 }
@@ -1890,30 +1914,41 @@ function renderLibraryBody(q) {
    PIANIST detail — with filter/sort
    ================================================================ */
 const SORT_LABELS = { name:"Name", level:"Level", year:"Year", length:"Length", key:"Key", coll:"Work" };
+const SORT_LABELS_ALL = { composer:"Composer", name:"Name", level:"Level", year:"Year", length:"Length", key:"Key" };
 const SORT_LABELS_SAVED = { dateAdded:"Date added", name:"Name", level:"Level", year:"Year", length:"Length", key:"Key", composer:"Composer" };
 let pianistState = { id:null, sort:"name", tonality:"all", q:"", dir:"asc" };
 function openPianist(id) {
-  pianistState = { id, sort:"name", tonality:"all", q:"", dir:"asc" };
+  pianistState = { id, sort: id === "__all" ? "composer" : "name", tonality:"all", q:"", dir:"asc" };
   renderPianist(); show("pianist","library","composer/"+id);
 }
 function renderPianist() {
   const { id } = pianistState;
+  const isAll = id === "__all";
   const c = COMPOSERS[id];
   const v = document.getElementById("view-pianist");
+  const hero = isAll
+    ? `<div class="phero">
+        <div class="cav cav-all">${IC.layers}</div>
+        <div class="phero-txt">
+          <div class="phero-head"><span class="phero-name">${t("All pieces")}</span><span class="phero-era">${PIECES.length} ${t("pieces")} · ${Object.keys(COMPOSERS).length} ${t("composers")}</span></div>
+          <div class="phero-bio">${t("Every composer in one list")}</div>
+        </div>
+      </div>`
+    : `<div class="phero">
+        <div class="cav cav-photo"><img src="images/composers/${id}.jpg" alt="${c.name}"></div>
+        <div class="phero-txt">
+          <div class="phero-head"><span class="phero-name">${cName(id)}</span><span class="phero-era">${cEra(id)}</span></div>
+          <div class="phero-bio">${cBio(id)}</div>
+        </div>
+      </div>`;
   v.innerHTML = `
     <div class="appbar">
       <button class="appbar-back" id="pBack">${IC.back}</button>
       <div style="flex:1"></div>
     </div>
-    <div class="phero">
-      <div class="cav cav-photo"><img src="images/composers/${id}.jpg" alt="${c.name}"></div>
-      <div class="phero-txt">
-        <div class="phero-head"><span class="phero-name">${cName(id)}</span><span class="phero-era">${cEra(id)}</span></div>
-        <div class="phero-bio">${cBio(id)}</div>
-      </div>
-    </div>
+    ${hero}
 
-    <div class="sortchips" id="sortChips">${sortBarHTML(pianistState, "pieceSearch")}</div>
+    <div class="sortchips" id="sortChips">${sortBarHTML(pianistState, "pieceSearch", isAll ? SORT_LABELS_ALL : undefined)}</div>
     <div id="pieceListWrap"></div>
     <div class="credits">Scores engraved from public-domain editions · data: NIFC &amp; craigsapp Humdrum (CC-BY) · piano samples: Salamander Grand (CC-BY)</div>`;
 
@@ -2768,7 +2803,7 @@ function renderProfile() {
       </div>
     </div>
     <div class="stat-grid">
-      <div class="stat"><div class="stat-num">8 ${t("days")}</div><div class="stat-lbl">${t("Practiced in 2026")}</div></div>
+      <div class="stat"><div class="stat-num">${daysCountLabel()}</div><div class="stat-lbl">${practicedLabel()}</div></div>
       <div class="stat"><div class="stat-num">${S.saved.length}</div><div class="stat-lbl">${t("Pieces")}</div></div>
       <div class="stat"><div class="stat-num">${new Set(S.saved.map(id=>(pieceById(id)||{}).c).filter(Boolean)).size}</div><div class="stat-lbl">${t("Composers")}</div></div>
     </div>
