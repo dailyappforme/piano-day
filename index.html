@@ -353,7 +353,7 @@
   .sort-dd .sort-trigger:hover, .sort-dd .sort-trigger:active, .sort-dd .sort-trigger:focus-visible { border-color: var(--mu-gray-900); box-shadow: var(--mu-focus-ring); outline: none; }
   .sort-dd .lang-caret { flex: none; color: var(--mu-ink-3); transition: transform var(--mu-fast) var(--mu-ease); }
   .sort-dd.is-open .lang-caret { transform: rotate(180deg); }
-  .sort-dd .menu { left: 0; right: 0; min-width: 0; }
+  .sort-dd .menu { left: 0; right: 0; min-width: 0; max-height: 46vh; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   /* custom sort dropdown (native select panels can't be styled) */
   .sortdd { position: relative; }
   .sortdd-btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px;
@@ -2074,6 +2074,22 @@ function sortBarHTML(state, searchId, labels) {
         <div class="menu" role="menu">${Object.entries(labels).map(([k,l])=>ddItem(k,l)).join("")}</div>
       </div>`;
 }
+// Size the mobile sort menu to the space above the tab bar; flip up if there's more room above.
+function fitSortMenu(dd){
+  const menu = dd.querySelector('.menu'); if (!menu) return;
+  menu.style.top = ''; menu.style.bottom = ''; menu.style.maxHeight = '';
+  const r = dd.getBoundingClientRect();
+  const tb = document.querySelector('.tabbar');
+  const floor = tb ? tb.getBoundingClientRect().top : window.innerHeight;
+  const below = floor - r.bottom - 12;
+  const above = r.top - 12;
+  if (below < 180 && above > below) {         // not enough room below → drop up
+    menu.style.top = 'auto'; menu.style.bottom = 'calc(100% + 6px)';
+    menu.style.maxHeight = Math.max(140, above) + 'px';
+  } else {
+    menu.style.maxHeight = Math.max(140, below) + 'px';
+  }
+}
 // shared: wire a sort bar's dir button + chips to a state object + rerender callback.
 // Any change rebuilds the bar HTML in place (keeps chip labels / level-board in sync).
 function wireSortBar(container, state, rerender, labels) {
@@ -2090,7 +2106,7 @@ function wireSortBar(container, state, rerender, labels) {
     if (lvsys) { e.stopPropagation(); S.gradeSystem = lvsys.dataset.lvsys; save(); state.sort = 'level'; rebuild(); rerender(); return; }
     // mobile sort dropdown: trigger toggles menu
     const trig = e.target.closest('[data-role="sorttrigger"]');
-    if (trig) { e.stopPropagation(); const dd=trig.closest('.sort-dd'); const open=dd.classList.toggle('is-open'); trig.setAttribute('aria-expanded', open); return; }
+    if (trig) { e.stopPropagation(); const dd=trig.closest('.sort-dd'); const open=dd.classList.toggle('is-open'); trig.setAttribute('aria-expanded', open); if (open) fitSortMenu(dd); return; }
     // mobile sort dropdown: menu item selects a sort key
     const opt = e.target.closest('[data-sortopt]');
     if (opt) { state.sort = opt.dataset.sortopt; rebuild(); rerender(); return; }
