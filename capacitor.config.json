@@ -1,5 +1,5 @@
 {
-  "appId": "com.mujiun.pianopractice",
+  "appId": "com.mujiun.pianoday",
   "appName": "Piano Practice",
   "webDir": "www",
   "ios": { "contentInset": "never" }
