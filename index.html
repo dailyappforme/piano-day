@@ -397,7 +397,7 @@
     font-size: 13px; color: var(--mu-ink-3); }
   .sheet-levels .slv:not(:first-child)::before { content: "·"; margin-right: 8px; color: var(--mu-gray-300); }
   .slv-sys { color: var(--mu-ink-3); }
-  .slv-val { font-weight: 650; color: var(--mu-ink); }
+  .slv-val { font-weight: 650; color: var(--mu-ink-2); }
 
   /* sheet sub-tabs (Overview / Practice / Focus) */
   .sheet-tabs { margin: 16px 0 4px; }
@@ -2391,7 +2391,7 @@ const SPOTIFY = {
 
 // A dedicated row on the score page showing the piece's grade across all three boards.
 function sheetLevelsHTML(p){
-  return `<div class="sheet-levels">${GRADE_SYS.map(s=>`<span class="slv"><span class="slv-sys">${s.name}</span> <b class="slv-val">${gradeFull(p.level,s.key)}</b></span>`).join("")}</div>`;
+  return `<div class="sheet-levels">${GRADE_SYS.map(s=>`<span class="slv"><span class="slv-sys">${s.name}</span> <b class="slv-val">${gradeVal(p.level,s.key)}</b></span>`).join("")}</div>`;
 }
 function renderSheet() {
   const p = pieceById(sheetCtx.id);
