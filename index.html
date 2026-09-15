@@ -1328,7 +1328,7 @@ function daysCountLabel(){ const n = activeDaysThisYear(); return `${n} ${t(n===
 /* ---- Analytics (PostHog) — anonymous product usage, opt-out in Settings --------
    Paste your Project API Key + region host below. Events are only sent when a key
    is set AND the user hasn't opted out (S.analytics !== false). No key = fully off. */
-const ANALYTICS = { key: "phc_REPLACE_WITH_YOUR_KEY", host: "https://us.i.posthog.com" };
+const ANALYTICS = { key: "phc_CB7yyaSLWeae7QZuCHAyW8e6p95vpmeKZcmZWMzqXgEG", host: "https://us.i.posthog.com" };
 let _ph = null;
 function analyticsAllowed(){ return S.analytics !== false && ANALYTICS.key && ANALYTICS.key.indexOf("REPLACE") === -1; }
 function initAnalytics(){
