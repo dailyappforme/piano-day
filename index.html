@@ -333,6 +333,17 @@
     transition: background var(--mu-fast) var(--mu-ease), color var(--mu-fast) var(--mu-ease), border-color var(--mu-fast) var(--mu-ease), box-shadow var(--mu-fast) var(--mu-ease); }
   .sortchips > button[data-sort]:hover, .sortchips > button[data-sort]:active, .sortchips > button[data-sort]:focus-visible { border-color: var(--mu-gray-900); box-shadow: var(--mu-focus-ring); outline: none; }
   .sortchips > button[data-sort].is-active { background: var(--mu-gray-900); color: #fff; border-color: var(--mu-gray-900); }
+  /* "Level" sort chip = a dropdown to pick the grading board (desktop/iPad) */
+  .lvsort-dd { position: relative; display: inline-flex; }
+  .lvsort-chip { height: 36px; padding: 0 12px; border: 1px solid var(--mu-border); background: var(--mu-white);
+    border-radius: var(--mu-radius-full); font-size: 13px; font-weight: 500; color: var(--mu-ink-2); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: background var(--mu-fast) var(--mu-ease), color var(--mu-fast) var(--mu-ease), border-color var(--mu-fast) var(--mu-ease), box-shadow var(--mu-fast) var(--mu-ease); }
+  .lvsort-chip:hover, .lvsort-chip:active, .lvsort-chip:focus-visible { border-color: var(--mu-gray-900); box-shadow: var(--mu-focus-ring); outline: none; }
+  .lvsort-chip.is-active { background: var(--mu-gray-900); color: #fff; border-color: var(--mu-gray-900); }
+  .lvsort-chip .lang-caret { flex: none; color: currentColor; opacity: .7; transition: transform var(--mu-fast) var(--mu-ease); }
+  .lvsort-dd.is-open .lang-caret { transform: rotate(180deg); }
+  html[data-theme="dark"] .lvsort-chip.is-active { color: #17171b; }
   /* full-width sort dropdown (mu-system .dropdown/.menu) — shown on mobile only (see media query) */
   .sort-dd { display: none; position: relative; }
   .sort-dd .sort-trigger { display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -381,21 +392,12 @@
     font-size: 13px; color: var(--mu-ink-3); }
   .sheet-meta b { font-weight: 650; color: var(--mu-ink-2); }
   .sheet-meta span:not(:first-child)::before { content: "·"; margin-right: 8px; color: var(--mu-gray-300); }
-  /* Level pill (3 grading systems): desktop = dropdown selector, touch = show all three */
-  .lvctl { display: inline-flex; align-items: center; }
-  .lvdd { position: relative; }
-  .lvdd-trigger { height: auto; padding: 3px 9px; font-size: 13px; gap: 6px; border-radius: 8px; line-height: 1.25; }
-  .sheet-meta .lvdd span::before { content: none !important; }   /* no dot-separators inside the pill/menu */
-  #lvMenu { min-width: 160px; }
-  #lvMenu .menu-item { display: flex; align-items: baseline; justify-content: space-between; }
-  .lvopt-sys { font-weight: 650; margin-right: 14px; }
-  .lvopt-val { color: var(--mu-ink-3); }
-  .lv3wrap { display: none; }
-  /* phones (narrow) show all three grades inline; desktop + iPad keep the dropdown selector */
-  @media (max-width: 520px){
-    .lvctl .lvdd { display: none; }
-    .lvctl .lv3wrap { display: inline-flex; align-items: center; gap: 8px; }
-  }
+  /* Score page: a row showing the grade across all three boards */
+  .sheet-levels { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .slv { display: inline-flex; align-items: baseline; gap: 7px; padding: 5px 11px;
+    border: 1px solid var(--mu-border); border-radius: var(--mu-radius-full); background: var(--mu-white); }
+  .slv-sys { font-family: var(--mu-mono); font-size: 10.5px; font-weight: 600; letter-spacing: .06em; color: var(--mu-ink-3); text-transform: uppercase; }
+  .slv-val { font-size: 13px; font-weight: 600; color: var(--mu-ink); }
 
   /* sheet sub-tabs (Overview / Practice / Focus) */
   .sheet-tabs { margin: 16px 0 4px; }
@@ -779,6 +781,7 @@
     .sortchips .grow { display: none; }
     .sortchips .filter-count { flex: 1 0 100%; margin-top: 2px; }
     .sortchips > button[data-sort] { display: none; }
+    .sortchips .lvsort-dd { display: none; }
     .sortchips .sort-dd { display: block; flex: 1; min-width: 0; }
     /* pianist hero: avatar above name */
     .phero { flex-direction: column; }
@@ -1998,7 +2001,7 @@ function renderPianist() {
   pianistState.q = "";
   const pieceSearchEl = v.querySelector("#pieceSearch");
   if (pieceSearchEl) pieceSearchEl.addEventListener("input", e=>{ pianistState.q = e.target.value.trim(); renderPieceList(); });
-  wireSortBar(v.querySelector("#sortChips"), pianistState, renderPieceList);
+  wireSortBar(v.querySelector("#sortChips"), pianistState, renderPieceList, isAll ? SORT_LABELS_ALL : SORT_LABELS);
   renderPieceList();
 }
 // shared: sort a piece list into labelled groups by sort key
@@ -2040,46 +2043,53 @@ function renderGroups(wrap, groups, sort, dir) {
 // shared: the Sort button + field chips + search bar markup
 function sortBarHTML(state, searchId, labels) {
   labels = labels || SORT_LABELS;
+  const sys = S.gradeSystem || "abrsm", sysName = gradeSys().name;
+  const caret = `<svg class="lang-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+  // desktop chip: "Level" is a dropdown that picks the grading board (and sorts by level)
+  const chip = (k,l)=> k==='level'
+    ? `<div class="dropdown lvsort-dd">
+         <button type="button" data-role="lvsorttrigger" class="lvsort-chip${state.sort==='level'?' is-active':''}"><span>${t(l)}${state.sort==='level'?` · ${sysName}`:''}</span>${caret}</button>
+         <div class="menu" role="menu">${GRADE_SYS.map(s=>`<button type="button" class="menu-item${state.sort==='level'&&s.key===sys?' is-selected':''}" role="menuitem" data-lvsys="${s.key}">${s.name}</button>`).join("")}</div>
+       </div>`
+    : `<button data-sort="${k}" class="${k===state.sort?'is-active':''}">${t(l)}</button>`;
+  // mobile single dropdown: expand "Level" into one option per board
+  const ddItem = (k,l)=> k==='level'
+    ? GRADE_SYS.map(s=>`<button type="button" class="menu-item${state.sort==='level'&&s.key===sys?' is-selected':''}" role="menuitem" data-sortopt="level" data-lvsys="${s.key}">${t(l)} · ${s.name}</button>`).join("")
+    : `<button type="button" class="menu-item${k===state.sort?' is-selected':''}" role="menuitem" data-sortopt="${k}">${t(l)}</button>`;
+  const ddVal = state.sort==='level' ? `${t(labels.level)} · ${sysName}` : t(labels[state.sort]||state.sort);
   return `<button class="sort-lead" data-role="dir" data-dir="${state.dir}" title="Ascending / descending" aria-label="Sort direction"><svg width="22" height="18" viewBox="0 0 20 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path class="sd-up" d="M5 12V2M2.5 4.5L5 2l2.5 2.5"/><path class="sd-dn" d="M13 4v10M10.5 11.5L13 14l2.5-2.5"/></svg><span class="sort-lead-txt">${state.dir==="desc"?t("Desc"):t("Asc")}</span></button>
       <span class="sort-divider"></span>
       <span class="sort-by-label">${t("Sort by")}</span>
-      ${Object.entries(labels).map(([k,l])=>`<button data-sort="${k}" class="${k===state.sort?'is-active':''}">${t(l)}</button>`).join("")}
+      ${Object.entries(labels).map(([k,l])=>chip(k,l)).join("")}
       <div class="dropdown sort-dd">
-        <button type="button" class="input sort-trigger" data-role="sorttrigger" aria-haspopup="menu" aria-expanded="false"><span class="sort-dd-val">${t(labels[state.sort]||state.sort)}</span><svg class="lang-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-        <div class="menu" role="menu">${Object.entries(labels).map(([k,l])=>`<button type="button" class="menu-item${k===state.sort?' is-selected':''}" role="menuitem" data-sortopt="${k}">${t(l)}</button>`).join("")}</div>
+        <button type="button" class="input sort-trigger" data-role="sorttrigger" aria-haspopup="menu" aria-expanded="false"><span class="sort-dd-val">${ddVal}</span><svg class="lang-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="menu" role="menu">${Object.entries(labels).map(([k,l])=>ddItem(k,l)).join("")}</div>
       </div>`;
 }
-// shared: wire a sort bar's dir button + chips to a state object + rerender callback
-function wireSortBar(container, state, rerender) {
+// shared: wire a sort bar's dir button + chips to a state object + rerender callback.
+// Any change rebuilds the bar HTML in place (keeps chip labels / level-board in sync).
+function wireSortBar(container, state, rerender, labels) {
+  labels = labels || SORT_LABELS;
+  const rebuild = ()=>{ container.innerHTML = sortBarHTML(state, null, labels); };
   container.addEventListener("click", e=>{
     const dirBtn = e.target.closest('[data-role="dir"]');
-    if (dirBtn) {
-      state.dir = state.dir==="asc" ? "desc" : "asc";
-      dirBtn.dataset.dir = state.dir;
-      const txt = dirBtn.querySelector(".sort-lead-txt"); if (txt) txt.textContent = state.dir==="desc" ? t("Desc") : t("Asc");
-      rerender(); return;
-    }
+    if (dirBtn) { state.dir = state.dir==="asc" ? "desc" : "asc"; rebuild(); rerender(); return; }
+    // desktop "Level" chip: open the board picker
+    const lvTrig = e.target.closest('[data-role="lvsorttrigger"]');
+    if (lvTrig) { e.stopPropagation(); lvTrig.closest('.lvsort-dd').classList.toggle('is-open'); return; }
+    // pick a grading board → sort by level in that board
+    const lvsys = e.target.closest('[data-lvsys]');
+    if (lvsys) { e.stopPropagation(); S.gradeSystem = lvsys.dataset.lvsys; save(); state.sort = 'level'; rebuild(); rerender(); return; }
     // mobile sort dropdown: trigger toggles menu
     const trig = e.target.closest('[data-role="sorttrigger"]');
     if (trig) { e.stopPropagation(); const dd=trig.closest('.sort-dd'); const open=dd.classList.toggle('is-open'); trig.setAttribute('aria-expanded', open); return; }
     // mobile sort dropdown: menu item selects a sort key
     const opt = e.target.closest('[data-sortopt]');
-    if (opt) {
-      state.sort = opt.dataset.sortopt;
-      container.querySelectorAll("button[data-sort]").forEach(x=>x.classList.toggle("is-active", x.dataset.sort===state.sort));
-      container.querySelectorAll('[data-sortopt]').forEach(x=>x.classList.toggle('is-selected', x===opt));
-      const val = container.querySelector('.sort-dd-val'); if (val) val.textContent = opt.textContent;
-      const dd = opt.closest('.sort-dd'); if (dd) { dd.classList.remove('is-open'); const tr=dd.querySelector('[data-role="sorttrigger"]'); if(tr) tr.setAttribute('aria-expanded', false); }
-      rerender(); return;
-    }
+    if (opt) { state.sort = opt.dataset.sortopt; rebuild(); rerender(); return; }
     const b = e.target.closest("button[data-sort]"); if (!b) return;
-    state.sort = b.dataset.sort;
-    container.querySelectorAll("button[data-sort]").forEach(x=>x.classList.toggle("is-active", x===b));
-    const val = container.querySelector('.sort-dd-val'); if (val) val.textContent = b.textContent;
-    container.querySelectorAll('[data-sortopt]').forEach(x=>x.classList.toggle('is-selected', x.dataset.sortopt===state.sort));
-    rerender();
+    state.sort = b.dataset.sort; rebuild(); rerender();
   });
-  document.addEventListener("click", e=>{ const dd=container.querySelector('.sort-dd'); if (dd && !dd.contains(e.target)) { dd.classList.remove('is-open'); const tr=dd.querySelector('[data-role="sorttrigger"]'); if(tr) tr.setAttribute('aria-expanded', false); } });
+  document.addEventListener("click", e=>{ container.querySelectorAll('.dropdown.is-open').forEach(dd=>{ if(!dd.contains(e.target)) dd.classList.remove('is-open'); }); });
 }
 function renderPieceList() {
   const { id, sort, tonality, q, dir } = pianistState;
@@ -2379,22 +2389,9 @@ const SPOTIFY = {
   "schumann-g21": "track/4NuxbJGP8ATK1qrfW4sVcY",
 };
 
-// Level pill for the sheet header: desktop/iPad = dropdown to pick the exam board;
-// touch/mobile = show all three grades inline (see the pointer:coarse CSS).
-function levelPillHTML(p){
-  const sys = S.gradeSystem || "abrsm";
-  const opts = GRADE_SYS.map(s=>`<button type="button" class="menu-item${s.key===sys?' is-selected':''}" role="menuitem" data-gsys="${s.key}"><span class="lvopt-sys">${s.name}</span><span class="lvopt-val">${gradeFull(p.level,s.key)}</span></button>`).join("");
-  const three = GRADE_SYS.map(s=>`<span class="lv3"><b>${s.name}</b> ${gradeVal(p.level,s.key)}</span>`).join("");
-  return `<div class="lvctl">
-    <div class="dropdown lvdd" id="lvDD">
-      <button type="button" class="input lang-trigger lvdd-trigger" id="lvTrigger" aria-haspopup="menu" aria-expanded="false">
-        <span><b>${gradeSys().name}</b> ${gradeVal(p.level,sys)}</span>
-        <svg class="lang-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <div class="menu" role="menu" id="lvMenu">${opts}</div>
-    </div>
-    <div class="lv3wrap">${three}</div>
-  </div>`;
+// A dedicated row on the score page showing the piece's grade across all three boards.
+function sheetLevelsHTML(p){
+  return `<div class="sheet-levels">${GRADE_SYS.map(s=>`<span class="slv"><span class="slv-sys">${s.name}</span><span class="slv-val">${gradeFull(p.level,s.key)}</span></span>`).join("")}</div>`;
 }
 function renderSheet() {
   const p = pieceById(sheetCtx.id);
@@ -2415,12 +2412,12 @@ function renderSheet() {
       <div class="sheet-eyebrow">${cName(p.c)}</div>
       <div class="sheet-title">${pieceNameHTML(p)}</div>
       <div class="sheet-meta">
-        ${levelPillHTML(p)}
         <span>${p.year}</span>
         <span>${fmtDur(p.dur)}</span>
         <span>${p.key}</span>
         <span id="bpmTag">♩ ${sheetCtx.bpm}</span>
       </div>
+      ${sheetLevelsHTML(p)}
     </div>
 
     <div class="sheet-tabs"><div class="seg" id="sheetSeg">
@@ -2435,15 +2432,6 @@ function renderSheet() {
   const toggleMark = ()=>{ const i=S.saved.indexOf(p.id); if(i>=0)S.saved.splice(i,1); else S.saved.unshift(p.id); save();
     document.querySelectorAll("#markBtn,#fMark").forEach(b=>b.classList.toggle("is-marked", S.saved.includes(p.id))); };
   markBtn.addEventListener("click", toggleMark);
-  const lvDD = v.querySelector("#lvDD");
-  if (lvDD) {
-    const lvTrigger = v.querySelector("#lvTrigger");
-    lvTrigger.addEventListener("click", e=>{ e.stopPropagation(); const open = lvDD.classList.toggle("is-open"); lvTrigger.setAttribute("aria-expanded", open); });
-    document.addEventListener("click", e=>{ if(!lvDD.contains(e.target)) lvDD.classList.remove("is-open"); });
-    v.querySelectorAll("#lvMenu .menu-item").forEach(mi=>{
-      mi.addEventListener("click", ()=>{ S.gradeSystem = mi.dataset.gsys; save(); renderSheet(); });
-    });
-  }
   const hdrPlay = v.querySelector("#hdrPlay");
   if (hdrPlay) hdrPlay.addEventListener("click", ()=>togglePlay(p.id));
   v.querySelector("#sheetSeg").addEventListener("click", e=>{
@@ -2833,7 +2821,7 @@ function renderSaved() {
     savedState.q = "";
     const savedSearchEl = v.querySelector("#savedSearch");
     if (savedSearchEl) savedSearchEl.addEventListener("input", e=>{ savedState.q = e.target.value.trim(); renderSavedList(); });
-    wireSortBar(v.querySelector("#savedSort"), savedState, renderSavedList);
+    wireSortBar(v.querySelector("#savedSort"), savedState, renderSavedList, SORT_LABELS_SAVED);
     renderSavedList();
   }
 }
