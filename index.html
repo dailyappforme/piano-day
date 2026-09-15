@@ -388,12 +388,15 @@
   .sheet-work { font-size: 15px; font-weight: 500; color: var(--mu-ink-3); margin-top: 5px; }
   .sheet-sub { font-size: 17px; font-weight: 500; color: var(--mu-ink-3); letter-spacing: 0; }
   .sheet-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .sheet-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px;
+  /* meta + 3-board levels share one row on desktop/iPad (divider between), stack on phones */
+  .sheet-metawrap { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
+  .meta-div { width: 1px; height: 15px; background: var(--mu-gray-300); flex: none; }
+  .sheet-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
     font-size: 13px; color: var(--mu-ink-3); }
   .sheet-meta b { font-weight: 650; color: var(--mu-ink-2); }
   .sheet-meta span:not(:first-child)::before { content: "·"; margin-right: 8px; color: var(--mu-gray-300); }
   /* Score page: plain-text row showing the grade across all three boards (· between systems) */
-  .sheet-levels { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px;
+  .sheet-levels { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
     font-size: 13px; color: var(--mu-ink-3); }
   .sheet-levels .slv:not(:first-child)::before { content: "·"; margin-right: 8px; color: var(--mu-gray-300); }
   .slv-sys { color: var(--mu-ink-3); }
@@ -783,6 +786,9 @@
     .sortchips > button[data-sort] { display: none; }
     .sortchips .lvsort-dd { display: none; }
     .sortchips .sort-dd { display: block; flex: 1; min-width: 0; }
+    /* score meta: stack the two rows on phones */
+    .sheet-metawrap { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .sheet-metawrap .meta-div { display: none; }
     /* pianist hero: avatar above name */
     .phero { flex-direction: column; }
     /* bottom nav: shorter, icons only */
@@ -2411,13 +2417,16 @@ function renderSheet() {
     <div class="sheet-hero">
       <div class="sheet-eyebrow">${cName(p.c)}</div>
       <div class="sheet-title">${pieceNameHTML(p)}</div>
-      <div class="sheet-meta">
-        <span>${p.year}</span>
-        <span>${fmtDur(p.dur)}</span>
-        <span>${p.key}</span>
-        <span id="bpmTag">♩ ${sheetCtx.bpm}</span>
+      <div class="sheet-metawrap">
+        <div class="sheet-meta">
+          <span>${p.year}</span>
+          <span>${fmtDur(p.dur)}</span>
+          <span>${p.key}</span>
+          <span id="bpmTag">♩ ${sheetCtx.bpm}</span>
+        </div>
+        <span class="meta-div"></span>
+        ${sheetLevelsHTML(p)}
       </div>
-      ${sheetLevelsHTML(p)}
     </div>
 
     <div class="sheet-tabs"><div class="seg" id="sheetSeg">
