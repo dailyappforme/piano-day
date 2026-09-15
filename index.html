@@ -381,6 +381,21 @@
     font-size: 13px; color: var(--mu-ink-3); }
   .sheet-meta b { font-weight: 650; color: var(--mu-ink-2); }
   .sheet-meta span:not(:first-child)::before { content: "·"; margin-right: 8px; color: var(--mu-gray-300); }
+  /* Level pill (3 grading systems): desktop = dropdown selector, touch = show all three */
+  .lvctl { display: inline-flex; align-items: center; }
+  .lvdd { position: relative; }
+  .lvdd-trigger { height: auto; padding: 3px 9px; font-size: 13px; gap: 6px; border-radius: 8px; line-height: 1.25; }
+  .sheet-meta .lvdd span::before { content: none !important; }   /* no dot-separators inside the pill/menu */
+  #lvMenu { min-width: 160px; }
+  #lvMenu .menu-item { display: flex; align-items: baseline; justify-content: space-between; }
+  .lvopt-sys { font-weight: 650; margin-right: 14px; }
+  .lvopt-val { color: var(--mu-ink-3); }
+  .lv3wrap { display: none; }
+  /* phones (narrow) show all three grades inline; desktop + iPad keep the dropdown selector */
+  @media (max-width: 520px){
+    .lvctl .lvdd { display: none; }
+    .lvctl .lv3wrap { display: inline-flex; align-items: center; gap: 8px; }
+  }
 
   /* sheet sub-tabs (Overview / Practice / Focus) */
   .sheet-tabs { margin: 16px 0 4px; }
@@ -867,18 +882,18 @@ const PIECES = [
   {"id":"rav-miroirs-1","c":"ravel","coll":"Miroirs, M.43","title":"Noctuelles","sub":"Miroirs · No. 1","key":"D♭ major","level":9,"year":1905,"dur":4.5,"story":"'Night moths' — fluttering, irregular figures darting through the dark. Dedicated to the poet Léon-Paul Fargue."},
   {"id":"rav-miroirs-2","c":"ravel","coll":"Miroirs, M.43","title":"Oiseaux tristes","sub":"Miroirs · No. 2","key":"E♭ minor","level":7,"year":1905,"dur":4,"story":"'Sad birds' — lone calls in a torpid summer forest; Ravel's own favourite of the set."},
   {"id":"rav-miroirs-3","c":"ravel","coll":"Miroirs, M.43","title":"Une barque sur l'océan","sub":"Miroirs · No. 3","key":"F♯ minor","level":9,"year":1905,"dur":7,"story":"'A boat on the ocean' — sweeping arpeggios paint rolling swells and shifting light on the water."},
-  {"id":"rav-miroirs-4","c":"ravel","coll":"Miroirs, M.43","title":"Alborada del gracioso","sub":"Miroirs · No. 4","key":"D minor","level":10,"year":1905,"dur":6.5,"story":"'The jester's dawn song' — a dazzling Spanish showpiece of repeated notes and guitar-like snaps."},
+  {"id":"rav-miroirs-4","c":"ravel","coll":"Miroirs, M.43","title":"Alborada del gracioso","sub":"Miroirs · No. 4","key":"D minor","level":11,"year":1905,"dur":6.5,"story":"'The jester's dawn song' — a dazzling Spanish showpiece of repeated notes and guitar-like snaps."},
   {"id":"rav-miroirs-5","c":"ravel","coll":"Miroirs, M.43","title":"La vallée des cloches","sub":"Miroirs · No. 5","key":"B major","level":8,"year":1905,"dur":5.5,"story":"'The valley of bells' — bells tolling across a still landscape, evoked in layered resonances."},
-  {"id":"rav-gaspard-1","c":"ravel","coll":"Gaspard de la nuit, M.55","title":"Ondine","sub":"Gaspard · No. 1","key":"C♯ major","level":10,"year":1908,"dur":6.5,"story":"The water-nymph sings to lure a mortal beneath the lake — a shimmering wash of rapid tremolando."},
+  {"id":"rav-gaspard-1","c":"ravel","coll":"Gaspard de la nuit, M.55","title":"Ondine","sub":"Gaspard · No. 1","key":"C♯ major","level":11,"year":1908,"dur":6.5,"story":"The water-nymph sings to lure a mortal beneath the lake — a shimmering wash of rapid tremolando."},
   {"id":"rav-gaspard-2","c":"ravel","coll":"Gaspard de la nuit, M.55","title":"Le Gibet","sub":"Gaspard · No. 2","key":"E♭ minor","level":8,"year":1908,"dur":6,"story":"'The gallows' — a corpse sways against a blood-red sunset while a bell tolls an obsessive B♭ throughout."},
-  {"id":"rav-gaspard-3","c":"ravel","coll":"Gaspard de la nuit, M.55","title":"Scarbo","sub":"Gaspard · No. 3","key":"G♯ minor","level":10,"year":1908,"dur":9,"story":"A malicious goblin flickers and vanishes in the night — one of the most fiendish pieces ever written."},
+  {"id":"rav-gaspard-3","c":"ravel","coll":"Gaspard de la nuit, M.55","title":"Scarbo","sub":"Gaspard · No. 3","key":"G♯ minor","level":11,"year":1908,"dur":9,"story":"A malicious goblin flickers and vanishes in the night — one of the most fiendish pieces ever written."},
   {"id":"rav-menuet-haydn","c":"ravel","title":"Menuet sur le nom d'Haydn","sub":"M.58","key":"G major","level":5,"year":1909,"dur":2,"story":"Written in 1909 for a special issue of the Revue musicale S.I.M. marking the centenary of Haydn's death — one of a set in which six French composers (Ravel, Debussy, Dukas, Reynaldo Hahn, Vincent d'Indy and Widor) each wrote a short tribute on the same theme. The five-note motif B–A–D–D–G spells H-A-Y-D-N through a German note-name cipher, and Ravel threads it through the melody forwards, inverted and in retrograde, as a poised, slightly wistful minuet in G major.\n\nIts cool, classicising bow to the 18th-century dance looks straight ahead to Ravel's wartime suite Le tombeau de Couperin (1917), and belongs to the long 'name-cipher' tradition of musical signatures running from Bach's B-A-C-H to Schumann and Brahms."},
   {"id":"rav-tombeau-1","c":"ravel","coll":"Le tombeau de Couperin, M.68","title":"Prélude","sub":"Tombeau · No. 1","key":"E minor","level":8,"year":1917,"dur":3,"story":"Perpetual-motion triplets in Baroque prelude style; dedicated to a friend killed in the war."},
   {"id":"rav-tombeau-2","c":"ravel","coll":"Le tombeau de Couperin, M.68","title":"Fugue","sub":"Tombeau · No. 2","key":"E minor","level":7,"year":1917,"dur":3,"story":"A gentle three-voice fugue, spare and searching."},
   {"id":"rav-tombeau-3","c":"ravel","coll":"Le tombeau de Couperin, M.68","title":"Forlane","sub":"Tombeau · No. 3","key":"E minor","level":8,"year":1917,"dur":6,"story":"A stylised Italian dance with piquant, bittersweet harmonies."},
   {"id":"rav-tombeau-4","c":"ravel","coll":"Le tombeau de Couperin, M.68","title":"Rigaudon","sub":"Tombeau · No. 4","key":"C major","level":8,"year":1917,"dur":3,"story":"A bright, robust Baroque dance framing a pastoral middle section."},
   {"id":"rav-tombeau-5","c":"ravel","coll":"Le tombeau de Couperin, M.68","title":"Menuet","sub":"Tombeau · No. 5","key":"G major","level":8,"year":1917,"dur":5,"story":"An elegant minuet with a solemn musette at its centre."},
-  {"id":"rav-tombeau-6","c":"ravel","coll":"Le tombeau de Couperin, M.68","title":"Toccata","sub":"Tombeau · No. 6","key":"E minor","level":10,"year":1917,"dur":4,"story":"A relentless, brilliant finale — repeated notes building to a blazing close."},
+  {"id":"rav-tombeau-6","c":"ravel","coll":"Le tombeau de Couperin, M.68","title":"Toccata","sub":"Tombeau · No. 6","key":"E minor","level":11,"year":1917,"dur":4,"story":"A relentless, brilliant finale — repeated notes building to a blazing close."},
   {"id":"cho-noc92","c":"chopin","coll":"Nocturnes","title":"Nocturne in E♭ major","sub":"Op. 9 No. 2","key":"E♭ major","level":5,"year":1832,"dur":4.5,"story":"Chopin's most beloved nocturne, written when he was barely twenty. Its singing right-hand line is meant to imitate the bel canto opera he adored — every return of the theme is decorated a little differently, as a great singer would ornament a repeat."},
   {"id":"cho-fantimp","c":"chopin","coll":"Impromptus","title":"Fantaisie-Impromptu","sub":"Op. 66","key":"C♯ minor","level":8,"year":1834,"dur":5,"story":"Chopin never published this piece and asked for it to be destroyed after his death; his friend Julian Fontana printed it anyway. The famous cross-rhythm — four notes against three — is its central technical puzzle."},
   {"id":"cho-bal1","c":"chopin","coll":"Ballades","title":"Ballade No. 1 in G minor","sub":"Op. 23","key":"G minor","level":9,"year":1836,"dur":9,"story":"The first of Chopin's four ballades and possibly the single most iconic Romantic piano work. Schumann admired it deeply, and its coda is one of the most terrifying páginas in the repertoire."},
@@ -949,7 +964,7 @@ const PIECES = [
   {"id":"deb-flaxen","c":"debussy","title":"The Girl with the Flaxen Hair","sub":"Préludes I","key":"G♭ major","level":4,"year":1910,"dur":2.5,"story":"A prelude of pure serenity built on pentatonic melody. Its quietness is deceptive: balancing the chords so the tune floats on top is the whole art of it."},
   {"id":"deb-gradus","c":"debussy","title":"Doctor Gradus ad Parnassum","sub":"Children's Corner","key":"C major","level":6,"year":1908,"dur":2,"story":"A gentle parody of dry Czerny exercises, written for his daughter 'Chouchou'. Behind the joke is a genuine study in even, glassy finger-work."},
   {"id":"lis-liebe3","c":"liszt","title":"Liebestraum No. 3","sub":"S. 541","key":"A♭ major","level":8,"year":1850,"dur":4.5,"story":"'Dream of Love' — originally a song about love that endures beyond death. The melody is passed between the hands and crowned by two famous cadenzas."},
-  {"id":"lis-campanella","c":"liszt","title":"La Campanella","sub":"S. 141 No. 3","key":"G♯ minor","level":10,"year":1851,"dur":5,"story":"'The Little Bell', after a Paganini theme. Its enormous right-hand leaps and repeated notes make it one of the most fearsome showpieces ever written."},
+  {"id":"lis-campanella","c":"liszt","title":"La Campanella","sub":"S. 141 No. 3","key":"G♯ minor","level":11,"year":1851,"dur":5,"story":"'The Little Bell', after a Paganini theme. Its enormous right-hand leaps and repeated notes make it one of the most fearsome showpieces ever written."},
   {"id":"lis-consol3","c":"liszt","title":"Consolation No. 3","sub":"S. 172","key":"D♭ major","level":5,"year":1850,"dur":4,"story":"The gentlest of Liszt's six Consolations, clearly modelled on a Chopin nocturne. A rare moment of pure repose from the great virtuoso."},
   {"id":"sat-gym1","c":"satie","title":"Gymnopédie No. 1","sub":"","key":"D major","level":3,"year":1888,"dur":3.5,"story":"Three slow, spare dances that were decades ahead of their time. The floating dissonances and steady pulse make it a study in patience and evenness of touch."},
   {"id":"sat-gnoss1","c":"satie","title":"Gnossienne No. 1","sub":"","key":"F minor","level":4,"year":1890,"dur":4,"story":"Written without bar-lines and sprinkled with cryptic instructions like 'wonder about yourself'. Its modal, vaguely Eastern melody drifts free of any regular metre."},
@@ -963,14 +978,14 @@ const PIECES = [
   {"id":"schumann-g17","c":"schumann","title":"Arabeske","sub":"Op. 18","key":"C major","level":6,"year":1839,"dur":7,"story":"A graceful rondo whose sunny refrain keeps returning between wistful minor episodes, closing with one of Schumann's most touching, whispered codas."},
   {"id":"schumann-g18","c":"schumann","title":"Carnaval","sub":"Op. 9","key":"A♭ major","level":9,"year":1835,"dur":30,"story":"A masked carnival ball of twenty-one vivid character sketches — Schumann hides his friends, his loves, and the musical letters A-S-C-H (his sweetheart's town) among the dancers, ending as his imaginary 'League of David' marches against the Philistines."},
   {"id":"schumann-g19","c":"schumann","title":"Fantasie in C","sub":"Op. 17","key":"C major","level":10,"year":1836,"dur":32,"story":"A towering three-movement fantasy — begun to help fund a Beethoven monument, laced with a hidden Beethoven song-quotation and coded with Schumann's longing for his beloved Clara."},
-  {"id":"schumann-g20","c":"schumann","title":"Toccata","sub":"Op. 7","key":"C major","level":10,"year":1832,"dur":6,"story":"One of the most punishing showpieces of the early Romantic era — a relentless perpetual motion in double notes that Schumann himself called the hardest piece ever written."},
+  {"id":"schumann-g20","c":"schumann","title":"Toccata","sub":"Op. 7","key":"C major","level":11,"year":1832,"dur":6,"story":"One of the most punishing showpieces of the early Romantic era — a relentless perpetual motion in double notes that Schumann himself called the hardest piece ever written."},
   {"id":"schumann-g21","c":"schumann","title":"Papillons","sub":"Op. 2","key":"D major","level":7,"year":1831,"dur":15,"story":"'Butterflies' — a chain of tiny waltzes and dances evoking a masked ball from Jean Paul's novel Flegeljahre, fluttering past like costumed guests glimpsed and gone."},
   {"id":"brahms-g22","c":"brahms","coll":"Intermezzi","title":"Intermezzo in E♭ major","sub":"Op. 117 No. 1","key":"E♭ major","level":6,"year":1892,"dur":5,"story":"The first of the late Op. 117 intermezzi — a lullaby inscribed with a Scottish cradle-song. Brahms called this set 'cradle-songs of my sorrows,' and it sings with autumnal tenderness."},
   {"id":"brahms-g23","c":"brahms","coll":"Intermezzi","title":"Intermezzo in A major","sub":"Op. 118 No. 2","key":"A major","level":6,"year":1893,"dur":6,"story":"The best-loved of all Brahms's late piano pieces — a tender, yearning song whose gentle A-major warmth shades into a darker, hymn-like heart."},
   {"id":"brahms-g24","c":"brahms","title":"Rhapsody in G minor","sub":"Op. 79 No. 2","key":"G minor","level":8,"year":1879,"dur":6,"story":"A stormy, tightly-wound rhapsody — restless and driving, one of Brahms's most exciting concert pieces despite its modest title."},
   {"id":"brahms-g26","c":"brahms","title":"Waltz in A♭ major","sub":"Op. 39 No. 15","key":"A♭ major","level":4,"year":1865,"dur":2,"story":"The tenderest of Brahms's sixteen waltzes — a gentle, beloved little dance in A-flat, gemütlich and glowing, that has become a recital and encore favorite."},
   {"id":"brahms-g27","c":"brahms","title":"Ballade 'Edward'","sub":"Op. 10 No. 1","key":"D minor","level":7,"year":1854,"dur":4,"story":"A dark ballade after the grim Scottish ballad 'Edward,' in which a son confesses to murdering his father — its brooding opening and violent climax make it the most dramatic of Brahms's early pieces."},
-  {"id":"brahms-g28","c":"brahms","title":"Variations on a Theme by Paganini","sub":"Op. 35","key":"A minor","level":10,"year":1863,"dur":25,"story":"Two books of dazzling variations on Paganini's famous Caprice No. 24 — a fearsome compendium of piano technique that Clara Schumann dubbed the 'Witch Variations.'"},
+  {"id":"brahms-g28","c":"brahms","title":"Variations on a Theme by Paganini","sub":"Op. 35","key":"A minor","level":11,"year":1863,"dur":25,"story":"Two books of dazzling variations on Paganini's famous Caprice No. 24 — a fearsome compendium of piano technique that Clara Schumann dubbed the 'Witch Variations.'"},
   {"id":"mendelssohn-g29","c":"mendelssohn","coll":"Songs Without Words","title":"Spring Song","sub":"Songs Without Words Op. 62 No. 6","key":"A major","level":6,"year":1844,"dur":3,"story":"The most famous of the Songs Without Words — a delicate, blossoming 'Spring Song' whose lilting melody seems to unfurl like new leaves."},
   {"id":"mendelssohn-g30","c":"mendelssohn","coll":"Songs Without Words","title":"Venetian Gondola Song","sub":"Op. 19 No. 6","key":"G minor","level":5,"year":1830,"dur":3,"story":"A gently rocking 'Venetian Gondola Song' — a minor-key barcarolle swaying over the lap of the water, a serenade drifting past under the moon."},
   {"id":"mendelssohn-g31","c":"mendelssohn","coll":"Songs Without Words","title":"Spinning Song","sub":"Op. 67 No. 4","key":"C major","level":7,"year":1845,"dur":2,"story":"A whirring perpetual motion evoking a spinning wheel — nicknamed 'The Bees' Wedding' for its busy, buzzing hum."},
@@ -1010,12 +1025,12 @@ const PIECES = [
   {"id":"liszt-g92","c":"liszt","coll":"Hungarian Rhapsodies","title":"Hungarian Rhapsody No. 2","sub":"S. 244","key":"C♯ minor","level":9,"year":1847,"dur":10,"story":"The most famous of the Hungarian Rhapsodies — a brooding, gypsy-style lassan gives way to a wild, accelerating friska. Its tunes are so iconic they've soundtracked cartoons for a century."},
   {"id":"liszt-g93","c":"liszt","coll":"Hungarian Rhapsodies","title":"Hungarian Rhapsody No. 6","sub":"S. 244","key":"D♭ major","level":9,"year":1847,"dur":7,"story":"A Hungarian Rhapsody that builds to a legendary whirlwind of hammered repeated octaves — a barnstorming virtuoso warhorse."},
   {"id":"liszt-g94","c":"liszt","coll":"Consolations","title":"Consolation No. 1","sub":"S. 172","key":"E major","level":5,"year":1850,"dur":3,"story":"The gentlest of Liszt's six Consolations — a quiet, hymn-like reverie, tender and consoling exactly as its title promises."},
-  {"id":"liszt-g95","c":"liszt","coll":"Transcendental Études","title":"Transcendental Étude No. 4 'Mazeppa'","sub":"S. 139","key":"D minor","level":10,"year":1852,"dur":8,"story":"'Mazeppa' — after the legend of the man bound naked to a wild horse and set loose across the steppe. Thundering double-note octaves gallop to collapse, then rise in triumph."},
+  {"id":"liszt-g95","c":"liszt","coll":"Transcendental Études","title":"Transcendental Étude No. 4 'Mazeppa'","sub":"S. 139","key":"D minor","level":11,"year":1852,"dur":8,"story":"'Mazeppa' — after the legend of the man bound naked to a wild horse and set loose across the steppe. Thundering double-note octaves gallop to collapse, then rise in triumph."},
   {"id":"liszt-g96","c":"liszt","coll":"Concert Études","title":"Un sospiro","sub":"Concert Étude No. 3","key":"D♭ major","level":9,"year":1848,"dur":6,"story":"'A Sigh' — a singing melody is passed hand-over-hand while sweeping arpeggios cross above and below it, one of the most poetic study-pieces ever written."},
-  {"id":"liszt-g97","c":"liszt","title":"Piano Sonata in B minor","sub":"S. 178","key":"B minor","level":10,"year":1853,"dur":30,"story":"Liszt's monumental Sonata — a single vast movement built almost entirely from a handful of themes ceaselessly transformed. Baffling to its first audiences, it is now revered as a summit of Romantic piano music."},
+  {"id":"liszt-g97","c":"liszt","title":"Piano Sonata in B minor","sub":"S. 178","key":"B minor","level":11,"year":1853,"dur":30,"story":"Liszt's monumental Sonata — a single vast movement built almost entirely from a handful of themes ceaselessly transformed. Baffling to its first audiences, it is now revered as a summit of Romantic piano music."},
   {"id":"liszt-g98","c":"liszt","coll":"Années de pèlerinage","title":"Les jeux d'eaux à la Villa d'Este","sub":"Années de pèlerinage III","key":"F♯ major","level":8,"year":1877,"dur":8,"story":"'The Fountains of the Villa d'Este' — glittering, spraying water-music that anticipated Ravel and Debussy by decades, crowned by a whispered verse from the Gospel about living water."},
   {"id":"liszt-g99","c":"liszt","coll":"Années de pèlerinage","title":"Sonetto 104 del Petrarca","sub":"Années de pèlerinage II","key":"E major","level":8,"year":1846,"dur":7,"story":"A wordless piano song after Petrarch's sonnet of love's sweet torment — 'I find no peace, and all my war is done' — its melody aching with Italianate longing."},
-  {"id":"liszt-g100","c":"liszt","title":"Mephisto Waltz No. 1","sub":"S. 514","key":"A major","level":10,"year":1860,"dur":11,"story":"The First Mephisto Waltz — after Lenau's Faust, the devil seizes a fiddle at a village tavern and drives the dancers into a sensual, demonic frenzy."},
+  {"id":"liszt-g100","c":"liszt","title":"Mephisto Waltz No. 1","sub":"S. 514","key":"A major","level":11,"year":1860,"dur":11,"story":"The First Mephisto Waltz — after Lenau's Faust, the devil seizes a fiddle at a village tavern and drives the dancers into a sensual, demonic frenzy."},
   {"id":"satie-g118","c":"satie","coll":"Gymnopédies","title":"Gymnopédie No. 2","sub":"","key":"C major","level":3,"year":1888,"dur":3,"story":"The most serene of the three Gymnopédies — the same slow, hovering dance, its bare melody drifting over rocking chords like something glimpsed through gauze."},
   {"id":"satie-g119","c":"satie","coll":"Gymnopédies","title":"Gymnopédie No. 3","sub":"","key":"A minor","level":3,"year":1888,"dur":3,"story":"The wistful, hymn-like third Gymnopédie — spare and unhurried, radical in 1888 for doing so little, so beautifully."},
   {"id":"satie-g120","c":"satie","coll":"Gnossiennes","title":"Gnossienne No. 2","sub":"","key":"—","level":6,"year":1890,"dur":2,"story":"A hypnotic Gnossienne — barless and modal, it circles a snake-charming melody over a steady vamp, sprinkled with Satie's cryptic performance jokes ('with astonishment,' 'very shiny')."},
@@ -1046,7 +1061,7 @@ const PIECES = [
   {"id":"bee-op109-1","c":"beethoven","coll":"Piano Sonata No. 30, Op. 109","title":"Vivace ma non troppo","sub":"I","key":"E major","level":9,"year":1820,"dur":4,"story":"The serene, searching opening of a late, visionary sonata."},
   {"id":"bee-adieux-1","c":"beethoven","coll":"Piano Sonata No. 26 'Les Adieux', Op. 81a","title":"Das Lebewohl: Adagio – Allegro","sub":"I","key":"E♭ major","level":9,"year":1810,"dur":7,"story":"A musical farewell to his patron, the Archduke Rudolph."},
   {"id":"bee-rage","c":"beethoven","title":"Rondo a capriccio 'Rage Over a Lost Penny'","sub":"Op. 129","key":"G major","level":8,"year":1795,"dur":6,"story":"A comic whirlwind of mock-fury over a mislaid coin."},
-  {"id":"bee-diabelli","c":"beethoven","title":"Diabelli Variations","sub":"Op. 120","key":"C major","level":10,"year":1823,"dur":50,"story":"Thirty-three variations spun from a trivial waltz — a monument of the form."},
+  {"id":"bee-diabelli","c":"beethoven","title":"Diabelli Variations","sub":"Op. 120","key":"C major","level":11,"year":1823,"dur":50,"story":"Thirty-three variations spun from a trivial waltz — a monument of the form."},
   {"id":"bee-bag126-1","c":"beethoven","coll":"6 Bagatelles, Op. 126","title":"No. 1 in G major","sub":"Op. 126 No. 1","key":"G major","level":6,"year":1824,"dur":3,"story":"From his last set of bagatelles — a miniature of late-period depth."},
   {"id":"bee-ecossaises","c":"beethoven","title":"6 Ecossaises","sub":"WoO 83","key":"E♭ major","level":3,"year":1806,"dur":1.5,"story":"Bright little country dances, a light student favourite."},
   {"id":"bee-minuet-g","c":"beethoven","title":"Minuet in G","sub":"WoO 10 No. 2","key":"G major","level":3,"year":1796,"dur":2,"story":"A graceful minuet nearly every beginner learns."},
@@ -1089,7 +1104,7 @@ const PIECES = [
   {"id":"deb-cc-shepherd","c":"debussy","coll":"Children's Corner","title":"The Little Shepherd","key":"A major","level":4,"year":1908,"dur":2,"story":"A wistful pastoral tune answering its own playful dance."},
   {"id":"deb-reflets","c":"debussy","coll":"Images, Book I","title":"Reflets dans l'eau","key":"D♭ major","level":8,"year":1905,"dur":5,"story":"The opening piece of Images, Book 1 (1905) — water reflections rendered in sound, ripples spreading outward from a single dropped chord. Debussy boasted to his publisher Durand that it used 'the newest discoveries in harmonic chemistry,' floating pentatonic and whole-tone washes free of traditional harmony to capture, as he put it, the very movement of water. A descendant of Liszt's fountains at the Villa d'Este, it stands as one of the founding masterpieces of musical Impressionism."},
   {"id":"deb-poissons","c":"debussy","coll":"Images, Book II","title":"Poissons d'or","key":"F♯ major","level":9,"year":1907,"dur":4,"story":"'Goldfish' darting in glittering figuration, inspired by a Japanese lacquer panel."},
-  {"id":"deb-feux","c":"debussy","coll":"Préludes, Book II","title":"Feux d'artifice","key":"D♭ major","level":10,"year":1913,"dur":5,"story":"Bastille-Day fireworks over Paris, closing Book II with a distant Marseillaise."}
+  {"id":"deb-feux","c":"debussy","coll":"Préludes, Book II","title":"Feux d'artifice","key":"D♭ major","level":11,"year":1913,"dur":5,"story":"Bastille-Day fireworks over Paris, closing Book II with a distant Marseillaise."}
 ];
 
 /* ================================================================
@@ -1115,7 +1130,7 @@ const CALENDAR = window.MUSIC_CALENDAR || [
    Persistent state (localStorage)
    ================================================================ */
 const LS_KEY = "pp_v1";
-const DEFAULT_STATE = { progress:{}, practiceSec:{}, saved:[], recent:["rav-menuet-haydn","cho-pre284"], lang:"en", theme:"light", keepAwake:10, entitlement:"free", installedAt:null, activeDays:[] };
+const DEFAULT_STATE = { progress:{}, practiceSec:{}, saved:[], recent:["rav-menuet-haydn","cho-pre284"], lang:"en", theme:"light", keepAwake:10, entitlement:"free", installedAt:null, activeDays:[], gradeSystem:"abrsm" };
 function applyTheme(){
   const dark = (S.theme==="dark");
   document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -1141,7 +1156,7 @@ const TL = {
     "On this day":"歷史上的今天","View composer":"查看作曲家","Sort":"排序","Composer":"作曲家","Jump into the library":"進入曲庫","See all":"查看全部","Nothing played yet.":"尚無彈奏紀錄",
     "Search":"搜尋","Composers":"作曲家","Pieces":"樂曲","pieces":"首","piece":"首",
     "Saved":"已收藏","No saved pieces yet":"尚未收藏樂曲","Tap the bookmark on any piece to keep it here.":"點擊任一樂曲的書籤即可收藏。",
-    "In progress":"進行中","Settings":"設定","Privacy Policy":"隱私政策","Dark mode":"深色模式","Language":"語言","Keep screen awake":"螢幕保持喚醒","While app is open":"開啟期間一直","5 minutes":"5 分鐘","10 minutes":"10 分鐘","15 minutes":"15 分鐘","30 minutes":"30 分鐘","1 hour":"1 小時","Advanced pianist":"進階鋼琴家",
+    "In progress":"進行中","Settings":"設定","Privacy Policy":"隱私政策","Dark mode":"深色模式","Language":"語言","Keep screen awake":"螢幕保持喚醒","While app is open":"開啟期間一直","5 minutes":"5 分鐘","10 minutes":"10 分鐘","15 minutes":"15 分鐘","30 minutes":"30 分鐘","1 hour":"1 小時","Advanced pianist":"進階鋼琴家","Grade":"級","Grading system":"評級系統",
     "Name":"名稱","Level":"程度","Year":"年份","Length":"長度","Key":"調性","Work":"作品",
     "Music":"樂譜","Warm-Up":"暖身","Explore":"探索","The story":"樂曲故事",
     "Intermediate":"中階","Advanced":"進階","Early-virtuoso":"準演奏級","Virtuoso":"演奏級",
@@ -1156,7 +1171,7 @@ const TL = {
     "On this day":"历史上的今天","View composer":"查看作曲家","Sort":"排序","Composer":"作曲家","Jump into the library":"进入曲库","See all":"查看全部","Nothing played yet.":"尚无弹奏记录",
     "Search":"搜索","Composers":"作曲家","Pieces":"乐曲","pieces":"首","piece":"首",
     "Saved":"已收藏","No saved pieces yet":"尚未收藏乐曲","Tap the bookmark on any piece to keep it here.":"点击任一乐曲的书签即可收藏。",
-    "In progress":"进行中","Settings":"设置","Privacy Policy":"隐私政策","Dark mode":"深色模式","Language":"语言","Keep screen awake":"屏幕保持唤醒","While app is open":"开启期间一直","5 minutes":"5 分钟","10 minutes":"10 分钟","15 minutes":"15 分钟","30 minutes":"30 分钟","1 hour":"1 小时","Advanced pianist":"进阶钢琴家",
+    "In progress":"进行中","Settings":"设置","Privacy Policy":"隐私政策","Dark mode":"深色模式","Language":"语言","Keep screen awake":"屏幕保持唤醒","While app is open":"开启期间一直","5 minutes":"5 分钟","10 minutes":"10 分钟","15 minutes":"15 分钟","30 minutes":"30 分钟","1 hour":"1 小时","Advanced pianist":"进阶钢琴家","Grade":"级","Grading system":"评级系统",
     "Name":"名称","Level":"难度","Year":"年份","Length":"时长","Key":"调性","Work":"作品",
     "Music":"乐谱","Warm-Up":"热身","Explore":"探索","The story":"乐曲故事",
     "Intermediate":"中阶","Advanced":"进阶","Early-virtuoso":"准演奏级","Virtuoso":"演奏级",
@@ -1552,6 +1567,30 @@ function levelLabel(l) {
   return t("Virtuoso");
 }
 
+/* ---- Grading systems (ABRSM / RCM / MTAC) --------------------------------
+   The app's own internal `level` (2–10, 11 = beyond) maps to each exam board.
+   Best-effort alignment; caps show a "+" past each board's ceiling
+   (ABRSM tops at 8, RCM & MTAC at 10). */
+const GRADE_SYS = [
+  { key:"abrsm", name:"ABRSM", word:"Grade" },
+  { key:"rcm",   name:"RCM",   word:"Level" },
+  { key:"mtac",  name:"MTAC",  word:"Level" },
+];
+const LEVEL_MAP = {
+  1:{abrsm:1,rcm:1,mtac:1},   2:{abrsm:1,rcm:2,mtac:2},   3:{abrsm:2,rcm:3,mtac:3},
+  4:{abrsm:3,rcm:4,mtac:4},   5:{abrsm:4,rcm:5,mtac:5},   6:{abrsm:5,rcm:6,mtac:6},
+  7:{abrsm:6,rcm:7,mtac:7},   8:{abrsm:7,rcm:8,mtac:8},   9:{abrsm:8,rcm:9,mtac:9},
+  10:{abrsm:"8+",rcm:10,mtac:10}
+};
+function gradeSys(){ return GRADE_SYS.find(s => s.key === (S.gradeSystem||"abrsm")) || GRADE_SYS[0]; }
+function gradeVal(level, sys){
+  if (level > 10) return sys === "abrsm" ? "8+" : "10+";
+  return (LEVEL_MAP[level] || LEVEL_MAP[10])[sys];
+}
+function gradeWordFor(sys){ return t(sys === "abrsm" ? "Grade" : "Level"); }
+function gradeShort(level, sys){ sys = sys || (S.gradeSystem||"abrsm"); return `${GRADE_SYS.find(s=>s.key===sys).name} ${gradeVal(level,sys)}`; }
+function gradeFull(level, sys){ return `${gradeWordFor(sys)} ${gradeVal(level,sys)}`; }
+
 /* ================================================================
    Routing
    ================================================================ */
@@ -1611,6 +1650,7 @@ document.getElementById("tabbar").addEventListener("click", e => {
 const IC = {
   search: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>`,
   layers: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>`,
+  grade: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.5 13.5 7 22l5-3 5 3-1.5-8.5"/></svg>`,
   music: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
   awake: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
   back: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`,
@@ -1717,7 +1757,7 @@ function pieceRow(p, idx, opts={}) {
       <div class="prow-meta">${meta.map((m,i)=>`<span class="${i?'dot-sep':''}">${m}</span>`).join("")}</div>
     </div>
     <div class="prow-right">
-      <span class="lvpill">Lv ${p.level}</span>
+      <span class="lvpill">${gradeShort(p.level)}</span>
       ${pct>0?`<span class="prow-pct">${pct}%</span>`:""}
     </div>
   </div>`;
@@ -2059,11 +2099,11 @@ function pieceRowWithSort(p, idx, sort) {
   if (sort === "year") tag = p.year;
   else if (sort === "length") tag = fmtDur(p.dur);
   else if (sort === "key") tag = p.key;
-  else tag = "Lv " + p.level;   // name, level, coll
+  else tag = gradeShort(p.level);   // name, level, coll — grade in the chosen board
   return `<div class="prow" data-piece="${p.id}">
     <div class="prow-body">
       <div class="prow-title">${sort==='coll'?(isMovement(p)?`${romanize(movNo(p))}. ${p.title}`:p.title):pieceNameHTML(p)}</div>
-      <div class="prow-meta"><span>Lv ${p.level}</span><span class="dot-sep">${p.year}</span><span class="dot-sep">${fmtDur(p.dur)}</span><span class="dot-sep">${p.key}</span></div>
+      <div class="prow-meta"><span>${gradeShort(p.level)}</span><span class="dot-sep">${p.year}</span><span class="dot-sep">${fmtDur(p.dur)}</span><span class="dot-sep">${p.key}</span></div>
     </div>
     <div class="prow-right">
       ${(sort==='coll'||sort==='name'||sort==='composer'||sort==='dateAdded')?"":`<span class="lvpill">${tag}</span>`}
@@ -2339,6 +2379,23 @@ const SPOTIFY = {
   "schumann-g21": "track/4NuxbJGP8ATK1qrfW4sVcY",
 };
 
+// Level pill for the sheet header: desktop/iPad = dropdown to pick the exam board;
+// touch/mobile = show all three grades inline (see the pointer:coarse CSS).
+function levelPillHTML(p){
+  const sys = S.gradeSystem || "abrsm";
+  const opts = GRADE_SYS.map(s=>`<button type="button" class="menu-item${s.key===sys?' is-selected':''}" role="menuitem" data-gsys="${s.key}"><span class="lvopt-sys">${s.name}</span><span class="lvopt-val">${gradeFull(p.level,s.key)}</span></button>`).join("");
+  const three = GRADE_SYS.map(s=>`<span class="lv3"><b>${s.name}</b> ${gradeVal(p.level,s.key)}</span>`).join("");
+  return `<div class="lvctl">
+    <div class="dropdown lvdd" id="lvDD">
+      <button type="button" class="input lang-trigger lvdd-trigger" id="lvTrigger" aria-haspopup="menu" aria-expanded="false">
+        <span><b>${gradeSys().name}</b> ${gradeVal(p.level,sys)}</span>
+        <svg class="lang-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="menu" role="menu" id="lvMenu">${opts}</div>
+    </div>
+    <div class="lv3wrap">${three}</div>
+  </div>`;
+}
 function renderSheet() {
   const p = pieceById(sheetCtx.id);
   const c = COMPOSERS[p.c];
@@ -2358,7 +2415,7 @@ function renderSheet() {
       <div class="sheet-eyebrow">${cName(p.c)}</div>
       <div class="sheet-title">${pieceNameHTML(p)}</div>
       <div class="sheet-meta">
-        <span><b>Lv ${p.level}</b> · ${levelLabel(p.level)}</span>
+        ${levelPillHTML(p)}
         <span>${p.year}</span>
         <span>${fmtDur(p.dur)}</span>
         <span>${p.key}</span>
@@ -2378,6 +2435,15 @@ function renderSheet() {
   const toggleMark = ()=>{ const i=S.saved.indexOf(p.id); if(i>=0)S.saved.splice(i,1); else S.saved.unshift(p.id); save();
     document.querySelectorAll("#markBtn,#fMark").forEach(b=>b.classList.toggle("is-marked", S.saved.includes(p.id))); };
   markBtn.addEventListener("click", toggleMark);
+  const lvDD = v.querySelector("#lvDD");
+  if (lvDD) {
+    const lvTrigger = v.querySelector("#lvTrigger");
+    lvTrigger.addEventListener("click", e=>{ e.stopPropagation(); const open = lvDD.classList.toggle("is-open"); lvTrigger.setAttribute("aria-expanded", open); });
+    document.addEventListener("click", e=>{ if(!lvDD.contains(e.target)) lvDD.classList.remove("is-open"); });
+    v.querySelectorAll("#lvMenu .menu-item").forEach(mi=>{
+      mi.addEventListener("click", ()=>{ S.gradeSystem = mi.dataset.gsys; save(); renderSheet(); });
+    });
+  }
   const hdrPlay = v.querySelector("#hdrPlay");
   if (hdrPlay) hdrPlay.addEventListener("click", ()=>togglePlay(p.id));
   v.querySelector("#sheetSeg").addEventListener("click", e=>{
@@ -2844,6 +2910,18 @@ function renderProfile() {
           </div>
         </div>
       </div>
+      <div class="settrow">
+        <div class="settrow-ic">${IC.grade}</div><div class="settrow-txt">${t("Grading system")}</div>
+        <div class="dropdown" id="gsysDD" style="margin-left:auto">
+          <button type="button" class="input lang-trigger" id="gsysTrigger" aria-haspopup="menu" aria-expanded="false">
+            <span>${gradeSys().name}</span>
+            <svg class="lang-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="menu menu-right" role="menu" id="gsysMenu">
+            ${GRADE_SYS.map(s=>`<button type="button" class="menu-item${s.key===(S.gradeSystem||'abrsm')?' is-selected':''}" role="menuitem" data-gsys="${s.key}">${s.name}</button>`).join("")}
+          </div>
+        </div>
+      </div>
       <a class="settrow" href="privacy.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
         <div class="settrow-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <div class="settrow-txt">${t("Privacy Policy")}</div>
@@ -2883,6 +2961,17 @@ function renderProfile() {
       v.querySelectorAll("#wakeMenu .menu-item").forEach(x=>x.classList.toggle("is-selected", x===mi));
       wakeDD.classList.remove("is-open");
       bumpWake();
+    });
+  });
+  const gsysDD = v.querySelector("#gsysDD"), gsysTrigger = v.querySelector("#gsysTrigger");
+  gsysTrigger.addEventListener("click", e=>{ e.stopPropagation(); const open = gsysDD.classList.toggle("is-open"); gsysTrigger.setAttribute("aria-expanded", open); });
+  document.addEventListener("click", e=>{ if(!gsysDD.contains(e.target)) gsysDD.classList.remove("is-open"); });
+  v.querySelectorAll("#gsysMenu .menu-item").forEach(mi=>{
+    mi.addEventListener("click", ()=>{
+      S.gradeSystem = mi.dataset.gsys; save();
+      gsysTrigger.querySelector("span").textContent = gradeSys().name;
+      v.querySelectorAll("#gsysMenu .menu-item").forEach(x=>x.classList.toggle("is-selected", x===mi));
+      gsysDD.classList.remove("is-open");
     });
   });
 }
