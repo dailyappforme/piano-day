@@ -1963,9 +1963,9 @@ function renderLibraryBody(q) {
 /* ================================================================
    PIANIST detail — with filter/sort
    ================================================================ */
-const SORT_LABELS = { name:"Name", level:"Level", year:"Year", length:"Length", key:"Key", coll:"Work" };
-const SORT_LABELS_ALL = { composer:"Composer", name:"Name", level:"Level", year:"Year", length:"Length", key:"Key" };
-const SORT_LABELS_SAVED = { dateAdded:"Date added", name:"Name", level:"Level", year:"Year", length:"Length", key:"Key", composer:"Composer" };
+const SORT_LABELS = { name:"Name", year:"Year", length:"Length", key:"Key", level:"Level", coll:"Work" };
+const SORT_LABELS_ALL = { composer:"Composer", name:"Name", year:"Year", length:"Length", key:"Key", level:"Level" };
+const SORT_LABELS_SAVED = { dateAdded:"Date added", name:"Name", year:"Year", length:"Length", key:"Key", level:"Level", composer:"Composer" };
 let pianistState = { id:null, sort:"name", tonality:"all", q:"", dir:"asc" };
 function openPianist(id) {
   pianistState = { id, sort: id === "__all" ? "composer" : "name", tonality:"all", q:"", dir:"asc" };
@@ -2118,7 +2118,7 @@ function pieceRowWithSort(p, idx, sort) {
   return `<div class="prow" data-piece="${p.id}">
     <div class="prow-body">
       <div class="prow-title">${sort==='coll'?(isMovement(p)?`${romanize(movNo(p))}. ${p.title}`:p.title):pieceNameHTML(p)}</div>
-      <div class="prow-meta"><span>${gradeShort(p.level)}</span><span class="dot-sep">${p.year}</span><span class="dot-sep">${fmtDur(p.dur)}</span><span class="dot-sep">${fmtKey(p.key)}</span></div>
+      <div class="prow-meta"><span>${p.year}</span><span class="dot-sep">${fmtDur(p.dur)}</span><span class="dot-sep">${fmtKey(p.key)}</span><span class="dot-sep">${gradeShort(p.level)}</span></div>
     </div>
     <div class="prow-right">
       ${(sort==='coll'||sort==='name'||sort==='composer'||sort==='dateAdded')?"":`<span class="lvpill">${tag}</span>`}
