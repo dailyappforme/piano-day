@@ -62,10 +62,13 @@
   }
   /* native app (Capacitor) / installed PWA: always full-bleed, no desktop mockup frame */
   html.is-native .stage { padding: 0; min-height: 100vh; min-height: 100dvh; align-items: stretch; }
-  html.is-native .device { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; border-radius: 0; box-shadow: none; }
+  /* reserve the status-bar safe area on the NON-scrolling device frame so content
+     can't scroll up under the status bar (padding on the scroll area scrolls away) */
+  html.is-native .device { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; border-radius: 0; box-shadow: none; padding-top: env(safe-area-inset-top); }
+  html.is-native .screen { padding-top: 0; }
   /* native/installed: white behind the status-bar safe area (no grey inset) */
-  html.is-native, html.is-native body, html.is-native .screen { background: #fff; }
-  html[data-theme="dark"].is-native, html[data-theme="dark"].is-native body, html[data-theme="dark"].is-native .screen { background: #0e0e11; }
+  html.is-native, html.is-native body, html.is-native .device, html.is-native .screen { background: #fff; }
+  html[data-theme="dark"].is-native, html[data-theme="dark"].is-native body, html[data-theme="dark"].is-native .device, html[data-theme="dark"].is-native .screen { background: #0e0e11; }
   @media (max-width: 1024px) {
     .stage { padding: 0; min-height: 100vh; min-height: 100dvh; align-items: stretch; }
     .device { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; }
@@ -83,12 +86,11 @@
   .screen { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: env(safe-area-inset-top); min-height: 0; }
   /* offline notice: a top strip that pushes content down (no overlap) */
   .offline-bar { flex: none; display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: calc(env(safe-area-inset-top) + 9px) 14px 9px; background: var(--mu-gray-900); color: #fff;
+    padding: 9px 14px; background: var(--mu-gray-900); color: #fff;
     font-size: 13px; font-weight: 500; line-height: 1.35; text-align: center; }
   .offline-bar[hidden] { display: none; }
   .offline-dot { width: 7px; height: 7px; border-radius: 50%; background: #ff6b6b; flex: none; }
   html[data-theme="dark"] .offline-bar { background: #2c2c30; }
-  .device.is-offline .screen { padding-top: 0; }   /* the bar carries the safe-area top instead */
   .screen::-webkit-scrollbar { width: 0; }
   .view { display: none; padding: 8px 28px 120px; }
   .view.is-active { display: block; }
@@ -1163,7 +1165,7 @@ function applyTheme(){
   try {
     const SB = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
     if (SB) {
-      SB.setOverlaysWebView && SB.setOverlaysWebView({ overlay: false });
+      SB.setOverlaysWebView && SB.setOverlaysWebView({ overlay: true });
       SB.setStyle && SB.setStyle({ style: dark ? 'DARK' : 'LIGHT' });
       SB.setBackgroundColor && SB.setBackgroundColor({ color: dark ? '#0e0e11' : '#ffffff' });
     }
