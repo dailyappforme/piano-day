@@ -594,8 +594,12 @@
 
   /* honest empty state when a piece has no score file yet */
   .score-err { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-    width: 100%; height: 100%; min-height: 260px; padding: 32px 22px; box-sizing: border-box;
+    flex: 1 1 auto; width: 100%; height: 100%; min-height: 340px; padding: 32px 22px; box-sizing: border-box;
     color: var(--mu-ink-3); background: var(--mu-gray-100); border-radius: var(--mu-radius-lg); }
+  /* fill edge-to-edge inside the score card / warm-up figure */
+  .focus-view.pdf-book .pdf-page .score-err { height: 100%; border-radius: 0; }
+  .warmup-fv .wu-figure { min-height: 0; }
+  .warmup-fv .wu-figure .score-err { align-self: stretch; }
   .score-empty { border-radius: var(--mu-radius-lg); background: var(--mu-gray-100);
     padding: 40px 24px; text-align: center; color: var(--mu-ink-3);
     min-height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -1872,7 +1876,7 @@ function renderHomeBody(q) {
               const ev = locEvent(ev0);
               const by = ev.composer ? cName(ev.composer) : t("On this day");
               return `<div class="cal-event">
-                ${ev.composer?`<img class="cal-avatar" src="images/composers/${ev.composer}.jpg" alt="">`:`<div class="cal-avatar cal-avatar-ph">${IC.music}</div>`}
+                ${ev.composer?`<img class="cal-avatar" src="images/composers/${ev.composer}.jpg" alt="" onerror="calAvatarError(this)">`:`<div class="cal-avatar cal-avatar-ph">${IC.music}</div>`}
                 <div class="cal-event-text">
                   <div class="cal-eyebrow">${by}${ev.year?" • "+ev.year:""}</div>
                   <div class="cal-title">${ev.title}</div>
@@ -1940,7 +1944,7 @@ function allCard() {
 function composerCard(id) {
   const c = COMPOSERS[id];
   return `<div class="ccard" data-composer="${id}">
-    <div class="cav cav-photo"><img src="images/composers/${id}.jpg" alt="${c.name}"></div>
+    <div class="cav cav-photo"><img src="images/composers/${id}.jpg" alt="${c.name}" onerror="avatarError(this)"></div>
     <div class="ccard-text">
       <div class="ccard-name">${cName(id)}</div>
       <div class="ccard-era">${cEra(id)}</div>
@@ -2025,7 +2029,7 @@ function renderPianist() {
         </div>
       </div>`
     : `<div class="phero">
-        <div class="cav cav-photo"><img src="images/composers/${id}.jpg" alt="${c.name}"></div>
+        <div class="cav cav-photo"><img src="images/composers/${id}.jpg" alt="${c.name}" onerror="avatarError(this)"></div>
         <div class="phero-txt">
           <div class="phero-head"><span class="phero-name">${cName(id)}</span><span class="phero-era">${cEra(id)}</span></div>
           <div class="phero-bio">${cBio(id)}</div>
@@ -2514,10 +2518,14 @@ function renderSheet() {
 // score/warm-up image failed to load (usually offline) → swap the broken-image icon for a clean notice
 function scoreImgError(img){
   if (img.dataset.err) return; img.dataset.err = "1";
+  const wu = img.closest(".warmup-fv"); if (wu){ const tt = wu.querySelector(".wu-title"); if (tt) tt.style.display = "none"; }  // drop the title, show only the offline notice
   const d = document.createElement("div"); d.className = "score-err";
   d.innerHTML = `<div class="score-empty-ic">${IC.wifiOff}</div><div class="score-empty-t">${t("Couldn't load this score")}</div><div class="score-empty-s">${t("You appear to be offline. Reconnect to view it.")}</div>`;
   img.replaceWith(d);
 }
+// composer avatar failed to load → fall back to the default grey + music-icon avatar (same as "All pieces")
+function avatarError(img){ const s = document.createElement("span"); s.className = "cav-all-in"; s.innerHTML = IC.music; img.replaceWith(s); }
+function calAvatarError(img){ const d = document.createElement("div"); d.className = "cal-avatar cal-avatar-ph"; d.innerHTML = IC.music; img.replaceWith(d); }
 function scoreEl(p, variant){
   const h = variant==="focus" ? "min-height:60vh" : "height:300px";
   const osmdTitle = variant==='focus' ? `<div class="osmd-title"><span class="osmd-title-name">${pieceNameHTML(p)}</span><span class="osmd-title-by">${COMPOSERS[p.c].name}</span></div>` : "";
