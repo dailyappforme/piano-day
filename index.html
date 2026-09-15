@@ -392,12 +392,12 @@
     font-size: 13px; color: var(--mu-ink-3); }
   .sheet-meta b { font-weight: 650; color: var(--mu-ink-2); }
   .sheet-meta span:not(:first-child)::before { content: "·"; margin-right: 8px; color: var(--mu-gray-300); }
-  /* Score page: a row showing the grade across all three boards */
-  .sheet-levels { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .slv { display: inline-flex; align-items: baseline; gap: 7px; padding: 5px 11px;
-    border: 1px solid var(--mu-border); border-radius: var(--mu-radius-full); background: var(--mu-white); }
-  .slv-sys { font-family: var(--mu-mono); font-size: 10.5px; font-weight: 600; letter-spacing: .06em; color: var(--mu-ink-3); text-transform: uppercase; }
-  .slv-val { font-size: 13px; font-weight: 600; color: var(--mu-ink); }
+  /* Score page: plain-text row showing the grade across all three boards (· between systems) */
+  .sheet-levels { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px;
+    font-size: 13px; color: var(--mu-ink-3); }
+  .sheet-levels .slv:not(:first-child)::before { content: "·"; margin-right: 8px; color: var(--mu-gray-300); }
+  .slv-sys { color: var(--mu-ink-3); }
+  .slv-val { font-weight: 650; color: var(--mu-ink); }
 
   /* sheet sub-tabs (Overview / Practice / Focus) */
   .sheet-tabs { margin: 16px 0 4px; }
@@ -2391,7 +2391,7 @@ const SPOTIFY = {
 
 // A dedicated row on the score page showing the piece's grade across all three boards.
 function sheetLevelsHTML(p){
-  return `<div class="sheet-levels">${GRADE_SYS.map(s=>`<span class="slv"><span class="slv-sys">${s.name}</span><span class="slv-val">${gradeFull(p.level,s.key)}</span></span>`).join("")}</div>`;
+  return `<div class="sheet-levels">${GRADE_SYS.map(s=>`<span class="slv"><span class="slv-sys">${s.name}</span> <b class="slv-val">${gradeFull(p.level,s.key)}</b></span>`).join("")}</div>`;
 }
 function renderSheet() {
   const p = pieceById(sheetCtx.id);
