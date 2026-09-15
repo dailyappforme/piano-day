@@ -786,6 +786,9 @@
     .sortchips > button[data-sort] { display: none; }
     .sortchips .lvsort-dd { display: none; }
     .sortchips .sort-dd { display: block; flex: 1; min-width: 0; }
+    /* score meta: stack into two rows on phones (meta / 3-board levels) */
+    .sheet-metawrap { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .sheet-metawrap .meta-div { display: none; }
     /* pianist hero: avatar above name */
     .phero { flex-direction: column; }
     /* bottom nav: shorter, icons only */
