@@ -275,7 +275,8 @@
   /* "All pieces" avatar — same framed/tilted look as composer photos, grey fill + icon */
   .cav-all-in { width: 100%; height: 100%; display: inline-flex; align-items: center; justify-content: center;
     border-radius: 12%; background: var(--mu-gray-100); color: var(--mu-gray-500); }
-  .phero .cav-all-in svg { width: 34px; height: 34px; }
+  .cav-all-in svg { width: 22px; height: 22px; }
+  .phero .cav-all-in svg { width: 30px; height: 30px; }
   .ccard .cav { width: 48px; height: 48px; flex-shrink: 0; }
   .ccard-text { flex: 1; min-width: 0; }
   .ccard-name { font-size: 16px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.25em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1841,7 +1842,7 @@ function todayCalendar() {
 
 function allCard() {
   return `<div class="ccard ccard-all" data-composer="__all">
-    <div class="cav cav-photo cav-all"><span class="cav-all-in">${IC.layers}</span></div>
+    <div class="cav cav-photo cav-all"><span class="cav-all-in">${IC.music}</span></div>
     <div class="ccard-text">
       <div class="ccard-name">${t("All pieces")}</div>
       <div class="ccard-era">${t("Every composer in one list")}</div>
@@ -1929,7 +1930,7 @@ function renderPianist() {
   const v = document.getElementById("view-pianist");
   const hero = isAll
     ? `<div class="phero">
-        <div class="cav cav-photo cav-all"><span class="cav-all-in">${IC.layers}</span></div>
+        <div class="cav cav-photo cav-all"><span class="cav-all-in">${IC.music}</span></div>
         <div class="phero-txt">
           <div class="phero-head"><span class="phero-name">${t("All pieces")}</span><span class="phero-era">${PIECES.length} ${t("pieces")} · ${Object.keys(COMPOSERS).length} ${t("composers")}</span></div>
           <div class="phero-bio">${t("Every composer in one list")}</div>
