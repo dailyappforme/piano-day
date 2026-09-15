@@ -786,9 +786,6 @@
     .sortchips > button[data-sort] { display: none; }
     .sortchips .lvsort-dd { display: none; }
     .sortchips .sort-dd { display: block; flex: 1; min-width: 0; }
-    /* score meta: stack the two rows on phones */
-    .sheet-metawrap { flex-direction: column; align-items: flex-start; gap: 6px; }
-    .sheet-metawrap .meta-div { display: none; }
     /* pianist hero: avatar above name */
     .phero { flex-direction: column; }
     /* bottom nav: shorter, icons only */
@@ -1319,6 +1316,8 @@ function daysCountLabel(){ const n = activeDaysThisYear(); return `${n} ${t(n===
 const pieceById = id => PIECES.find(p => p.id === id);
 const piecesOf = cId => cId === "__all" ? PIECES.slice() : PIECES.filter(p => p.c === cId);
 const modeOf = p => /minor/i.test(p.key) ? "minor" : "major";
+// display: "E major" → "E Major", "A minor" → "A Minor" (logic still parses lowercase)
+const fmtKey = k => (k||"").replace(/\bmajor\b/i,"Major").replace(/\bminor\b/i,"Minor");
 const pctOf = id => S.progress[id] || 0;
 const secOf = id => S.practiceSec[id] || 0;
 const fmtDur = m => { const s = Math.round(m*60); return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; };
@@ -1442,12 +1441,12 @@ const WARMUP_TECH = {};      // per-piece override, e.g. {"liszt-x":"velocity","
 function warmupItems(p){
   const it = [];
   const sc = scaleImg(p.key);
-  if (sc) it.push({ id:"scale", label:"Scale", title:`${p.key} scale`, sub:"Hanon · Two octaves, hands together", imgs:[sc] });
+  if (sc) it.push({ id:"scale", label:"Scale", title:`${fmtKey(p.key)} scale`, sub:"Hanon · Two octaves, hands together", imgs:[sc] });
   if (p.level > WARMUP_EASY_MAX) {
     const tech = WARMUP_TECH[p.id] || "arpeggio";
     const a = arpImg(p.key);
-    if (tech === "arpeggio" && a) it.push({ id:"arp", label:"Arpeggio", title:`${p.key} arpeggio`, sub:"Hanon · 1·3·5·8, smooth thumb-under", imgs:[a] });
-    else if (tech === "velocity" && WARMUP_CZERNY[p.key]) it.push({ id:"vel", label:"Velocity", title:`${p.key} velocity`, sub:WARMUP_CZERNY[p.key].sub, imgs:WARMUP_CZERNY[p.key].imgs });
+    if (tech === "arpeggio" && a) it.push({ id:"arp", label:"Arpeggio", title:`${fmtKey(p.key)} arpeggio`, sub:"Hanon · 1·3·5·8, smooth thumb-under", imgs:[a] });
+    else if (tech === "velocity" && WARMUP_CZERNY[p.key]) it.push({ id:"vel", label:"Velocity", title:`${fmtKey(p.key)} velocity`, sub:WARMUP_CZERNY[p.key].sub, imgs:WARMUP_CZERNY[p.key].imgs });
   }
   return it.slice(0, 2);
 }
@@ -1758,7 +1757,7 @@ function pieceRowNameHTML(p){
 /* piece row markup */
 function pieceRow(p, idx, opts={}) {
   const pct = pctOf(p.id);
-  const meta = [cNameShort(p.c), p.key, `${fmtDur(p.dur)}`];
+  const meta = [cNameShort(p.c), fmtKey(p.key), `${fmtDur(p.dur)}`];
   return `<div class="prow" data-piece="${p.id}">
     ${opts.num ? `<div class="prow-num">${idx+1}</div>` : ""}
     <div class="prow-body">
@@ -2114,12 +2113,12 @@ function pieceRowWithSort(p, idx, sort) {
   let tag;
   if (sort === "year") tag = p.year;
   else if (sort === "length") tag = fmtDur(p.dur);
-  else if (sort === "key") tag = p.key;
+  else if (sort === "key") tag = fmtKey(p.key);
   else tag = gradeShort(p.level);   // name, level, coll — grade in the chosen board
   return `<div class="prow" data-piece="${p.id}">
     <div class="prow-body">
       <div class="prow-title">${sort==='coll'?(isMovement(p)?`${romanize(movNo(p))}. ${p.title}`:p.title):pieceNameHTML(p)}</div>
-      <div class="prow-meta"><span>${gradeShort(p.level)}</span><span class="dot-sep">${p.year}</span><span class="dot-sep">${fmtDur(p.dur)}</span><span class="dot-sep">${p.key}</span></div>
+      <div class="prow-meta"><span>${gradeShort(p.level)}</span><span class="dot-sep">${p.year}</span><span class="dot-sep">${fmtDur(p.dur)}</span><span class="dot-sep">${fmtKey(p.key)}</span></div>
     </div>
     <div class="prow-right">
       ${(sort==='coll'||sort==='name'||sort==='composer'||sort==='dateAdded')?"":`<span class="lvpill">${tag}</span>`}
@@ -2421,7 +2420,7 @@ function renderSheet() {
         <div class="sheet-meta">
           <span>${p.year}</span>
           <span>${fmtDur(p.dur)}</span>
-          <span>${p.key}</span>
+          <span>${fmtKey(p.key)}</span>
           <span id="bpmTag">♩ ${sheetCtx.bpm}</span>
         </div>
         <span class="meta-div"></span>
