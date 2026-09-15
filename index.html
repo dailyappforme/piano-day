@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-<title>Piano Practice</title>
+<title>Piano Day</title>
 <link rel="stylesheet" href="mu-system/mu.css">
 <script src="vendor/opensheetmusicdisplay.min.js"></script>
 <script src="library/scores-xml.js"></script>
@@ -712,7 +712,7 @@
   .credits { font-size: 11.5px; line-height: 1.6; color: var(--mu-ink-3); margin-top: 28px; padding: 0 2px; }
   .settrow { display: flex; align-items: center; gap: 12px; padding: 15px 4px; border-bottom: 1px solid var(--mu-gray-100); }
   /* keep-awake is the bottom-most setting → open its menu upward so it isn't clipped by the tab bar */
-  #wakeDD .menu { top: auto; bottom: calc(100% + 6px); max-height: 60vh; overflow-y: auto; }
+  #wakeDD .menu, #gsysDD .menu { top: auto; bottom: calc(100% + 6px); max-height: 60vh; overflow-y: auto; }
   .settrow-ic { width: 34px; height: 34px; border-radius: 9px; background: var(--mu-gray-100); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .settrow-txt { flex: 1; font-size: 15px; font-weight: 500; }
   .settrow-val { font-size: 14px; color: var(--mu-ink-3); }
@@ -1163,7 +1163,7 @@ function applyTheme(){
   try {
     const SB = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
     if (SB) {
-      SB.setOverlaysWebView && SB.setOverlaysWebView({ overlay: true });
+      SB.setOverlaysWebView && SB.setOverlaysWebView({ overlay: false });
       SB.setStyle && SB.setStyle({ style: dark ? 'DARK' : 'LIGHT' });
       SB.setBackgroundColor && SB.setBackgroundColor({ color: dark ? '#0e0e11' : '#ffffff' });
     }
@@ -1176,8 +1176,8 @@ const wakeLabel = v => (WAKE_OPTS.find(o=>String(o[0])===String(v))||["10","10 m
 // UI-chrome translations (keyed by English string; musical titles/bios stay original)
 const TL = {
   "zh-Hant": {
-    "Home":"首頁","Library":"曲庫","Playlist":"播放清單","You":"我的",
-    "Your playlist":"我的播放清單","Your practice":"練習概況","Practiced in 2026":"2026 年練習","days":"天","day":"天",
+    "Home":"首頁","Library":"曲庫","Playlist":"收藏","You":"我的",
+    "Your playlist":"我的收藏","Your practice":"練習概況","Practiced in 2026":"2026 年練習","days":"天","day":"天",
     "On this day":"歷史上的今天","View composer":"查看作曲家","Sort":"排序","Composer":"作曲家","Jump into the library":"進入曲庫","See all":"查看全部","Nothing played yet.":"尚無彈奏紀錄",
     "Search":"搜尋","Composers":"作曲家","Pieces":"樂曲","pieces":"首","piece":"首",
     "Saved":"已收藏","No saved pieces yet":"尚未收藏樂曲","Tap the bookmark on any piece to keep it here.":"點擊任一樂曲的書籤即可收藏。",
@@ -1191,8 +1191,8 @@ const TL = {
     "All pieces":"全部樂曲","Every composer in one list":"所有作曲家，一份清單"
   },
   "zh-Hans": {
-    "Home":"首页","Library":"曲库","Playlist":"播放列表","You":"我的",
-    "Your playlist":"我的播放列表","Your practice":"练习概况","Practiced in 2026":"2026 年练习","days":"天","day":"天",
+    "Home":"首页","Library":"曲库","Playlist":"收藏","You":"我的",
+    "Your playlist":"我的收藏","Your practice":"练习概况","Practiced in 2026":"2026 年练习","days":"天","day":"天",
     "On this day":"历史上的今天","View composer":"查看作曲家","Sort":"排序","Composer":"作曲家","Jump into the library":"进入曲库","See all":"查看全部","Nothing played yet.":"尚无弹奏记录",
     "Search":"搜索","Composers":"作曲家","Pieces":"乐曲","pieces":"首","piece":"首",
     "Saved":"已收藏","No saved pieces yet":"尚未收藏乐曲","Tap the bookmark on any piece to keep it here.":"点击任一乐曲的书签即可收藏。",
@@ -1643,8 +1643,10 @@ function gradeFull(level, sys){ return `${gradeWordFor(sys)} ${gradeVal(level,sy
    Routing
    ================================================================ */
 let rootTab = "home";
+function stopSpotify(){ document.querySelectorAll(".spotify-embed iframe").forEach(f=>{ try{ f.src = "about:blank"; }catch(e){} }); }
 function show(view, root, hash) {
   const apply = () => {
+    if (view !== "sheet") stopSpotify();   // leaving a piece → kill any Spotify preview
     document.querySelectorAll(".view").forEach(v => v.classList.remove("is-active"));
     const el = document.getElementById("view-" + view);
     el.classList.add("is-active");
