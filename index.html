@@ -3000,12 +3000,12 @@ function renderProfile() {
   const v = document.getElementById("view-profile");
   const inProgress = PIECES.filter(p=>pctOf(p.id)>0 && pctOf(p.id)<100).sort((a,b)=>pctOf(b.id)-pctOf(a.id));
   const rows = [
-    { key:"grade",     ic:IC.grade,  label:t("Grading system"),         desc:t("Exam board used for piece levels"),        value:gradeSys().name },
-    { key:"awake",     ic:IC.awake,  label:t("Screen awake"),           desc:t("Keep the display on while practicing"),     value:t(wakeLabel(S.keepAwake)) },
-    { key:"lang",      ic:IC.globe,  label:t("Language"),               desc:t("Language for the app interface"),           value:LANGS[S.lang] },
-    { key:"theme",     ic:IC.moon,   label:t("Dark mode"),              desc:t("Use a darker color theme"),                 value:S.theme==="dark"?t("On"):t("Off") },
-    { key:"analytics", ic:IC.chart,  label:t("Anonymous data sharing"), desc:t("Help improve the app with anonymous usage"),value:S.analytics!==false?t("On"):t("Off") },
-    { key:"privacy",   ic:IC.shield, label:t("Privacy Policy"),         desc:t("How your data is handled"),                 value:"" },
+    { key:"grade",     ic:IC.grade,  label:t("Grading system"),         value:gradeSys().name },
+    { key:"awake",     ic:IC.awake,  label:t("Screen awake"),           value:t(wakeLabel(S.keepAwake)) },
+    { key:"lang",      ic:IC.globe,  label:t("Language"),               value:LANGS[S.lang] },
+    { key:"theme",     ic:IC.moon,   label:t("Dark mode"),              value:S.theme==="dark"?t("On"):t("Off") },
+    { key:"analytics", ic:IC.chart,  label:t("Anonymous data sharing"), value:S.analytics!==false?t("On"):t("Off") },
+    { key:"privacy",   ic:IC.shield, label:t("Privacy Policy"),         value:"" },
   ];
   v.innerHTML = `
     <div class="appbar" style="flex-direction:column;align-items:stretch;gap:2px">
@@ -3019,10 +3019,7 @@ function renderProfile() {
     <div class="sec">
       ${rows.map(r=>`<button class="settrow settrow-nav" data-setting="${r.key}">
         <div class="settrow-ic">${r.ic}</div>
-        <div class="settrow-txt">
-          <div class="settrow-label">${r.label}</div>
-          ${r.desc?`<div class="settrow-desc">${r.desc}</div>`:""}
-        </div>
+        <div class="settrow-txt"><div class="settrow-label">${r.label}</div></div>
         ${r.value?`<div class="settrow-val">${r.value}</div>`:""}
         <div class="settrow-chev">${IC.chevR}</div>
       </button>`).join("")}
@@ -3038,6 +3035,14 @@ function renderSetting(){
   const key = settingCtx.key;
   const v = document.getElementById("view-setting");
   const optList = (items, cur, attr) => `<div class="optlist">${items.map(it=>`<button class="opt-row" ${attr}="${it.k}"><span class="opt-label">${it.label}</span>${String(it.k)===String(cur)?`<span class="opt-check">${IC.check}</span>`:""}</button>`).join("")}</div>`;
+  const DESC = {
+    grade:     t("Exam board used for piece levels"),
+    awake:     t("Keep the display on while practicing"),
+    lang:      t("Language for the app interface"),
+    theme:     t("Use a darker color theme"),
+    analytics: t("Help improve the app with anonymous usage"),
+    privacy:   t("How your data is handled"),
+  };
   let title="", body="";
   if (key==="grade")     { title=t("Grading system");         body=optList(GRADE_SYS.map(s=>({k:s.key,label:s.name})), S.gradeSystem||"abrsm", "data-gsys"); }
   else if (key==="awake"){ title=t("Screen awake");           body=optList(WAKE_OPTS.map(([k,l])=>({k,label:t(l)})), S.keepAwake, "data-wake"); }
@@ -3045,10 +3050,14 @@ function renderSetting(){
   else if (key==="theme"){ title=t("Dark mode");              body=optList([{k:"on",label:t("On")},{k:"off",label:t("Off")}], S.theme==="dark"?"on":"off", "data-theme"); }
   else if (key==="analytics"){ title=t("Anonymous data sharing"); body=optList([{k:"on",label:t("On")},{k:"off",label:t("Off")}], S.analytics!==false?"on":"off", "data-analytics")+`<div class="opt-note">${t("Anonymous usage helps improve the app. We never collect your name, account, or any personal data.")}</div>`; }
   else if (key==="privacy"){ title=t("Privacy Policy");       body=privacyHTML(); }
+  const desc = DESC[key] || "";
   v.innerHTML = `
     <div class="appbar" style="flex-direction:column;align-items:stretch;gap:12px">
       <button class="appbar-back" id="setBack">${IC.back}</button>
-      <div class="appbar-title">${title}</div>
+      <div>
+        <div class="appbar-title">${title}</div>
+        ${desc?`<div class="appbar-sub" style="margin-top:3px">${desc}</div>`:""}
+      </div>
     </div>
     <div class="setwrap">${body}</div>`;
   v.querySelector("#setBack").addEventListener("click", ()=>{ renderProfile(); show("profile","profile"); });
