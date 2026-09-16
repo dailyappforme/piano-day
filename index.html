@@ -743,7 +743,7 @@
   /* touch devices: no sticky hover states (they linger weirdly after tap/scroll); keep hover on desktop */
   @media (hover: none) {
     .rrow:hover, .prow:hover, .sugg-item:hover, .explore-link:hover, .fbtn-link:hover,
-    .appbar-back:hover, .settrow-nav:hover, .opt-row:hover, .sortdd-panel button:hover { background: transparent; }
+    .appbar-back:not(.is-marked):hover, .settrow-nav:hover, .opt-row:hover, .sortdd-panel button:hover { background: transparent; }
     .ccard:hover { border-color: var(--mu-border); box-shadow: none; }
     .rrow:hover, .prow:hover { border-radius: 0; }
   }
