@@ -785,14 +785,14 @@
   /* native dark: the screen is #0e0e11, so match it there; desktop dark uses --mu-bg (#17171b) via the base rule */
   html[data-theme="dark"].is-native .appbar { background: #0e0e11; }
   html[data-theme="dark"] .tabbar { background: rgba(24,24,28,.8); }
-  /* Music/Warm-up floating panel sits over white scores → keep it light even in dark mode */
-  html[data-theme="dark"] .focus-actions { background: rgba(255,255,255,0.92); border-color: rgba(0,0,0,0.08); }
-  html[data-theme="dark"] .focus-actions button { color: #48484d; }
-  html[data-theme="dark"] .focus-actions button:hover { background: #f2f2f3; }
-  html[data-theme="dark"] .focus-actions button.is-on,
-  html[data-theme="dark"] .focus-actions button.is-marked { background: #1d1d1f; color: #fff; }
-  html[data-theme="dark"] .focus-actions #zoomVal,
-  html[data-theme="dark"] .focus-actions .fa-page { color: #48484d; }
+  /* The music/warm-up sheet section has a white background → render it entirely in LIGHT mode
+     (score title, floating panel, page controls) even when the app is in dark mode.
+     Scoping the light palette to .focus-view makes every descendant use light styling. */
+  html[data-theme="dark"] .focus-view {
+    --mu-bg:#fff; --mu-white:#fff; --mu-ink:#1d1d1f; --mu-ink-2:#48484d; --mu-ink-3:#767680;
+    --mu-gray-50:#f7f7f8; --mu-gray-100:#f2f2f3; --mu-gray-200:#e8e8ea; --mu-gray-300:#d6d6d9;
+    --mu-gray-400:#b0b0b6; --mu-gray-500:#767680; --mu-gray-900:#1d1d1f; --mu-border:#e8e8ea;
+  }
   html[data-theme="dark"] .sortchips > button[data-sort].is-active { color:#17171b; }
   html[data-theme="dark"] .mark-btn.is-marked { color:#17171b; }
   /* keep the notation/score white in dark mode */
