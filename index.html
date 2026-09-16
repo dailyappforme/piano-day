@@ -719,6 +719,26 @@
   .settrow-ic { width: 34px; height: 34px; border-radius: 9px; background: var(--mu-gray-100); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .settrow-txt { flex: 1; font-size: 15px; font-weight: 500; }
   .settrow-val { font-size: 14px; color: var(--mu-ink-3); }
+  /* iOS-style drill-down settings */
+  .settrow-nav { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; transition: background var(--mu-fast) var(--mu-ease); }
+  .settrow-nav:hover, .settrow-nav:active { background: var(--mu-gray-50); }
+  .settrow-chev { display: inline-flex; flex: none; color: var(--mu-gray-400); margin-left: 4px; }
+  .set-title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .setwrap { padding: 6px 0 24px; }
+  .optlist { display: flex; flex-direction: column; }
+  .opt-row { -webkit-appearance: none; appearance: none; background: transparent; border: 0; border-bottom: 1px solid var(--mu-gray-100);
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 4px;
+    font: inherit; color: inherit; text-align: left; cursor: pointer; transition: background var(--mu-fast) var(--mu-ease); }
+  .opt-row:hover, .opt-row:active { background: var(--mu-gray-50); }
+  .opt-label { font-size: 15px; font-weight: 500; }
+  .opt-check { display: inline-flex; flex: none; color: var(--mu-ink); }
+  .opt-note { font-size: 13px; color: var(--mu-ink-3); line-height: 1.55; padding: 14px 4px 0; }
+  .priv { padding: 4px 2px; }
+  .priv-lead { font-size: 14.5px; color: var(--mu-ink-2); line-height: 1.6; margin: 0 0 4px; }
+  .priv h3 { font-size: 15px; font-weight: 650; margin: 22px 0 6px; }
+  .priv p { font-size: 14px; color: var(--mu-ink-2); line-height: 1.6; margin: 0 0 8px; }
+  .priv-full { display: inline-block; margin-top: 18px; font-size: 14px; font-weight: 600; color: var(--mu-ink); text-decoration: none; }
+  .priv-full:hover { text-decoration: underline; }
 
   /* ---- bottom tab bar ---- */
   .tabbar {
@@ -846,6 +866,7 @@
       <section class="view" id="view-saved"></section>
       <!-- PROFILE -->
       <section class="view" id="view-profile"></section>
+      <section class="view" id="view-setting"></section>
 
     </div>
 
@@ -1190,6 +1211,16 @@ const TL = {
     "Intermediate":"中階","Advanced":"進階","Early-virtuoso":"準演奏級","Virtuoso":"演奏級",
     "marked":"已收藏","saved":"已收藏","Practice":"練習","Date added":"加入日期","Find your next piece to master":"尋找你想精通的下一首樂曲",
     "composers":"位作曲家","Account and settings":"帳戶與設定","Sort by":"排序方式","Asc":"升序","Desc":"降序",
+    "On":"開啟","Off":"關閉","Anonymous data sharing":"匿名數據分享",
+    "Anonymous usage helps improve the app. We never collect your name, account, or any personal data.":"匿名使用數據有助改善 App，我們絕不收集你的姓名、帳戶或任何個人資料。",
+    "Piano Day works without collecting your personal information. Here's what the app handles.":"Piano Day 無需收集你的個人資料即可運作。以下是 App 處理的內容。",
+    "Stored on your device":"儲存在你的裝置",
+    "No accounts and no servers receive your data. Your practice progress, saved pieces, and preferences live only on your device.":"沒有帳戶，也沒有伺服器接收你的資料。你的練習進度、收藏樂曲與偏好只保存在你的裝置上。",
+    "Analytics":"使用分析",
+    "We use anonymous usage analytics to improve the app — events like opening a piece or switching tabs, never your name or account. Turn it off anytime under Anonymous data sharing.":"我們使用匿名使用分析來改善 App — 例如開啟樂曲或切換分頁等事件，絕不涉及你的姓名或帳戶。你可隨時在「匿名數據分享」中關閉。",
+    "Third-party content":"第三方內容",
+    "Some pieces embed an official Spotify player; playing a preview lets Spotify process data under its own policy. Scores are public-domain editions.":"部分樂曲嵌入官方 Spotify 播放器；播放預覽時 Spotify 會依其自身政策處理資料。樂譜均為公有領域版本。",
+    "Read the full policy":"閱讀完整政策",
     "Search composers or pieces":"搜尋作曲家或樂曲",
     "All pieces":"全部樂曲","Every composer in one list":"所有作曲家，一份清單"
   },
@@ -1205,6 +1236,16 @@ const TL = {
     "Intermediate":"中阶","Advanced":"进阶","Early-virtuoso":"准演奏级","Virtuoso":"演奏级",
     "marked":"已收藏","saved":"已收藏","Practice":"练习","Date added":"加入日期","Find your next piece to master":"寻找你想精通的下一首乐曲",
     "composers":"位作曲家","Account and settings":"账户与设置","Sort by":"排序方式","Asc":"升序","Desc":"降序",
+    "On":"开启","Off":"关闭","Anonymous data sharing":"匿名数据分享",
+    "Anonymous usage helps improve the app. We never collect your name, account, or any personal data.":"匿名使用数据有助改善 App，我们绝不收集你的姓名、账户或任何个人资料。",
+    "Piano Day works without collecting your personal information. Here's what the app handles.":"Piano Day 无需收集你的个人资料即可运作。以下是 App 处理的内容。",
+    "Stored on your device":"存储在你的设备",
+    "No accounts and no servers receive your data. Your practice progress, saved pieces, and preferences live only on your device.":"没有账户，也没有服务器接收你的资料。你的练习进度、收藏乐曲与偏好只保存在你的设备上。",
+    "Analytics":"使用分析",
+    "We use anonymous usage analytics to improve the app — events like opening a piece or switching tabs, never your name or account. Turn it off anytime under Anonymous data sharing.":"我们使用匿名使用分析来改善 App — 例如打开乐曲或切换标签等事件，绝不涉及你的姓名或账户。你可随时在“匿名数据分享”中关闭。",
+    "Third-party content":"第三方内容",
+    "Some pieces embed an official Spotify player; playing a preview lets Spotify process data under its own policy. Scores are public-domain editions.":"部分乐曲嵌入官方 Spotify 播放器；播放预览时 Spotify 会依其自身政策处理资料。乐谱均为公有领域版本。",
+    "Read the full policy":"阅读完整政策",
     "Search composers or pieces":"搜索作曲家或乐曲",
     "All pieces":"全部乐曲","Every composer in one list":"所有作曲家，一份列表"
   }
@@ -1681,6 +1722,7 @@ function routeTo(hash) {
   else if (seg === "piece" && pieceById(arg)) openSheet(arg);
   else if (seg === "library") { renderLibrary(); show("library","library"); }
   else if (seg === "saved") { renderSaved(); show("saved","saved"); }
+  else if (seg === "setting" && arg) { openSetting(arg); }
   else if (seg === "profile") { renderProfile(); show("profile","profile"); }
   else { renderHome(); show("home","home"); }
 }
@@ -1706,6 +1748,9 @@ const IC = {
   layers: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>`,
   grade: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.5 13.5 7 22l5-3 5 3-1.5-8.5"/></svg>`,
   chart: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m6 14 4-4 3 3 5-6"/></svg>`,
+  chevR: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+  check: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  shield: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
   wifiOff: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></svg>`,
   music: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
   awake: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
@@ -2929,10 +2974,15 @@ function renderSavedList() {
    ================================================================ */
 function renderProfile() {
   const v = document.getElementById("view-profile");
-  const totalSec = Object.values(S.practiceSec).reduce((a,b)=>a+b,0);
-  const touched = Object.keys(S.progress).filter(k=>S.progress[k]>0).length || Object.keys(S.practiceSec).length;
-  const learned = Object.values(S.progress).filter(p=>p>=100).length;
   const inProgress = PIECES.filter(p=>pctOf(p.id)>0 && pctOf(p.id)<100).sort((a,b)=>pctOf(b.id)-pctOf(a.id));
+  const rows = [
+    { key:"grade",     ic:IC.grade,  label:t("Grading system"),         value:gradeSys().name },
+    { key:"awake",     ic:IC.awake,  label:t("Screen awake"),           value:t(wakeLabel(S.keepAwake)) },
+    { key:"lang",      ic:IC.globe,  label:t("Language"),               value:LANGS[S.lang] },
+    { key:"theme",     ic:IC.moon,   label:t("Dark mode"),              value:S.theme==="dark"?t("On"):t("Off") },
+    { key:"analytics", ic:IC.chart,  label:t("Anonymous data sharing"), value:S.analytics!==false?t("On"):t("Off") },
+    { key:"privacy",   ic:IC.shield, label:t("Privacy Policy"),         value:"" },
+  ];
   v.innerHTML = `
     <div class="appbar" style="flex-direction:column;align-items:stretch;gap:2px">
       <div class="appbar-title">${t("You")}</div>
@@ -2942,108 +2992,53 @@ function renderProfile() {
       <div class="sec-head"><div class="sec-title">${t("In progress")}</div></div>
       <div class="rowlist">${inProgress.map((p,i)=>pieceRow(p,i)).join("")}</div>
     </div>` : ""}
-
     <div class="sec">
-      <div class="settrow">
-        <div class="settrow-ic">${IC.grade}</div><div class="settrow-txt">${t("Grading system")}</div>
-        <div class="dropdown" id="gsysDD" style="margin-left:auto">
-          <button type="button" class="input lang-trigger" id="gsysTrigger" aria-haspopup="menu" aria-expanded="false">
-            <span>${gradeSys().name}</span>
-            <svg class="lang-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="menu menu-right" role="menu" id="gsysMenu">
-            ${GRADE_SYS.map(s=>`<button type="button" class="menu-item${s.key===(S.gradeSystem||'abrsm')?' is-selected':''}" role="menuitem" data-gsys="${s.key}">${s.name}</button>`).join("")}
-          </div>
-        </div>
-      </div>
-      <div class="settrow">
-        <div class="settrow-ic">${IC.awake}</div><div class="settrow-txt">${t("Screen awake")}</div>
-        <div class="dropdown" id="wakeDD" style="margin-left:auto">
-          <button type="button" class="input lang-trigger" id="wakeTrigger" aria-haspopup="menu" aria-expanded="false">
-            <span>${t(wakeLabel(S.keepAwake))}</span>
-            <svg class="lang-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="menu menu-right" role="menu" id="wakeMenu">
-            ${WAKE_OPTS.map(([k,label])=>`<button type="button" class="menu-item${String(k)===String(S.keepAwake)?' is-selected':''}" role="menuitem" data-wake="${k}">${t(label)}</button>`).join("")}
-          </div>
-        </div>
-      </div>
-      <div class="settrow">
-        <div class="settrow-ic">${IC.globe}</div><div class="settrow-txt">${t("Language")}</div>
-        <div class="dropdown" id="langDD" style="margin-left:auto">
-          <button type="button" class="input lang-trigger" id="langTrigger" aria-haspopup="menu" aria-expanded="false">
-            <span>${LANGS[S.lang]}</span>
-            <svg class="lang-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="menu menu-right" role="menu" id="langMenu">
-            ${Object.entries(LANGS).map(([k,name])=>`<button type="button" class="menu-item${k===S.lang?' is-selected':''}" role="menuitem" data-lang="${k}">${name}</button>`).join("")}
-          </div>
-        </div>
-      </div>
-      <div class="settrow"><div class="settrow-ic">${IC.moon}</div><div class="settrow-txt">${t("Dark mode")}</div>
-        <button class="tgl${S.theme==='dark'?' is-on':''}" id="themeSwitch" role="switch" aria-checked="${S.theme==='dark'}"><span class="tgl-knob"></span></button>
-      </div>
-      <div class="settrow"><div class="settrow-ic">${IC.chart}</div><div class="settrow-txt">${t("Usage data")}</div>
-        <button class="tgl${S.analytics!==false?' is-on':''}" id="analyticsSwitch" role="switch" aria-checked="${S.analytics!==false}"><span class="tgl-knob"></span></button>
-      </div>
-      <a class="settrow" href="privacy.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;">
-        <div class="settrow-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div class="settrow-txt">${t("Privacy Policy")}</div>
-        <div class="settrow-val" style="margin-left:auto" aria-hidden="true">↗</div>
-      </a>
+      ${rows.map(r=>`<button class="settrow settrow-nav" data-setting="${r.key}">
+        <div class="settrow-ic">${r.ic}</div>
+        <div class="settrow-txt">${r.label}</div>
+        ${r.value?`<div class="settrow-val">${r.value}</div>`:""}
+        <div class="settrow-chev">${IC.chevR}</div>
+      </button>`).join("")}
     </div>`;
   wirePieceRows(v);
-  v.querySelector("#themeSwitch").addEventListener("click", e=>{
-    S.theme = S.theme==='dark' ? 'light' : 'dark'; save(); applyTheme();
-    const sw = e.currentTarget;
-    sw.classList.toggle('is-on', S.theme==='dark');
-    sw.setAttribute('aria-checked', S.theme==='dark');
-  });
-  v.querySelector("#analyticsSwitch").addEventListener("click", e=>{
-    const on = !(S.analytics!==false); setAnalyticsConsent(on);
-    const sw = e.currentTarget;
-    sw.classList.toggle('is-on', on);
-    sw.setAttribute('aria-checked', on);
-  });
-  const langDD = v.querySelector("#langDD");
-  const langTrigger = v.querySelector("#langTrigger");
-  langTrigger.addEventListener("click", e=>{
-    e.stopPropagation();
-    const open = langDD.classList.toggle("is-open");
-    langTrigger.setAttribute("aria-expanded", open);
-  });
-  document.addEventListener("click", e=>{ if(!langDD.contains(e.target)) langDD.classList.remove("is-open"); });
-  v.querySelectorAll("#langMenu .menu-item").forEach(mi=>{
-    mi.addEventListener("click", ()=>{
-      S.lang = mi.dataset.lang; save();
-      document.documentElement.lang = S.lang;
-      applyTabLabels();
-      renderProfile();
-    });
-  });
-  const wakeDD = v.querySelector("#wakeDD"), wakeTrigger = v.querySelector("#wakeTrigger");
-  wakeTrigger.addEventListener("click", e=>{ e.stopPropagation(); const open = wakeDD.classList.toggle("is-open"); wakeTrigger.setAttribute("aria-expanded", open); });
-  document.addEventListener("click", e=>{ if(!wakeDD.contains(e.target)) wakeDD.classList.remove("is-open"); });
-  v.querySelectorAll("#wakeMenu .menu-item").forEach(mi=>{
-    mi.addEventListener("click", ()=>{
-      S.keepAwake = mi.dataset.wake; save();
-      wakeTrigger.querySelector("span").textContent = t(wakeLabel(S.keepAwake));
-      v.querySelectorAll("#wakeMenu .menu-item").forEach(x=>x.classList.toggle("is-selected", x===mi));
-      wakeDD.classList.remove("is-open");
-      bumpWake();
-    });
-  });
-  const gsysDD = v.querySelector("#gsysDD"), gsysTrigger = v.querySelector("#gsysTrigger");
-  gsysTrigger.addEventListener("click", e=>{ e.stopPropagation(); const open = gsysDD.classList.toggle("is-open"); gsysTrigger.setAttribute("aria-expanded", open); });
-  document.addEventListener("click", e=>{ if(!gsysDD.contains(e.target)) gsysDD.classList.remove("is-open"); });
-  v.querySelectorAll("#gsysMenu .menu-item").forEach(mi=>{
-    mi.addEventListener("click", ()=>{
-      S.gradeSystem = mi.dataset.gsys; save(); track("grade_system", { sys: S.gradeSystem, from: "settings" });
-      gsysTrigger.querySelector("span").textContent = gradeSys().name;
-      v.querySelectorAll("#gsysMenu .menu-item").forEach(x=>x.classList.toggle("is-selected", x===mi));
-      gsysDD.classList.remove("is-open");
-    });
-  });
+  v.querySelectorAll("[data-setting]").forEach(b=>b.addEventListener("click",()=>openSetting(b.dataset.setting)));
+}
+
+/* iOS-style drill-down settings sub-pages */
+let settingCtx = { key:null };
+function openSetting(key){ settingCtx.key = key; renderSetting(); show("setting","profile","setting/"+key); }
+function renderSetting(){
+  const key = settingCtx.key;
+  const v = document.getElementById("view-setting");
+  const optList = (items, cur, attr) => `<div class="optlist">${items.map(it=>`<button class="opt-row" ${attr}="${it.k}"><span class="opt-label">${it.label}</span>${String(it.k)===String(cur)?`<span class="opt-check">${IC.check}</span>`:""}</button>`).join("")}</div>`;
+  let title="", body="";
+  if (key==="grade")     { title=t("Grading system");         body=optList(GRADE_SYS.map(s=>({k:s.key,label:s.name})), S.gradeSystem||"abrsm", "data-gsys"); }
+  else if (key==="awake"){ title=t("Screen awake");           body=optList(WAKE_OPTS.map(([k,l])=>({k,label:t(l)})), S.keepAwake, "data-wake"); }
+  else if (key==="lang") { title=t("Language");               body=optList(Object.entries(LANGS).map(([k,n])=>({k,label:n})), S.lang, "data-lang"); }
+  else if (key==="theme"){ title=t("Dark mode");              body=optList([{k:"on",label:t("On")},{k:"off",label:t("Off")}], S.theme==="dark"?"on":"off", "data-theme"); }
+  else if (key==="analytics"){ title=t("Anonymous data sharing"); body=optList([{k:"on",label:t("On")},{k:"off",label:t("Off")}], S.analytics!==false?"on":"off", "data-analytics")+`<div class="opt-note">${t("Anonymous usage helps improve the app. We never collect your name, account, or any personal data.")}</div>`; }
+  else if (key==="privacy"){ title=t("Privacy Policy");       body=privacyHTML(); }
+  v.innerHTML = `
+    <div class="appbar"><button class="appbar-back" id="setBack">${IC.back}</button><div class="set-title">${title}</div><div style="flex:1"></div></div>
+    <div class="setwrap">${body}</div>`;
+  v.querySelector("#setBack").addEventListener("click", ()=>{ renderProfile(); show("profile","profile"); });
+  v.querySelectorAll("[data-gsys]").forEach(b=>b.addEventListener("click",()=>{ S.gradeSystem=b.dataset.gsys; save(); track("grade_system",{sys:S.gradeSystem,from:"settings"}); renderSetting(); }));
+  v.querySelectorAll("[data-wake]").forEach(b=>b.addEventListener("click",()=>{ S.keepAwake=b.dataset.wake; save(); bumpWake(); renderSetting(); }));
+  v.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>{ S.lang=b.dataset.lang; save(); document.documentElement.lang=S.lang; applyTabLabels(); renderSetting(); }));
+  v.querySelectorAll("[data-theme]").forEach(b=>b.addEventListener("click",()=>{ S.theme=b.dataset.theme==="on"?"dark":"light"; save(); applyTheme(); renderSetting(); }));
+  v.querySelectorAll("[data-analytics]").forEach(b=>b.addEventListener("click",()=>{ setAnalyticsConsent(b.dataset.analytics==="on"); renderSetting(); }));
+}
+function privacyHTML(){
+  return `<div class="priv">
+    <p class="priv-lead">${t("Piano Day works without collecting your personal information. Here's what the app handles.")}</p>
+    <h3>${t("Stored on your device")}</h3>
+    <p>${t("No accounts and no servers receive your data. Your practice progress, saved pieces, and preferences live only on your device.")}</p>
+    <h3>${t("Analytics")}</h3>
+    <p>${t("We use anonymous usage analytics to improve the app — events like opening a piece or switching tabs, never your name or account. Turn it off anytime under Anonymous data sharing.")}</p>
+    <h3>${t("Third-party content")}</h3>
+    <p>${t("Some pieces embed an official Spotify player; playing a preview lets Spotify process data under its own policy. Scores are public-domain editions.")}</p>
+    <a class="priv-full" href="privacy.html" target="_blank" rel="noopener">${t("Read the full policy")} ↗</a>
+  </div>`;
 }
 
 /* ================================================================
