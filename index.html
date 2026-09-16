@@ -43,7 +43,7 @@
   html, body { height: 100%; }
   body { background: #e6e6e9; overflow: hidden; }
   /* instant taps (no double-tap-zoom delay) while still allowing pinch-zoom on scores */
-  * { touch-action: manipulation; }
+  * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
   /* ---- iPad device frame (portrait 834 × 1194) ---- */
   .stage {
