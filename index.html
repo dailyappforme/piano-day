@@ -1319,6 +1319,9 @@ const SCORE_PAGE = {};  // per-movement PDFs now start at page 1 — no anchors 
 // Pieces that should show the PDF score even if MusicXML/notes exist (user preference)
 const FORCE_PDF = new Set(["rav-menuet-haydn"]);
 const SCORE_VER = "20260915a";  // bump whenever a PDF is replaced in-place, to bust browser cache
+// Score page images are served on-demand from the web (not bundled in the native app, to keep it small).
+// Web build: relative (same host). Native app: absolute Cloudflare URL. Warm-up images stay bundled.
+const ASSET_BASE = (typeof window !== "undefined" && window.Capacitor) ? "https://piano-day.dailyappforme.workers.dev/" : "";
 function pdfSrc(id, params){
   const pg = SCORE_PAGE[id] ? "page=" + SCORE_PAGE[id] : "";
   const q = [pg, params].filter(Boolean).join("&");
@@ -1331,7 +1334,7 @@ function pdfViewer(p, variant){
   const n = (window.SCORE_IMG && window.SCORE_IMG[base]) || 1;
   let imgs = "";
   for (let i = 1; i <= n; i++)
-    imgs += `<div class="pdf-page"><img class="pdf-img" src="library/${p.c}/img/${base}_${i}.webp?v=${SCORE_VER}" alt="${p.title} score" loading="lazy" draggable="false" onerror="scoreImgError(this)"></div>`;
+    imgs += `<div class="pdf-page"><img class="pdf-img" src="${ASSET_BASE}library/${p.c}/img/${base}_${i}.webp?v=${SCORE_VER}" alt="${p.title} score" loading="lazy" draggable="false" onerror="scoreImgError(this)"></div>`;
   return `<div class="pdf-imgwrap">${imgs}</div>`;
 }
 let S = load();
