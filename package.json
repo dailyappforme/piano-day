@@ -4,7 +4,7 @@
   "private": true,
   "description": "Piano practice — sheet library + player (iPad/iPhone)",
   "scripts": {
-    "sync-web": "rm -rf www && mkdir -p www && cp index.html privacy.html www/ && cp -R library mu-system images vendor www/",
+    "sync-web": "rm -rf www && mkdir -p www && cp index.html privacy.html support.html www/ && cp -R library mu-system images vendor www/",
     "ios:copy": "npm run sync-web && npx cap copy ios && npm run ios:strip-scores",
     "ios:strip-scores": "find ios/App/App/public/library -type f -name '*.webp' -not -path '*warmup*' -delete && find ios/App/App/public/library -type d \\( -name xml -o -name scores \\) -exec rm -rf {} +",
     "ios:open": "npx cap open ios"
