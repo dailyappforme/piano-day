@@ -1241,7 +1241,7 @@ const TL = {
     "Saved":"已收藏","No saved pieces yet":"尚未收藏樂曲","Tap the bookmark on any piece to keep it here.":"點擊任一樂曲的書籤即可收藏。",
     "In progress":"進行中","Settings":"設定","Privacy Policy":"隱私政策","Dark mode":"深色模式","Language":"語言","Keep screen awake":"螢幕保持喚醒","Screen awake":"螢幕喚醒","While app is open":"開啟期間一直","5 minutes":"5 分鐘","10 minutes":"10 分鐘","15 minutes":"15 分鐘","30 minutes":"30 分鐘","1 hour":"1 小時","Advanced pianist":"進階鋼琴家","Grade":"級","Grading system":"評級系統","Share anonymous usage":"分享匿名使用數據","Anonymous data sharing":"匿名數據分享","Exam board used for piece levels":"用於樂曲分級的考試制度","Keep the display on while practicing":"練習時保持螢幕開啟","Language for the app interface":"應用程式介面語言","Use a darker color theme":"使用較深的色彩主題","Help improve the app with anonymous usage":"以匿名使用數據協助改善應用程式","How your data is handled":"我們如何處理你的資料","Usage data":"使用數據","You're offline — some scores and previews may not load.":"目前離線 — 部分樂譜與預覽可能無法載入。","Couldn't load this score":"無法載入此樂譜","You appear to be offline. Reconnect to view it.":"你目前似乎離線，請重新連線以檢視。","Preview needs an internet connection":"預覽需要網路連線",
     "Name":"名稱","Level":"程度","Year":"年份","Length":"長度","Key":"調性","Work":"作品",
-    "Music":"樂譜","Warm-Up":"暖身","Explore":"探索","The story":"樂曲故事",
+    "Score":"樂譜","Warm-Up":"暖身","Explore":"探索","The story":"樂曲故事",
     "Intermediate":"中階","Advanced":"進階","Early-virtuoso":"準演奏級","Virtuoso":"演奏級",
     "marked":"已收藏","saved":"已收藏","Practice":"練習","Date added":"加入日期","Find your next piece to master":"尋找你想精通的下一首樂曲",
     "composers":"位作曲家","Account and settings":"帳戶與設定","Sort by":"排序方式","Asc":"升序","Desc":"降序",
@@ -1266,7 +1266,7 @@ const TL = {
     "Saved":"已收藏","No saved pieces yet":"尚未收藏乐曲","Tap the bookmark on any piece to keep it here.":"点击任一乐曲的书签即可收藏。",
     "In progress":"进行中","Settings":"设置","Privacy Policy":"隐私政策","Dark mode":"深色模式","Language":"语言","Keep screen awake":"屏幕保持唤醒","Screen awake":"屏幕唤醒","While app is open":"开启期间一直","5 minutes":"5 分钟","10 minutes":"10 分钟","15 minutes":"15 分钟","30 minutes":"30 分钟","1 hour":"1 小时","Advanced pianist":"进阶钢琴家","Grade":"级","Grading system":"评级系统","Share anonymous usage":"分享匿名使用数据","Anonymous data sharing":"匿名数据分享","Exam board used for piece levels":"用于乐曲分级的考试制度","Keep the display on while practicing":"练习时保持屏幕开启","Language for the app interface":"应用程序界面语言","Use a darker color theme":"使用较深的色彩主题","Help improve the app with anonymous usage":"以匿名使用数据帮助改善应用程序","How your data is handled":"我们如何处理你的数据","Usage data":"使用数据","You're offline — some scores and previews may not load.":"目前离线 — 部分乐谱与预览可能无法加载。","Couldn't load this score":"无法加载此乐谱","You appear to be offline. Reconnect to view it.":"你目前似乎离线，请重新连线以查看。","Preview needs an internet connection":"预览需要网络连接",
     "Name":"名称","Level":"难度","Year":"年份","Length":"时长","Key":"调性","Work":"作品",
-    "Music":"乐谱","Warm-Up":"热身","Explore":"探索","The story":"乐曲故事",
+    "Score":"乐谱","Warm-Up":"热身","Explore":"探索","The story":"乐曲故事",
     "Intermediate":"中阶","Advanced":"进阶","Early-virtuoso":"准演奏级","Virtuoso":"演奏级",
     "marked":"已收藏","saved":"已收藏","Practice":"练习","Date added":"加入日期","Find your next piece to master":"寻找你想精通的下一首乐曲",
     "composers":"位作曲家","Account and settings":"账户与设置","Sort by":"排序方式","Asc":"升序","Desc":"降序",
@@ -2535,7 +2535,7 @@ function renderSheet() {
   const v = document.getElementById("view-sheet");
   const hasWarmup = warmupItems(p).length > 0;   // keyless pieces (whole-tone/no key) have none → hide the tab
   if (sheetCtx.tab === "practice" && !hasWarmup) sheetCtx.tab = "focus";
-  const TABS = [["focus",t("Music")], ...(hasWarmup ? [["practice",t("Warm-Up")]] : []), ["explore",t("Explore")]];
+  const TABS = [["focus",t("Score")], ...(hasWarmup ? [["practice",t("Warm-Up")]] : []), ["explore",t("Explore")]];
   v.innerHTML = `
     <div class="appbar">
       <button class="appbar-back" id="sBack">${IC.back}</button>
