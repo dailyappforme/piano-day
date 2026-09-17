@@ -470,11 +470,11 @@
   .wu-title-sub { font-size: 13px; color: var(--mu-ink-3); margin-top: 4px; }
   .wu-figure { padding: 0 14px 16px; }
   .wu-img { width: 100%; display: block; }
-  /* enlarge: title on top, exercise fit to the remaining height, centered on white */
+  /* enlarge: title sits directly above the exercise; the title+score group is centered on white */
   .focus-view.warmup-fv.fake-fs { background: #fff; }
-  .focus-view.warmup-fv.fake-fs .warmup-scroll { border: none; border-radius: 0; }
-  .focus-view.warmup-fv.fake-fs .wu-figure { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 14px 12px; }
-  .focus-view.warmup-fv.fake-fs .wu-img { width: auto; height: auto; max-width: 100%; max-height: 100%; }
+  .focus-view.warmup-fv.fake-fs .warmup-scroll { border: none; border-radius: 0; justify-content: center; align-items: center; }
+  .focus-view.warmup-fv.fake-fs .wu-figure { flex: 0 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 14px 12px; }
+  .focus-view.warmup-fv.fake-fs .wu-img { width: auto; height: auto; max-width: 100%; max-height: 76vh; }
   .warmup-actions { gap: 0; }
   .warmup-actions .wu-seg { display: flex; align-items: center; gap: 0; }
   /* text segments (not the round icon buttons) — hug their text, uppercase mono, divider between each */
