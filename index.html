@@ -1348,7 +1348,7 @@ const FORCE_PDF = new Set(["rav-menuet-haydn"]);
 const SCORE_VER = "20260915a";  // bump whenever a PDF is replaced in-place, to bust browser cache
 // Score page images are served on-demand from the web (not bundled in the native app, to keep it small).
 // Web build: relative (same host). Native app: absolute Cloudflare URL. Warm-up images stay bundled.
-const ASSET_BASE = (typeof window !== "undefined" && window.Capacitor) ? "https://piano-day.dailyappforme.workers.dev/" : "";
+const ASSET_BASE = (typeof window !== "undefined" && window.Capacitor) ? "https://piano-day.dailyappforme.com/" : "";
 function pdfSrc(id, params){
   const pg = SCORE_PAGE[id] ? "page=" + SCORE_PAGE[id] : "";
   const q = [pg, params].filter(Boolean).join("&");
