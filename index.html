@@ -105,21 +105,20 @@
     margin: 0 -28px 4px;
     display: flex; align-items: center; gap: 12px;
   }
-  /* progressive blur (vision-app style): translucent gradient + blur, masked so the
-     blur strength dissolves smoothly past the bar — no hard edge */
+  /* progressive fade: content slides under the bar and dissolves into the page colour.
+     Pure colour gradient — backdrop-filter smears dark content on WKWebView, so no blur. */
   .appbar::before {
-    content: ""; position: absolute; inset: 0 0 -24px 0; z-index: -1; pointer-events: none;
+    content: ""; position: absolute; inset: 0 0 -46px 0; z-index: -1; pointer-events: none;
     background: linear-gradient(180deg,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 92%, transparent) 0%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 55%, transparent) 55%, transparent 90%);
-    backdrop-filter: blur(14px) saturate(150%);
-    -webkit-backdrop-filter: blur(14px) saturate(150%);
-    /* alpha reaches 0 well before the element edge — WebKit clips backdrop-filter at the
-       bounds, so a buffer zone keeps that clip line invisible */
-    -webkit-mask-image: linear-gradient(180deg, #000 45%, rgba(0,0,0,.6) 68%, rgba(0,0,0,.2) 82%, transparent 91%);
-    mask-image: linear-gradient(180deg, #000 45%, rgba(0,0,0,.6) 68%, rgba(0,0,0,.2) 82%, transparent 91%);
+      var(--page-bg, var(--mu-bg)) 0%,
+      var(--page-bg, var(--mu-bg)) 38%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 96%, transparent) 48%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 86%, transparent) 58%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 70%, transparent) 68%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 50%, transparent) 78%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 28%, transparent) 87%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 10%, transparent) 95%, transparent 100%);
   }
-
   /* pages with a pinned sort menu under the bar keep a solid edge (no soften) */
   #view-pianist .appbar, #view-saved .appbar { background: var(--page-bg, var(--mu-bg)); }
   #view-pianist .appbar::before, #view-saved .appbar::before { display: none; }
