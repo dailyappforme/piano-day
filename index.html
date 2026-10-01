@@ -108,14 +108,17 @@
   /* progressive blur (vision-app style): translucent gradient + blur, masked so the
      blur strength dissolves smoothly past the bar — no hard edge */
   .appbar::before {
-    content: ""; position: absolute; inset: 0 0 -30px 0; z-index: -1; pointer-events: none;
+    content: ""; position: absolute; inset: 0 0 -44px 0; z-index: -1; pointer-events: none;
     background: linear-gradient(180deg,
       color-mix(in srgb, var(--page-bg, var(--mu-bg)) 92%, transparent) 0%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 55%, transparent) 55%, transparent 100%);
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 86%, transparent) 30%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 68%, transparent) 52%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 42%, transparent) 70%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 18%, transparent) 85%, transparent 100%);
     backdrop-filter: blur(14px) saturate(150%);
     -webkit-backdrop-filter: blur(14px) saturate(150%);
-    -webkit-mask-image: linear-gradient(180deg, #000 52%, transparent 100%);
-    mask-image: linear-gradient(180deg, #000 52%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 30%, rgba(0,0,0,.8) 55%, rgba(0,0,0,.45) 75%, rgba(0,0,0,.15) 90%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 30%, rgba(0,0,0,.8) 55%, rgba(0,0,0,.45) 75%, rgba(0,0,0,.15) 90%, transparent 100%);
   }
   /* pages with a pinned sort menu under the bar keep a solid edge (no soften) */
   #view-pianist .appbar, #view-saved .appbar { background: var(--page-bg, var(--mu-bg)); }
