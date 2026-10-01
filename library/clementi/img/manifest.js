@@ -1,0 +1,2 @@
+// Clementi page-strip counts (public-domain PDF — Schirmer, Gradus ad Parnassum Op.44)
+window.SCORE_IMG = Object.assign(window.SCORE_IMG||{}, {"clementi-gradus":2,"clementi-son1-1":1,"clementi-son1-2":1,"clementi-son1-3":2,"clementi-son3-1":2,"clementi-son5-1":3,"clem-son2-1":2,"clem-son2-2":1,"clem-son2-3":2,"clem-son3-2":1,"clem-son3-3":2,"clem-son4-1":2,"clem-son4-2":1,"clem-son4-3":1,"clem-son5-2":2,"clem-son5-3":1,"clem-son6-1":4,"clem-son6-2":2});

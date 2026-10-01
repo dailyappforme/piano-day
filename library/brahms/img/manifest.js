@@ -1,0 +1,2 @@
+// Brahms page-strip counts (public-domain PDF — Breitkopf/Sauer)
+window.SCORE_IMG = Object.assign(window.SCORE_IMG||{}, {"brahms-g22":3,"brahms-g26":2,"brahms-g23":4,"brahms-g24":9,"brahms-g28":16,"brahms-g27":3,"brahms-op117-2":4,"brahms-op117-3":5,"brahms-op118-1":2,"brahms-op118-3":4,"brahms-op118-4":3,"brahms-op118-5":3,"brahms-op118-6":4,"brahms-op10-2":6,"brahms-op10-3":5,"brahms-op10-4":6});

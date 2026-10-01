@@ -1,0 +1,13 @@
+node_modules/
+www/
+ios/App/App/public/
+ios/App/Pods/
+.DS_Store
+score-source.html
+_local/
+library/*/src/
+calendar-events.html
+
+# score page-strips live in Cloudflare R2 (bucket piano-scores), not in git
+library/*/img/*.webp
+!library/warmup/img/*.webp

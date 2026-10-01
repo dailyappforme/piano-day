@@ -1,0 +1,2 @@
+// Schubert page-strip counts (public-domain PDF — Breitkopf)
+window.SCORE_IMG = Object.assign(window.SCORE_IMG||{}, {"schubert-g10":6,"schubert-g11":10,"schubert-g12":6,"schubert-g13":2,"schubert-g14":36,"schubert-g15":26,"schubert-op90-1":6,"schubert-op90-2":8,"schubert-op142-1":11,"schubert-op142-2":3,"schubert-op142-4":9,"schubert-mm-1":3,"schubert-mm-2":4,"schubert-mm-4":4,"schubert-mm-5":2,"schubert-mm-6":2,"schubert-d960-1":16,"schubert-d960-2":4,"schubert-d960-3":2,"schubert-d960-4":14,"schubert-wand-1":8,"schubert-wand-2":6,"schubert-wand-3":7,"schubert-wand-4":5});
