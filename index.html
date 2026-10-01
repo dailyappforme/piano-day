@@ -109,6 +109,7 @@
      Pure colour gradient — backdrop-filter smears dark content on WKWebView, so no blur. */
   .appbar::before {
     content: ""; position: absolute; inset: 0 0 -46px 0; z-index: -1; pointer-events: none;
+    opacity: 0; transition: opacity .25s var(--mu-ease);   /* appears only once content scrolls under */
     background: linear-gradient(180deg,
       var(--page-bg, var(--mu-bg)) 0%,
       var(--page-bg, var(--mu-bg)) 38%,
@@ -119,6 +120,7 @@
       color-mix(in srgb, var(--page-bg, var(--mu-bg)) 28%, transparent) 87%,
       color-mix(in srgb, var(--page-bg, var(--mu-bg)) 10%, transparent) 95%, transparent 100%);
   }
+  .screen.scrolled .appbar::before { opacity: 1; }
   /* pages with a pinned sort menu under the bar keep a solid edge (no soften) */
   #view-pianist .appbar, #view-saved .appbar { background: var(--page-bg, var(--mu-bg)); }
   #view-pianist .appbar::before, #view-saved .appbar::before { display: none; }
