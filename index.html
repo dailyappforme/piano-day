@@ -105,25 +105,35 @@
     margin: 0 -28px 4px;
     display: flex; align-items: center; gap: 12px;
   }
-  /* progressive fade: content slides under the bar and dissolves into the page colour.
-     Pure colour gradient — backdrop-filter smears dark content on WKWebView, so no blur. */
+  /* two layers, shown only once content scrolls under the bar:
+     ::before = blurred backdrop whose strength tapers via mask (alpha hits 0 before the
+     element edge — WebKit hard-clips the filter at bounds);
+     ::after  = colour veil ON TOP so blurred dark content never shows naked. */
   .appbar::before {
+    content: ""; position: absolute; inset: 0 0 -40px 0; z-index: -2; pointer-events: none;
+    opacity: 0; transition: opacity .25s var(--mu-ease);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    -webkit-mask-image: linear-gradient(180deg, #000 40%, rgba(0,0,0,.6) 65%, rgba(0,0,0,.2) 80%, transparent 90%);
+    mask-image: linear-gradient(180deg, #000 40%, rgba(0,0,0,.6) 65%, rgba(0,0,0,.2) 80%, transparent 90%);
+  }
+  .appbar::after {
     content: ""; position: absolute; inset: 0 0 -46px 0; z-index: -1; pointer-events: none;
-    opacity: 0; transition: opacity .25s var(--mu-ease);   /* appears only once content scrolls under */
+    opacity: 0; transition: opacity .25s var(--mu-ease);
     background: linear-gradient(180deg,
       var(--page-bg, var(--mu-bg)) 0%,
-      var(--page-bg, var(--mu-bg)) 38%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 96%, transparent) 48%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 86%, transparent) 58%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 70%, transparent) 68%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 50%, transparent) 78%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 28%, transparent) 87%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 10%, transparent) 95%, transparent 100%);
+      var(--page-bg, var(--mu-bg)) 30%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 90%, transparent) 45%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 74%, transparent) 58%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 55%, transparent) 70%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 34%, transparent) 81%,
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 16%, transparent) 91%, transparent 100%);
   }
-  .screen.scrolled .appbar::before { opacity: 1; }
+  .screen.scrolled .appbar::before, .screen.scrolled .appbar::after { opacity: 1; }
   /* pages with a pinned sort menu under the bar keep a solid edge (no soften) */
   #view-pianist .appbar, #view-saved .appbar { background: var(--page-bg, var(--mu-bg)); }
-  #view-pianist .appbar::before, #view-saved .appbar::before { display: none; }
+  #view-pianist .appbar::before, #view-saved .appbar::before,
+  #view-pianist .appbar::after, #view-saved .appbar::after { display: none; }
   .appbar-title { font-size: 30px; font-weight: 700; letter-spacing: -0.028em; line-height: 1.25em; }
   .appbar-sub { font-size: 13px; color: var(--mu-ink-3); margin-top: 0; }
   .appbar-back {
