@@ -108,27 +108,21 @@
   /* progressive blur (vision-app style): translucent gradient + blur, masked so the
      blur strength dissolves smoothly past the bar — no hard edge */
   .appbar::before {
-    content: ""; position: absolute; inset: 0 0 -44px 0; z-index: -1; pointer-events: none;
+    content: ""; position: absolute; inset: 0 0 -24px 0; z-index: -1; pointer-events: none;
     background: linear-gradient(180deg,
       color-mix(in srgb, var(--page-bg, var(--mu-bg)) 92%, transparent) 0%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 86%, transparent) 30%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 68%, transparent) 52%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 42%, transparent) 70%,
-      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 18%, transparent) 85%, transparent 100%);
+      color-mix(in srgb, var(--page-bg, var(--mu-bg)) 55%, transparent) 55%, transparent 90%);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    /* alpha reaches 0 well before the element edge — WebKit clips backdrop-filter at the
+       bounds, so a buffer zone keeps that clip line invisible */
+    -webkit-mask-image: linear-gradient(180deg, #000 45%, rgba(0,0,0,.6) 68%, rgba(0,0,0,.2) 82%, transparent 91%);
+    mask-image: linear-gradient(180deg, #000 45%, rgba(0,0,0,.6) 68%, rgba(0,0,0,.2) 82%, transparent 91%);
   }
-  /* true progressive blur: a mask can only fade colour, not blur strength, so the taper
-     is built from stacked bands of decreasing backdrop-filter (injected into each appbar) */
-  .ab-blur { position: absolute; inset: 0 0 -44px 0; z-index: -2; pointer-events: none; }
-  .ab-blur i { position: absolute; left: 0; right: 0; display: block; }
-  .ab-blur i:nth-child(1) { top: 0; bottom: 44px; backdrop-filter: blur(14px) saturate(150%); -webkit-backdrop-filter: blur(14px) saturate(150%); }
-  .ab-blur i:nth-child(2) { bottom: 33px; height: 11px; backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%); }
-  .ab-blur i:nth-child(3) { bottom: 22px; height: 11px; backdrop-filter: blur(6px) saturate(130%); -webkit-backdrop-filter: blur(6px) saturate(130%); }
-  .ab-blur i:nth-child(4) { bottom: 11px; height: 11px; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
-  .ab-blur i:nth-child(5) { bottom: 0; height: 11px; backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px); }
+
   /* pages with a pinned sort menu under the bar keep a solid edge (no soften) */
   #view-pianist .appbar, #view-saved .appbar { background: var(--page-bg, var(--mu-bg)); }
-  #view-pianist .appbar::before, #view-saved .appbar::before,
-  #view-pianist .appbar .ab-blur, #view-saved .appbar .ab-blur { display: none; }
+  #view-pianist .appbar::before, #view-saved .appbar::before { display: none; }
   .appbar-title { font-size: 30px; font-weight: 700; letter-spacing: -0.028em; line-height: 1.25em; }
   .appbar-sub { font-size: 13px; color: var(--mu-ink-3); margin-top: 0; }
   .appbar-back {
@@ -4488,17 +4482,6 @@ function bumpWake(){
 (function(){ const sc=document.getElementById("screen"); if(sc) sc.addEventListener("scroll", bumpWake, {passive:true}); })();
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") bumpWake(); });
 bumpWake();
-// inject the progressive-blur band stack into every appbar (restored after each re-render)
-function _blurStack(){
-  document.querySelectorAll(".appbar:not(.has-blurstack)").forEach(bar=>{
-    bar.classList.add("has-blurstack");
-    const s=document.createElement("div"); s.className="ab-blur"; s.setAttribute("aria-hidden","true");
-    s.innerHTML="<i></i><i></i><i></i><i></i><i></i>";
-    bar.prepend(s);
-  });
-}
-new MutationObserver(_blurStack).observe(document.body,{subtree:true,childList:true});
-_blurStack();
 routeTo(location.hash);
 </script>
 </body>
