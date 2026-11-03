@@ -32,7 +32,17 @@
 <script src="library/bach/img/manifest.js"></script>
 <script src="library/clementi/img/manifest.js"></script>
 <script src="library/score-pages.js"></script>
-<script>try{ if (window.Capacitor || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) document.documentElement.classList.add('is-native'); }catch(e){}</script>
+<script>try{
+  var _nat = window.Capacitor || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (_nat) document.documentElement.classList.add('is-native');
+  /* Tag tablet-sized devices from the PHYSICAL screen (window.screen), which stays
+     constant while the app resumes. The webview's viewport width briefly reports a
+     narrow value during the resume animation; screen.width does not. We key the
+     "never collapse to 1 column" rules off this so the layout can't flip. */
+  var _s = window.screen || {};
+  var _short = Math.min(_s.width || 9999, _s.height || 9999);
+  if (_nat && _short >= 600) document.documentElement.classList.add('tablet');
+}catch(e){}</script>
 <script src="library/piano-samples.js"></script>
 <script src="library/calendar-data.js"></script>
 <script src="library/i18n-content.js"></script>
@@ -41,6 +51,9 @@
      Piano Practice · iPad app · mu-system greyscale
      =============================================================== */
   html, body { height: 100%; }
+  /* stop iOS WebKit from auto-inflating text on launch (content appears "big" for a
+     frame, then snaps smaller once the viewport settles). Pin it to the real size. */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { background: #e6e6e9; overflow: hidden; }
   /* instant taps (no double-tap-zoom delay) while still allowing pinch-zoom on scores */
   * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
@@ -61,10 +74,14 @@
     display: flex; flex-direction: column;
   }
   /* native app (Capacitor) / installed PWA: always full-bleed, no desktop mockup frame */
-  html.is-native .stage { padding: 0; min-height: 100vh; min-height: 100dvh; align-items: stretch; }
+  html.is-native .stage { padding: 0; width: 100%; min-height: 100vh; min-height: 100dvh; align-items: stretch; }
   /* reserve the status-bar safe area on the NON-scrolling device frame so content
      can't scroll up under the status bar (padding on the scroll area scrolls away) */
-  html.is-native .device { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; border-radius: 0; box-shadow: none; padding-top: env(safe-area-inset-top); }
+  /* width:100% (not 100vw) — on iOS WKWebView vw units cache a stale layout-viewport
+     value and don't recompute after the app is backgrounded/resumed (app switcher,
+     Stage Manager, split view), leaving the frame the wrong width on return. % tracks
+     the real webview box, which the OS always resizes correctly. */
+  html.is-native .device { width: 100%; height: 100vh; height: 100dvh; max-width: none; max-height: none; border-radius: 0; box-shadow: none; padding-top: env(safe-area-inset-top); }
   html.is-native .screen { padding-top: 0; }
   /* native/installed: white behind the status-bar safe area (no grey inset) */
   html.is-native, html.is-native body, html.is-native .device, html.is-native .screen { background: #fff; }
@@ -72,15 +89,15 @@
   html[data-theme="dark"].is-native { --page-bg: #17171b; }
   html.is-native { --page-bg: #fff; }
   @media (max-width: 1024px) {
-    .stage { padding: 0; min-height: 100vh; min-height: 100dvh; align-items: stretch; }
-    .device { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; }
+    .stage { padding: 0; width: 100%; min-height: 100vh; min-height: 100dvh; align-items: stretch; }
+    .device { width: 100%; height: 100vh; height: 100dvh; border-radius: 0; }
     html, body { background: var(--mu-white); }
   }
   /* real touch tablets (iPad incl. landscape > 1024px): full app, no desktop mockup frame/grey/shadow.
      The .device mockup is for desktop preview only. */
   @media (pointer: coarse) {
-    .stage { padding: 0; min-height: 100vh; min-height: 100dvh; align-items: stretch; background: var(--mu-white); }
-    .device { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; border-radius: 0; box-shadow: none; }
+    .stage { padding: 0; width: 100%; min-height: 100vh; min-height: 100dvh; align-items: stretch; background: var(--mu-white); }
+    .device { width: 100%; height: 100vh; height: 100dvh; max-width: none; max-height: none; border-radius: 0; box-shadow: none; }
     html, body { background: var(--mu-white); }
   }
 
@@ -567,6 +584,25 @@
   .focus-actions #zoomVal { font-family: var(--mu-mono); font-size: 13.5px; color: var(--mu-ink-2); min-width: 42px; text-align: center; }
   .fa-sep { width: 1px; height: 20px; background: var(--mu-border); margin: 0 3px; }
   .focus-actions .fa-page { font-family: var(--mu-mono); font-size: 13px; color: var(--mu-ink-2); min-width: 44px; text-align: center; padding: 0 2px; }
+  /* two-mode toolbar: main (page/edit/zoom) vs edit (annotation tools). Only one shows at a time. */
+  .fa-main, .fa-edit { display: flex; align-items: center; gap: 2px; }
+  .focus-view.ann-editing .fa-main { display: none; }
+  .fa-edit { display: none; }
+  .focus-view.ann-editing .fa-edit { display: flex; }
+  /* divider that always stays visible (unlike .fa-sep, which collapses in book/zoom views) */
+  .fa-div { width: 1px; height: 22px; background: var(--mu-border); margin: 0 4px; flex: none; }
+  /* the Done pill: text, not a fixed-width circle (higher specificity beats the touch 50px rule) */
+  .focus-view .focus-actions .ann-done { width: auto; min-width: 0; height: 38px; padding: 0 18px; border-radius: var(--mu-radius-full); background: var(--mu-gray-900); color: #fff; font-weight: 600; font-size: 15px; }
+  .focus-view .focus-actions .ann-done:hover { background: var(--mu-gray-900); filter: brightness(1.15); }
+  /* thickness slider popover (same glass styling as the colour popover) */
+  .ann-thickpop { position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%); z-index: 23;
+    display: flex; align-items: center; gap: 12px; border-radius: var(--mu-radius-full); padding: 8px 18px;
+    background: rgba(255,255,255,0.86); border: 1px solid var(--mu-border); box-shadow: var(--mu-shadow-md);
+    -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); }
+  .ann-thickpop[hidden] { display: none !important; }
+  .focus-view.fake-fs .ann-thickpop, .focus-view.pdf-book .ann-thickpop { bottom: calc(env(safe-area-inset-bottom) + 92px); }
+  .ann-thickpop input[type=range] { width: 160px; accent-color: var(--mu-ink); }
+  .ann-thickdot { background: var(--mu-ink); border-radius: 50%; flex: none; }
   .metro-group { display: contents; }
   .focus-scroll { border: 1px solid var(--mu-border); border-radius: var(--mu-radius-lg);
     background: var(--mu-white); overflow-x: hidden; overflow-y: auto; max-height: 72vh; min-height: 320px; padding-bottom: 76px; }
@@ -586,6 +622,68 @@
   .pdf-imgwrap { width: 100%; }
   .pdf-img { width: 100%; display: block; background: #fff; }
   .pdf-page + .pdf-page { margin-top: 4px; }
+
+  /* ---- score annotations (draw / text / shape) ---- */
+  .focus-view .pdf-page { position: relative; }   /* anchor for the overlay */
+  /* never let iOS pop the Copy/Translate/Share callout or select the score while marking */
+  .focus-view, .focus-view .pdf-page, .focus-view .pdf-img, .focus-view .ann-layer {
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .ann-layer { position: absolute; z-index: 6; pointer-events: none; touch-action: none; overflow: visible; }
+  .focus-view.ann-active .ann-layer { pointer-events: auto; }
+  .focus-view.ann-active .focus-actions, .focus-view.ann-editing .focus-actions { opacity: 1 !important; pointer-events: auto !important; }
+  /* bigger, finger-friendly tool buttons in the score toolbar */
+  .focus-actions button.ann-tool, .focus-actions button.ann-eyebtn { width: 44px; height: 44px; }
+  .focus-actions button.ann-tool svg, .focus-actions button.ann-eyebtn svg { width: 21px; height: 21px; }
+  /* divider to the LEFT of the pencil — stays visible on touch/book views (unlike .fa-sep) */
+  .focus-actions .ann-vsep { display: block !important; height: 26px; }
+  /* colour lives in the MAIN toolbar: ONE swatch showing the current colour; tap it for the
+     full colour popover. Visible only while editing. */
+  .focus-actions .ann-colorsep { display: block !important; height: 26px; }
+  .focus-actions .ann-colorbtn { display: inline-flex; width: 30px; height: 30px; flex: none; margin: 0 7px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--mu-border); cursor: pointer; padding: 0; }
+  .ann-colorpop { position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%); z-index: 23;
+    display: flex; align-items: center; gap: 9px; flex-wrap: nowrap;
+    border-radius: var(--mu-radius-full); padding: 3px 14px;
+    background: rgba(255,255,255,0.8); border: 1px solid var(--mu-border); box-shadow: var(--mu-shadow-md);
+    -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); }
+  .ann-colorpop[hidden] { display: none !important; }
+  .focus-view.fake-fs .ann-colorpop, .focus-view.pdf-book .ann-colorpop { bottom: calc(env(safe-area-inset-bottom) + 92px); }
+  .ann-sym { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 16px; font-weight: 700; }
+  /* created marks are ALWAYS tappable — tap one to jump straight into adjust. The empty
+     overlay stays click-through (pointer-events:none on .ann-layer) so paging/scroll works
+     when no tool is active; while a tool IS active the whole overlay captures (rule above). */
+  .ann-layer > *:not(.ann-selui) { pointer-events: all; touch-action: none; }
+  .ann-layer .ann-selui { pointer-events: none; }
+  /* hidden mode: the eye toggle greys out the tools and hides the drawn layer */
+  .focus-view.ann-hidden .ann-layer { display: none; }
+  .focus-view.ann-hidden .ann-tool { opacity: .32; pointer-events: none; }
+  /* secondary (palette) menu — SAME glass style as the main toolbar: one row, no wrap */
+  .ann-palette { position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%); z-index: 22;
+    display: flex; align-items: center; gap: 9px; flex-wrap: nowrap; justify-content: flex-start;
+    max-width: calc(100% - 16px); overflow-x: auto; -webkit-overflow-scrolling: touch;
+    border-radius: var(--mu-radius-full); padding: 7px 12px;
+    background: rgba(255,255,255,0.8); border: 1px solid var(--mu-border); box-shadow: var(--mu-shadow-md);
+    -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); }
+  .ann-palette[hidden] { display: none !important; }   /* the display:flex above otherwise defeats the hidden attribute */
+  .ann-palette::-webkit-scrollbar { display: none; }
+  .focus-view.fake-fs .ann-palette, .focus-view.pdf-book .ann-palette { bottom: calc(env(safe-area-inset-bottom) + 92px); }
+  /* keep the palette shown while editing, in sync with the (pinned) main toolbar */
+  .focus-view.ann-active .ann-palette { opacity: 1; pointer-events: auto; }
+  .ann-palette .ann-div { width: 1px; height: 26px; flex: none; margin: 0 1px; background: var(--mu-border); }
+  .ann-sw { width: 34px; height: 34px; flex: none; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--mu-border); cursor: pointer; padding: 0; }
+  .ann-sw.is-sel { box-shadow: 0 0 0 2px var(--mu-ink); transform: scale(1.09); }
+  .ann-pb { min-width: 40px; height: 40px; flex: none; padding: 0 10px; border: none; background: transparent;
+    border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--mu-ink-2); font-size: 15px; }
+  .ann-pb:hover { background: var(--mu-gray-100); }
+  .ann-pb.is-sel { background: var(--mu-gray-900); color: #fff; }
+  .ann-pb svg { width: 20px; height: 20px; }
+  .ann-done { width: auto; min-width: 0; padding: 0 16px; border-radius: var(--mu-radius-full); background: var(--mu-gray-900); color: #fff; font-weight: 600; }
+  .ann-done:hover { background: var(--mu-gray-900); filter: brightness(1.15); }
+  .ann-wdot { background: currentColor; border-radius: 50%; display: block; }
+  .ann-hint { flex: none; white-space: nowrap; font-size: 13px; color: var(--mu-ink-2); padding: 0 4px; }
+  .ann-textin { position: absolute; z-index: 30; background: rgba(255,255,255,.92); border: 1px solid var(--mu-ink);
+    border-radius: 5px; padding: 1px 5px; font-weight: 600; line-height: 1.1; outline: none; min-width: 40px;
+    font-family: -apple-system, system-ui, sans-serif; -webkit-user-select: text; user-select: text; }
+  html[data-theme="dark"] .ann-textin { background: rgba(30,30,34,.92); }
   .focus-view:fullscreen { background: var(--mu-bg); padding: 16px; box-sizing: border-box; }
   .focus-view:fullscreen .focus-scroll { max-height: none; height: calc(100vh - 32px); }
   .focus-view:-webkit-full-screen { background: var(--mu-bg); padding: 16px; box-sizing: border-box; }
@@ -634,7 +732,8 @@
   /* floating panel auto-hides after inactivity; tap the page to bring it back */
   .focus-actions { transition: opacity .3s var(--mu-ease); }
   .focus-view.fake-fs.panel-hidden .focus-actions,
-  .focus-view.pdf-book.panel-hidden .focus-actions { opacity: 0; pointer-events: none; }
+  .focus-view.pdf-book.panel-hidden .focus-actions,
+  .focus-view.panel-hidden .focus-actions { opacity: 0; pointer-events: none; }
   .fs-close { display: none; }
   /* enlarge view: exit via the shrink icon in the toolbar (no separate go-back button) */
   .focus-view.fake-fs .fs-close { display: none; }
@@ -830,7 +929,12 @@
   .tabbtn:hover, .tabbtn:active, .tabbtn:focus { background: transparent; outline: none; }
   .tabbtn svg { width: 24px; height: 24px; }
   .tabbtn.is-active { color: var(--mu-ink); }
-  .tabbtn.is-active svg { stroke-width: 2.2; }
+  /* selected tab: show the solid (filled) icon instead of the outline one */
+  .tabbtn .ic-fill { display: none; }
+  .tabbtn.is-active .ic-line { display: none; }
+  .tabbtn.is-active .ic-fill { display: block; }
+  /* home: keep the same outline icon, but fill it solid (roof + body) when selected */
+  .tabbtn.is-active[data-tab="home"] svg path { fill: currentColor; }
 
   /* smooth page crossfade (View Transitions API) */
   ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .22s; animation-timing-function: var(--mu-ease); }
@@ -912,8 +1016,13 @@
 
   /* Touch devices (iPad / phone): all interactive controls meet the 44×44px tap-target minimum */
   @media (pointer: coarse) {
-    .focus-actions { gap: 4px; }
-    .focus-actions button { width: 44px; height: 44px; }
+    .focus-actions { gap: 5px; padding: 4px 7px; }
+    .focus-actions button { width: 50px; height: 50px; }
+    .focus-actions button svg { width: 22px; height: 22px; }
+    .focus-actions button.ann-tool, .focus-actions button.ann-eyebtn { width: 50px; height: 50px; }
+    .focus-actions button.ann-tool svg, .focus-actions button.ann-eyebtn svg { width: 24px; height: 24px; }
+    .focus-actions .fa-page { font-size: 15px; min-width: 50px; }
+    .ann-colorpop { padding: 12px 14px; }   /* match the taller toolbar height on iPad */
     /* touch: pinch-zoom instead of +/- buttons */
     .focus-actions #zoomOut, .focus-actions #zoomIn, .focus-actions #zoomVal, .focus-actions:not(.warmup-actions) .fa-sep { display: none; }
     .zoomctrl button { width: 44px; height: 44px; }
@@ -921,6 +1030,17 @@
     .sortchips > button { height: 36px; }
     .cal-link, .home-card, .recent-item, .tabbtn { min-height: 44px; }
   }
+
+  /* iPad/tablet native app: NEVER collapse the home/library grids to one column, even if
+     the webview momentarily reports a narrow viewport while resuming from the background.
+     Keyed off .tablet (from physical screen size) so it survives the transient width.
+     Higher specificity than the max-width:640 rules above, so it always wins. */
+  html.is-native.tablet .home-grid { grid-template-columns: 1fr 1fr !important; }
+  html.is-native.tablet .cgrid     { grid-template-columns: 1fr 1fr !important; }
+  html.is-native.tablet .toolgrid  { grid-template-columns: 1fr 1fr !important; }
+  /* playlist card: cap the height (~12 rows) and scroll inside if there are more, instead
+     of growing unbounded on iPad */
+  html.is-native.tablet .home-grid > .home-col:first-child .home-card { height: min(760px, 60dvh) !important; max-height: none !important; overflow-y: auto !important; }
 </style>
 </head>
 <body>
@@ -948,19 +1068,22 @@
     <!-- bottom nav -->
     <nav class="tabbar" id="tabbar">
       <button class="tabbtn is-active" data-tab="home">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path class="house-body" d="M5 9.5V21h14V9.5"/></svg>
         <span class="tb-lbl" data-k="Home">Home</span>
       </button>
       <button class="tabbtn" data-tab="library">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="6" height="18" rx="1"/><rect x="14" y="3" width="6" height="18" rx="1"/><path d="M4 8h6M14 8h6"/></svg>
+        <svg class="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="6" height="18" rx="1"/><rect x="14" y="3" width="6" height="18" rx="1"/><path d="M4 8h6M14 8h6"/></svg>
+        <svg class="ic-fill" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.4 3H8.6A1.4 1.4 0 0 1 10 4.4V19.6A1.4 1.4 0 0 1 8.6 21H5.4A1.4 1.4 0 0 1 4 19.6V4.4A1.4 1.4 0 0 1 5.4 3ZM4 7.4H10V8.7H4ZM15.4 3H18.6A1.4 1.4 0 0 1 20 4.4V19.6A1.4 1.4 0 0 1 18.6 21H15.4A1.4 1.4 0 0 1 14 19.6V4.4A1.4 1.4 0 0 1 15.4 3ZM14 7.4H20V8.7H14Z"/></svg>
         <span class="tb-lbl" data-k="Library">Library</span>
       </button>
       <button class="tabbtn" data-tab="saved">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z"/></svg>
+        <svg class="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z"/></svg>
+        <svg class="ic-fill" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 2.5h12a1.3 1.3 0 0 1 1.3 1.3v17.4a.8.8 0 0 1-1.2.7L12 18.1l-6.1 3.8a.8.8 0 0 1-1.2-.7V3.8A1.3 1.3 0 0 1 6 2.5Z"/></svg>
         <span class="tb-lbl" data-k="Playlist">Playlist</span>
       </button>
       <button class="tabbtn" data-tab="profile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+        <svg class="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+        <svg class="ic-fill" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="7.6" r="4.3"/><path d="M12 13.4c-4.4 0-7.6 2.4-7.6 6.3 0 .8.5 1.3 1.3 1.3h12.6c.8 0 1.3-.5 1.3-1.3 0-3.9-3.2-6.3-7.6-6.3Z"/></svg>
         <span class="tb-lbl" data-k="You">You</span>
       </button>
     </nav>
@@ -3903,6 +4026,14 @@ function renderSheetPane(p, toggleMark){
     const shrink = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>`;
     const minusIc = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
     const plusIc = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    const penIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+    const textIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`;
+    const shapeIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="8.5" r="5"/><rect x="11" y="11" width="9.5" height="9.5" rx="1.4"/></svg>`;
+    const noteIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="17" cy="15.4" r="2.6"/><path d="M8.6 18V5l10.8-2v12.4"/><path d="M8.6 8.2 19.4 6.2"/></svg>`;
+    const editIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>`;
+    const thickIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7" stroke-width="1.2"/><line x1="4" y1="12" x2="20" y2="12" stroke-width="2.6"/><line x1="4" y1="17.5" x2="20" y2="17.5" stroke-width="4.4"/></svg>`;
+    const eraserIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>`;
+    const undoIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>`;
     const isPdf = !SCORE_SVG[p.id] && !!(window.SCORE_IMG && window.SCORE_IMG[p.id]);   // page-strips render as PDF
     // book pager only for true per-page scores; legacy tall combined strips stay vertical (contain-fit would shrink them)
     const isBook = isPdf && ((window.SCORE_PAGE_AR && window.SCORE_PAGE_AR[p.id] || 1.4) < 2.2);
@@ -3911,15 +4042,34 @@ function renderSheetPane(p, toggleMark){
         <button class="fs-close" id="fsClose" title="Exit full screen" aria-label="Exit full screen">${IC.back}</button>
         <div class="focus-scroll${isPdf?' is-pdf':''}" id="focusScroll"><div class="focus-zoom" id="focusZoom">${scoreEl(p,"focus")}</div></div>
         <div class="focus-actions">
-          <button id="pgPrev" title="Previous">${isBook?cLeft:cUp}</button>
-          ${isBook?`<span id="pgInfo" class="fa-page">1/${(window.SCORE_IMG&&window.SCORE_IMG[p.id])||1}</span>`:``}
-          <button id="pgNext" title="Next">${isBook?cRight:cDn}</button>
-          <span class="fa-sep"></span>
-          <button id="zoomOut" title="Zoom out">${minusIc}</button>
-          <span id="zoomVal">${Math.round(sheetCtx.zoom*100)}%</span>
-          <button id="zoomIn" title="Zoom in">${plusIc}</button>
-          <span class="fa-sep"></span>
-          <button id="fullBtn" title="Full screen">${full}</button>
+          <div class="fa-main">
+            <button id="pgPrev" title="Previous">${isBook?cLeft:cUp}</button>
+            ${isBook?`<span id="pgInfo" class="fa-page">1/${(window.SCORE_IMG&&window.SCORE_IMG[p.id])||1}</span>`:``}
+            <button id="pgNext" title="Next">${isBook?cRight:cDn}</button>
+            ${isPdf?`<span class="fa-div"></span>
+            <button id="annEdit" class="ann-eyebtn" title="Edit / annotate">${editIc}</button>
+            <button id="annEye" class="ann-eyebtn" title="Hide marks">${ANN_EYE}</button>`:``}
+            <span class="fa-sep"></span>
+            <button id="zoomOut" title="Zoom out">${minusIc}</button>
+            <span id="zoomVal">${Math.round(sheetCtx.zoom*100)}%</span>
+            <button id="zoomIn" title="Zoom in">${plusIc}</button>
+            <span class="fa-sep"></span>
+            <button id="fullBtn" title="Full screen">${full}</button>
+          </div>
+          ${isPdf?`<div class="fa-edit" hidden>
+            <button class="ann-colorbtn" id="annColorBtn" title="Colour"></button>
+            <button id="annThick" class="ann-tool" title="Thickness">${thickIc}</button>
+            <span class="fa-div"></span>
+            <button id="annPen" class="ann-tool" title="Draw">${penIc}</button>
+            <button id="annText" class="ann-tool" title="Add text">${textIc}</button>
+            <button id="annShape" class="ann-tool" title="Shape">${shapeIc}</button>
+            <button id="annNote" class="ann-tool" title="Music symbols">${noteIc}</button>
+            <span class="fa-div"></span>
+            <button id="annUndo" class="ann-tool" title="Undo">${undoIc}</button>
+            <button id="annEraser" class="ann-tool" title="Eraser">${eraserIc}</button>
+            <span class="fa-div"></span>
+            <button id="annDone" class="ann-done" title="Done">Done</button>
+          </div>`:``}
         </div>
       </div>
       ${SPOTIFY[p.id] ? `<div class="spotify-embed"><div class="sp-fallback">${IC.music||''}<span class="sp-fallback-txt">${navigator.onLine===false ? t("Preview needs an internet connection") : t("Spotify preview")}</span><a class="sp-open" href="https://open.spotify.com/${SPOTIFY[p.id]}" target="_blank" rel="noopener">${t("Open in Spotify")} ↗</a></div>${navigator.onLine===false ? "" : `<iframe style="border-radius:12px" src="https://open.spotify.com/embed/${SPOTIFY[p.id]}?utm_source=generator&theme=0" width="100%" height="80" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" onload="this.closest('.spotify-embed').classList.add('sp-loaded')"></iframe>`}</div>` : ""}`;
@@ -4013,13 +4163,14 @@ function renderSheetPane(p, toggleMark){
     pane.querySelector("#zoomOut").addEventListener("click", ()=>{ sheetCtx.zoom=Math.max(0.5, sheetCtx.zoom-0.25); applyZoom(pane); });
     const fullBtn = pane.querySelector("#fullBtn");
     const pgPrev = pane.querySelector("#pgPrev"), pgNext = pane.querySelector("#pgNext");
-    // floating panel: auto-hide after 10s of no interaction (book pager, default + enlarge); any tap/scroll brings it back
+    // floating main menu: auto-hide after 30s of no interaction; any tap/scroll brings it back.
+    // While the edit menu is open (ann-editing) or a tool is active (ann-active) it stays put.
     let panelTimer = null;
     function pokePanel(){
-      if (!fv.classList.contains("fake-fs") && !fv.classList.contains("pdf-book")) return;
-      fv.classList.remove("panel-hidden");
       clearTimeout(panelTimer);
-      panelTimer = setTimeout(()=> fv.classList.add("panel-hidden"), 10000);
+      fv.classList.remove("panel-hidden");
+      if (fv.classList.contains("ann-editing") || fv.classList.contains("ann-active")) return;
+      panelTimer = setTimeout(()=> fv.classList.add("panel-hidden"), 30000);
     }
     fv.addEventListener("pointerdown", pokePanel);
     scroll.addEventListener("scroll", pokePanel, { passive:true });
@@ -4034,6 +4185,8 @@ function renderSheetPane(p, toggleMark){
       pokePanel();
     }
     function exitFs(){
+      if (fv._annExit) fv._annExit();   // leaving fullscreen also finishes any annotation editing
+      fv.classList.remove("ann-editing");   // and closes the edit menu back to the main menu
       const pg = currentPage();
       fv.classList.remove("fake-fs", "panel-hidden"); document.body.classList.remove("fs-active");
       clearTimeout(panelTimer);
@@ -4043,6 +4196,7 @@ function renderSheetPane(p, toggleMark){
     }
     fullBtn.addEventListener("click", ()=>{ fv.classList.contains("fake-fs") ? exitFs() : enterFs(); });
     pane.querySelector("#fsClose").addEventListener("click", exitFs);
+    setupAnnotations(pane, p, { scroll, fv, isBook, isPdf, enterFs, pokePanel });
   }
 }
 
@@ -4050,6 +4204,446 @@ function applyZoom(pane){
   const z=pane.querySelector("#focusZoom"), val=pane.querySelector("#zoomVal");
   if (z) z.style.transform = `scale(${sheetCtx.zoom})`;
   if (val) val.textContent = Math.round(sheetCtx.zoom*100)+"%";
+}
+
+/* =====================================================================
+   Score annotations — freehand "mark", text and outlined shapes drawn on
+   the page images with finger or Apple Pencil. Stored per piece+page in
+   S.annos (localStorage) in a 1000-wide viewBox space so they stay pinned
+   to the notes across zoom / paging / re-open.
+   ===================================================================== */
+const ANN_NS = "http://www.w3.org/2000/svg";
+const ANN_EYE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const ANN_EYEOFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.9 5.2A9.8 9.8 0 0 1 12 5c7 0 10.5 7 10.5 7a17.3 17.3 0 0 1-3.1 3.9M6.2 6.2A17.1 17.1 0 0 0 1.5 12S5 19 12 19a9.5 9.5 0 0 0 4.1-.9"/><line x1="3" y1="3" x2="21" y2="21"/></svg>`;
+const ANN_COLORS = ["#e23b3b","#2f6df6","#1faa59","#f5a623","#9b51e0","#e84f9c","#111111","#9a9a9f"];
+const ANN_WIDTHS = [ ["XS",2], ["S",4], ["M",9] ];      // label, stroke (viewBox units) — thinner set
+const ANN_TSIZES = [ ["S",20], ["M",30], ["L",44] ];    // a touch smaller
+// stampable musical symbols, grouped: accidentals · dynamics · pedal · accents · note names · fingering
+const ANN_SYMS = [
+  ["♯","♭","♮"],
+  ["pp","p","mp","mf","f","ff"],
+  ["Ped.","✱"],
+  [">","^","sf","sfz"],
+  ["A","B","C","D","E","F","G"],
+  ["1","2","3","4","5","6","7"],
+];
+let annSym = "♯";
+let annSymSize = 30;
+let annTool = null;            // 'pen' | 'text' | 'shape'
+let annColor = ANN_COLORS[0];
+let annWidth = ANN_WIDTHS[0][1];   // draw defaults to the thinnest
+let annShape = "rect";         // 'rect' | 'circle'
+let annShapeFill = "none";     // 'none' (outline only) | 'fill' (solid, 10% opacity)
+let annTSize = ANN_TSIZES[0][1];   // text defaults to S
+let annLastSvg = null;         // last overlay drawn on (for undo / clear)
+
+function annStore(){ if(!S.annos) S.annos = {}; return S.annos; }
+function annData(pieceId, pageIdx){
+  const st = annStore();
+  (st[pieceId] || (st[pieceId] = {}));
+  return st[pieceId][pageIdx] || (st[pieceId][pageIdx] = []);
+}
+function annPathD(pts){
+  if(!pts.length) return "";
+  if(pts.length < 3) return "M" + pts.map(p=>`${p.x} ${p.y}`).join(" L");
+  let d = `M${pts[0].x} ${pts[0].y}`;
+  for(let i=1;i<pts.length-1;i++){ const mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2; d += ` Q${pts[i].x} ${pts[i].y} ${mx} ${my}`; }
+  const last = pts[pts.length-1]; d += ` L${last.x} ${last.y}`;
+  return d;
+}
+function annSetFill(el, it){   // shape fill: outline-only (default) or solid tint at 10% opacity
+  if(it.f==='fill'){ el.setAttribute('fill', it.c); el.setAttribute('fill-opacity','0.1'); }
+  else el.setAttribute('fill','none');
+}
+function annMake(it){
+  let el;
+  if(it.t==='p'){ el=document.createElementNS(ANN_NS,'path'); el.setAttribute('d',it.d); el.setAttribute('fill','none'); el.setAttribute('stroke-linecap','round'); el.setAttribute('stroke-linejoin','round'); }
+  else if(it.t==='r'){ el=document.createElementNS(ANN_NS,'rect'); el.setAttribute('x',it.x); el.setAttribute('y',it.y); el.setAttribute('width',it.w2); el.setAttribute('height',it.h2); el.setAttribute('rx',(Math.min(it.w2,it.h2)*0.03).toFixed(1)); annSetFill(el,it); }
+  else if(it.t==='c'){ el=document.createElementNS(ANN_NS,'ellipse'); el.setAttribute('cx',it.x); el.setAttribute('cy',it.y); el.setAttribute('rx',it.w2); el.setAttribute('ry',it.h2); annSetFill(el,it); }
+  else if(it.t==='t'){ el=document.createElementNS(ANN_NS,'text'); el.setAttribute('x',it.x); el.setAttribute('y',it.y); el.setAttribute('font-size',it.s); el.setAttribute('font-weight', it.m?'700':'600'); el.setAttribute('font-family', it.m ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : '-apple-system, system-ui, sans-serif'); el.setAttribute('dominant-baseline','hanging'); el.textContent=it.v; el.setAttribute('fill',it.c); }
+  if(!el) return null;
+  if(it.t!=='t'){ el.setAttribute('stroke',it.c); el.setAttribute('stroke-width',it.w); }
+  return el;
+}
+function annRender(svg){
+  const items = annData(svg.dataset.piece, +svg.dataset.page);
+  svg.textContent = "";
+  items.forEach((it, idx)=>{
+    const el = annMake(it); if(!el) return;
+    el.dataset.i = idx; svg.appendChild(el);
+    if(it.tx || it.ty || (it.sc && it.sc!==1)){
+      let bx = it.bx0, by = it.by0;
+      if(bx==null){ const bb = el.getBBox(); bx = bb.x; by = bb.y; }   // fallback (layer must be visible)
+      annApplyTransform(el, it, { bx, by });
+    }
+  });
+  if(annSel && annSel.svg===svg) annDrawSel(svg);
+}
+// ---- selection / move / resize / erase of placed marks ----
+let annSel = null;    // { svg, idx, bx, by, ow, oh, box, hr }
+let annDrag = null;   // { mode:'move'|'resize', svg, id, ox, oy }
+let annErasing = null;// pointerId currently erasing
+let annErasedAny = false;
+let annOnSel = null;  // callback to refresh the palette when selection changes
+let annLastItem = null, annLastItemSvg = null;   // most-recently created mark (for quick recolour)
+function annEraseAt(svg, e){
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if(el && el!==svg && svg.contains(el) && el.dataset && el.dataset.i!=null){
+    annData(svg.dataset.piece, +svg.dataset.page).splice(+el.dataset.i, 1); save(); annRender(svg); return true;
+  }
+  return false;
+}
+function annApplyTransform(el, it, sel){
+  const tx=it.tx||0, ty=it.ty||0, sc=it.sc||1;
+  if(!tx && !ty && sc===1){ el.removeAttribute('transform'); return; }
+  const bx = sel ? sel.bx : 0, by = sel ? sel.by : 0;
+  el.setAttribute('transform', `translate(${tx} ${ty}) translate(${bx} ${by}) scale(${sc}) translate(${-bx} ${-by})`);
+}
+function annVisBox(it, s){ const sc=it.sc||1, tx=it.tx||0, ty=it.ty||0; return { x:s.bx+tx, y:s.by+ty, w:s.ow*sc, h:s.oh*sc }; }
+function annDrawSel(svg){
+  const old = svg.querySelector('.ann-selui'); if(old) old.remove();
+  if(!annSel || annSel.svg!==svg) return;
+  const it = annData(svg.dataset.piece, +svg.dataset.page)[annSel.idx]; if(!it){ annSel=null; return; }
+  const b = annVisBox(it, annSel); annSel.box = b;
+  const ctm = svg.getScreenCTM(); const r = annSel.hr = ctm ? 14/ctm.a : 18;
+  const g = document.createElementNS(ANN_NS,'g'); g.setAttribute('class','ann-selui');
+  const rect = document.createElementNS(ANN_NS,'rect');
+  rect.setAttribute('x',b.x); rect.setAttribute('y',b.y); rect.setAttribute('width',Math.max(1,b.w)); rect.setAttribute('height',Math.max(1,b.h));
+  rect.setAttribute('fill','none'); rect.setAttribute('stroke','#2f6df6'); rect.setAttribute('stroke-width', (r*0.14).toFixed(2)); rect.setAttribute('stroke-dasharray', `${(r*0.5).toFixed(1)} ${(r*0.45).toFixed(1)}`);
+  g.appendChild(rect);
+  const mk=(cx,cy,fill)=>{ const c=document.createElementNS(ANN_NS,'circle'); c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r); c.setAttribute('fill',fill); c.setAttribute('stroke','#fff'); c.setAttribute('stroke-width',(r*0.2).toFixed(2)); g.appendChild(c); };
+  mk(b.x+b.w, b.y+b.h, '#2f6df6');   // resize handle (bottom-right) — delete is via the eraser tool
+  svg.appendChild(g);
+}
+function annHit(pt, cx, cy, r){ return Math.hypot(pt.x-cx, pt.y-cy) <= r*1.7; }
+function annSelectDown(svg, e){
+  e.preventDefault(); e.stopPropagation();
+  try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+  annLastSvg = svg;
+  const pt = annPoint(svg, e.clientX, e.clientY);
+  if(annSel && annSel.svg===svg && annSel.box){
+    const b = annSel.box, r = annSel.hr || 18;
+    if(annHit(pt, b.x+b.w, b.y+b.h, r)){ annDrag={mode:'resize', svg, id:e.pointerId}; return; }   // resize
+    if(pt.x>=b.x-r*0.6 && pt.x<=b.x+b.w+r*0.6 && pt.y>=b.y-r*0.6 && pt.y<=b.y+b.h+r*0.6){           // move
+      annDrag={mode:'move', svg, id:e.pointerId, ox:pt.x, oy:pt.y}; return;
+    }
+  }
+  const el = (e.target && e.target!==svg && e.target.dataset && e.target.dataset.i!=null) ? e.target : null;
+  if(el){ const bb=el.getBBox(); annSel={ svg, idx:+el.dataset.i, bx:bb.x, by:bb.y, ow:bb.width, oh:bb.height }; annDrawSel(svg); }
+  else { annSel=null; annDrawSel(svg); }
+  if(typeof annOnSel==='function') annOnSel();   // refresh palette (show selected mark's colour/thickness)
+}
+function annPoint(svg, cx, cy){
+  const m = svg.getScreenCTM(); if(!m) return {x:0,y:0};
+  const pt = svg.createSVGPoint(); pt.x=cx; pt.y=cy;
+  const u = pt.matrixTransform(m.inverse());
+  return { x: Math.round(u.x*10)/10, y: Math.round(u.y*10)/10 };
+}
+function annShapeAttrs(el, s, e){
+  const x=Math.min(s.x,e.x), y=Math.min(s.y,e.y), w=Math.abs(e.x-s.x), h=Math.abs(e.y-s.y);
+  if(el.tagName==='ellipse'){ el.setAttribute('cx',x+w/2); el.setAttribute('cy',y+h/2); el.setAttribute('rx',w/2); el.setAttribute('ry',h/2); }
+  else { el.setAttribute('x',x); el.setAttribute('y',y); el.setAttribute('width',w); el.setAttribute('height',h); el.setAttribute('rx',(Math.min(w,h)*0.03).toFixed(1)); }
+}
+function annAttachDraw(svg){
+  let cur = null;   // active stroke/shape: {type,id,pts|start,el}
+  svg.addEventListener('pointerdown', e=>{
+    if(!annTool){
+      // no tool active: a tap directly on a created mark jumps into adjust mode for it
+      if(e.target && e.target!==svg && e.target.dataset && e.target.dataset.i!=null){
+        const fv = svg.closest('.focus-view');
+        if(fv && fv._annPick){ e.preventDefault(); e.stopPropagation(); fv._annPick(svg, e.target); }
+      }
+      return;
+    }
+    if(annTool==='select'){ annSelectDown(svg, e); return; }
+    if(annTool==='eraser'){   // touch a mark to erase it; drag across several to wipe them
+      e.preventDefault(); e.stopPropagation();
+      try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+      annLastSvg = svg; annErasing = e.pointerId; annErasedAny = false;
+      if(annEraseAt(svg, e)) annErasedAny = true;
+      return;
+    }
+    if(cur) return;
+    e.preventDefault(); e.stopPropagation();
+    try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+    annLastSvg = svg;
+    const pt = annPoint(svg, e.clientX, e.clientY);
+    if(annTool==='note'){ const _it={t:'t',m:1,c:annColor,x:pt.x,y:pt.y,s:annSymSize,v:annSym}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); return; }
+    if(annTool==='text'){ annCreateText(svg, pt); return; }
+    if(annTool==='pen'){
+      cur = { type:'pen', id:e.pointerId, pts:[pt], el:annMake({t:'p',c:annColor,w:annWidth,d:`M${pt.x} ${pt.y}`}) };
+    } else {
+      cur = { type:'shape', id:e.pointerId, start:pt, el:annMake(annShape==='circle'?{t:'c',c:annColor,w:annWidth,f:annShapeFill,x:pt.x,y:pt.y,w2:0,h2:0}:{t:'r',c:annColor,w:annWidth,f:annShapeFill,x:pt.x,y:pt.y,w2:0,h2:0}) };
+    }
+    svg.appendChild(cur.el);
+  });
+  svg.addEventListener('pointermove', e=>{
+    if(annErasing===e.pointerId){ e.preventDefault(); if(annEraseAt(svg, e)) annErasedAny=true; return; }
+    if(annDrag && annDrag.svg===svg && e.pointerId===annDrag.id && annSel){
+      e.preventDefault();
+      const it = annData(svg.dataset.piece, +svg.dataset.page)[annSel.idx]; if(!it) return;
+      const pt = annPoint(svg, e.clientX, e.clientY);
+      if(annDrag.mode==='move'){ it.tx=(it.tx||0)+(pt.x-annDrag.ox); it.ty=(it.ty||0)+(pt.y-annDrag.oy); annDrag.ox=pt.x; annDrag.oy=pt.y; }
+      else { const nw = pt.x - (annSel.bx + (it.tx||0)); it.sc = Math.max(0.15, nw/Math.max(1, annSel.ow)); }
+      const el = svg.querySelector(`[data-i="${annSel.idx}"]`); if(el) annApplyTransform(el, it, annSel);
+      annDrawSel(svg); return;
+    }
+    if(!cur || e.pointerId!==cur.id) return;
+    e.preventDefault();
+    const pt = annPoint(svg, e.clientX, e.clientY);
+    if(cur.type==='pen'){ cur.pts.push(pt); cur.el.setAttribute('d', annPathD(cur.pts)); }
+    else annShapeAttrs(cur.el, cur.start, pt);
+  });
+  const end = e=>{
+    if(annErasing===e.pointerId){ try{ svg.releasePointerCapture(e.pointerId); }catch(_){} annErasing=null; if(!annErasedAny){ const _fv=svg.closest('.focus-view'); if(_fv && _fv._annExit) _fv._annExit(); } return; }
+    if(annDrag && annDrag.svg===svg && e.pointerId===annDrag.id){
+      try{ svg.releasePointerCapture(e.pointerId); }catch(_){}
+      const it = annSel && annData(svg.dataset.piece, +svg.dataset.page)[annSel.idx];
+      if(it){ it.bx0 = annSel.bx; it.by0 = annSel.by; }   // persist transform origin (survives hidden layer)
+      save(); annDrag=null; return;
+    }
+    if(!cur || e.pointerId!==cur.id) return;
+    try{ svg.releasePointerCapture(e.pointerId); }catch(_){}
+    const items = annData(svg.dataset.piece, +svg.dataset.page);
+    let created = false;
+    if(cur.type==='pen'){
+      if(cur.pts.length>1){ items.push({t:'p',c:annColor,w:annWidth,d:annPathD(cur.pts)}); annLastItem=items[items.length-1]; annLastItemSvg=svg; save(); created=true; }
+      else cur.el.remove();
+    } else {
+      const s=cur.start, f=annPoint(svg, e.clientX, e.clientY);
+      const x=Math.min(s.x,f.x), y=Math.min(s.y,f.y), w=Math.abs(f.x-s.x), h=Math.abs(f.y-s.y);
+      if(w>8 && h>8){
+        if(annShape==='circle') items.push({t:'c',c:annColor,w:annWidth,f:annShapeFill,x:x+w/2,y:y+h/2,w2:w/2,h2:h/2});
+        else items.push({t:'r',c:annColor,w:annWidth,f:annShapeFill,x,y,w2:w,h2:h});
+        annLastItem=items[items.length-1]; annLastItemSvg=svg; save(); created=true;
+      } else cur.el.remove();
+    }
+    cur = null;
+    // a plain tap on empty space (nothing drawn) closes the secondary menu / finishes editing
+    if(!created){ const _fv=svg.closest('.focus-view'); if(_fv && _fv._annExit) _fv._annExit(); return; }
+    annRender(svg);   // re-index elements (data-i) so they're selectable/movable
+  };
+  svg.addEventListener('pointerup', end);
+  svg.addEventListener('pointercancel', e=>{ if(annErasing===e.pointerId){ annErasing=null; } if(annDrag&&e.pointerId===annDrag.id){ annDrag=null; } if(cur&&e.pointerId===cur.id){ cur.el.remove(); cur=null; } });
+}
+function annCreateText(svg, pt){
+  const fv = svg.closest('.focus-view'); if(!fv) return;
+  const m = svg.getScreenCTM(); if(!m) return;
+  const sp = svg.createSVGPoint(); sp.x=pt.x; sp.y=pt.y;
+  const scr = sp.matrixTransform(m);
+  const fr = fv.getBoundingClientRect();
+  const input = document.createElement('input');
+  input.type='text'; input.className='ann-textin'; input.placeholder='Type…';
+  input.style.left = (scr.x - fr.left) + 'px';
+  input.style.top  = (scr.y - fr.top) + 'px';
+  input.style.color = annColor;
+  input.style.fontSize = Math.max(12, annTSize * m.a) + 'px';   // match on-page size
+  fv.appendChild(input);
+  setTimeout(()=>input.focus(), 0);
+  let done = false;
+  const commit = ()=>{ if(done) return; done=true; const v=input.value.trim();
+    if(v){ const _it={t:'t',c:annColor,x:pt.x,y:pt.y,s:annTSize,v}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); }
+    input.remove();
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); input.blur(); } else if(e.key==='Escape'){ done=true; input.remove(); } });
+}
+function annSetupLayers(p, ctx){
+  const scroll = ctx.scroll; if(!scroll) return;
+  scroll.querySelectorAll('.pdf-page').forEach((page, i)=>{
+    const img = page.querySelector('.pdf-img'); if(!img || page.querySelector('.ann-layer')) return;
+    const svg = document.createElementNS(ANN_NS,'svg');
+    svg.setAttribute('class','ann-layer');
+    // meet (= contain): the 1000×H coordinate box letterboxes inside the svg element box
+    // exactly like the image's object-fit:contain in fullscreen, so marks track the image
+    // content in both normal and fullscreen modes.
+    svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+    svg.dataset.piece = p.id; svg.dataset.page = i;
+    page.appendChild(svg);
+    const place = ()=>{ svg.style.left=img.offsetLeft+'px'; svg.style.top=img.offsetTop+'px'; svg.style.width=img.offsetWidth+'px'; svg.style.height=img.offsetHeight+'px'; };
+    const setVB = ()=>{ if(img.naturalWidth){ svg.setAttribute('viewBox', `0 0 1000 ${(1000*img.naturalHeight/img.naturalWidth).toFixed(1)}`); } };
+    if(img.complete && img.naturalWidth){ setVB(); place(); annRender(svg); }
+    img.addEventListener('load', ()=>{ setVB(); place(); annRender(svg); });
+    if(window.ResizeObserver) new ResizeObserver(place).observe(img);
+    annAttachDraw(svg);
+  });
+}
+function setupAnnotations(pane, p, ctx){
+  if(!ctx.isPdf) return;                 // only page-image scores get the annotation layer
+  annTool = null; annLastSvg = null;
+  annSetupLayers(p, ctx);
+  const fv = ctx.fv;
+  const btns = { pen: pane.querySelector('#annPen'), text: pane.querySelector('#annText'), shape: pane.querySelector('#annShape'), note: pane.querySelector('#annNote'), eraser: pane.querySelector('#annEraser') };
+  if(!btns.pen) return;
+  const editBtn = pane.querySelector('#annEdit'), doneBtn = pane.querySelector('#annDone');
+  const thickBtn = pane.querySelector('#annThick'), undoBtn = pane.querySelector('#annUndo');
+  const pal = document.createElement('div'); pal.className='ann-palette'; pal.hidden=true; fv.appendChild(pal);
+  const colorBtn = pane.querySelector('#annColorBtn');   // current-colour swatch in the edit toolbar
+  const colorpop = document.createElement('div'); colorpop.className='ann-colorpop'; colorpop.hidden=true; fv.appendChild(colorpop);
+  const thickpop = document.createElement('div'); thickpop.className='ann-thickpop'; thickpop.hidden=true; fv.appendChild(thickpop);
+
+  const annSelItem = () => annSel && annData(annSel.svg.dataset.piece, +annSel.svg.dataset.page)[annSel.idx];
+  const wdot = (lab,w,sel) => { const d=Math.round(4+w*0.85); return `<button class="ann-pb${sel?' is-sel':''}" data-w="${w}" title="${lab}"><span class="ann-wdot" style="width:${d}px;height:${d}px"></span></button>`; };
+  const tdot = (lab,s,sel) => `<button class="ann-pb${sel?' is-sel':''}" data-s="${s}" title="${lab}" style="font-weight:700">${lab}</button>`;
+  const rectIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg>`;
+  const circIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>`;
+  const fillNoneIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>`;
+  const fillSolidIc = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="currentColor" fill-opacity="0.28"/></svg>`;
+  const undoIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>`;
+  const trashIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>`;
+  const xIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>`;
+
+  function buildPalette(){
+    // colours are NOT here anymore — they're in the main toolbar colour-bar
+    let html = "";
+    if(annTool==='select'){
+      // adjust: shows ONLY when a mark is selected — its thickness/size + delete
+      const it = annSelItem();
+      if(!it){ pal.innerHTML = ""; return; }
+      if(it.t!=='t') html += ANN_WIDTHS.map(([l,w])=>wdot(l,w,w===it.w)).join("");
+      else html += ANN_TSIZES.map(([l,s])=>tdot(l,s,s===it.s)).join("");
+      if(it.t==='r' || it.t==='c') html += `<span class="ann-div"></span>` +
+        `<button class="ann-pb${(it.f||'none')==='none'?' is-sel':''}" data-fill="none" title="Outline">${fillNoneIc}</button>` +
+        `<button class="ann-pb${it.f==='fill'?' is-sel':''}" data-fill="fill" title="Solid (10%)">${fillSolidIc}</button>`;
+      html += `<span class="ann-div"></span><button class="ann-pb" data-act="del" title="Delete">${trashIc}</button>`;
+      pal.innerHTML = html; return;
+    }
+    if(annTool==='note'){
+      html += ANN_SYMS.map(grp => grp.map(s=>`<button class="ann-pb ann-sym${s===annSym?' is-sel':''}" data-sym="${s}">${s}</button>`).join("")).join(`<span class="ann-div"></span>`);
+      html += `<span class="ann-div"></span>` + ANN_TSIZES.map(([l,s])=>`<button class="ann-pb${s===annSymSize?' is-sel':''}" data-ns="${s}" style="font-weight:700">${l}</button>`).join("");
+      pal.innerHTML = html; return;
+    }
+    if(annTool==='text'){ html += ANN_TSIZES.map(([l,s])=>tdot(l,s,s===annTSize)).join(""); pal.innerHTML = html; return; }
+    if(annTool==='shape'){ html +=
+      `<button class="ann-pb${annShape==='rect'?' is-sel':''}" data-shape="rect">${rectIc}</button>` +
+      `<button class="ann-pb${annShape==='circle'?' is-sel':''}" data-shape="circle">${circIc}</button>` +
+      `<span class="ann-div"></span>` +
+      `<button class="ann-pb${annShapeFill==='none'?' is-sel':''}" data-fill="none" title="Outline">${fillNoneIc}</button>` +
+      `<button class="ann-pb${annShapeFill==='fill'?' is-sel':''}" data-fill="fill" title="Solid (10%)">${fillSolidIc}</button>`;
+      pal.innerHTML = html; return;
+    }
+    // pen / eraser / no-tool: no secondary palette (thickness lives on the toolbar slider)
+    pal.innerHTML = "";
+  }
+  function buildThick(){   // thickness slider — shared by pen (mark) and shape border
+    const selIt = (annTool==='select') ? annSelItem() : null;
+    const cur = (selIt && selIt.t!=='t') ? selIt.w : annWidth;
+    thickpop.innerHTML = `<span class="ann-thickdot" style="width:6px;height:6px"></span>`
+      + `<input type="range" min="1.5" max="14" step="0.5" value="${cur}" aria-label="Thickness">`
+      + `<span class="ann-thickdot" style="width:16px;height:16px"></span>`;
+  }
+  function buildColorbar(){
+    const selIt = (annTool==='select') ? annSelItem() : null;
+    const cur = selIt ? selIt.c : annColor;
+    if(colorBtn) colorBtn.style.background = cur;
+    colorpop.innerHTML = ANN_COLORS.map(c=>`<button class="ann-sw${c===cur?' is-sel':''}" data-c="${c}" style="background:${c}"></button>`).join("");
+  }
+  function showPalForTool(){   // restore the tool's own secondary menu (after a popover closes)
+    if(annTool==='select'){ if(annSelItem()){ buildPalette(); pal.hidden=false; } else pal.hidden=true; }
+    else if(annTool){ buildPalette(); pal.hidden = !pal.innerHTML; }   // pen/eraser have no extras
+    else pal.hidden=true;
+  }
+  if(colorBtn) colorBtn.addEventListener('click', ()=>{
+    if(colorpop.hidden){ pal.hidden=true; thickpop.hidden=true; colorpop.hidden=false; }   // colour popover takes the slot
+    else { colorpop.hidden=true; showPalForTool(); }
+  });
+  if(thickBtn) thickBtn.addEventListener('click', ()=>{
+    if(thickpop.hidden){ pal.hidden=true; colorpop.hidden=true; buildThick(); thickpop.hidden=false; }
+    else { thickpop.hidden=true; showPalForTool(); }
+  });
+  thickpop.addEventListener('input', e=>{
+    const r = e.target.closest('input'); if(!r) return;
+    annWidth = +r.value;
+    const selIt = (annTool==='select') ? annSelItem() : null;
+    if(selIt && selIt.t!=='t'){ selIt.w = annWidth; save(); annRender(annSel.svg); annDrawSel(annSel.svg); }
+    else if(annLastItem && annLastItem.t!=='t'){ annLastItem.w = annWidth; save(); if(annLastItemSvg) annRender(annLastItemSvg); }
+  });
+  colorpop.addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b || !b.dataset.c) return;
+    annColor = b.dataset.c;
+    const selIt = (annTool==='select') ? annSelItem() : null;
+    if(selIt){ selIt.c = annColor; save(); annRender(annSel.svg); annDrawSel(annSel.svg); }
+    else if(annLastItem){ annLastItem.c = annColor; save(); if(annLastItemSvg) annRender(annLastItemSvg); }   // recolour the mark just drawn
+    buildColorbar(); colorpop.hidden = true; showPalForTool();
+  });
+  buildColorbar();   // show the current colour on the always-visible main-toolbar swatch
+  function lockSwipe(on){ if(ctx.scroll) ctx.scroll.style.overflow = on ? 'hidden' : ''; }
+  function setTool(tool, noFs){
+    annTool = (annTool===tool) ? null : tool;
+    annLastItem = null; annLastItemSvg = null;   // new tool session → no "last mark" to recolour
+    Object.values(btns).forEach(b=>b && b.classList.remove('is-on'));
+    // selection UI + per-mark hit-testing in select (adjust) and eraser modes
+    annSel = null;
+    const hitMode = (annTool==='select' || annTool==='eraser');
+    fv.querySelectorAll('.ann-layer').forEach(l=>{ l.classList.toggle('sel-mode', hitMode); const ui=l.querySelector('.ann-selui'); if(ui) ui.remove(); });
+    if(annTool){
+      if(btns[annTool]) btns[annTool].classList.add('is-on');   // 'select' has no toolbar button
+      if(annTool==='select'){ pal.innerHTML=''; pal.hidden=true; }   // adjust: palette only on selecting a mark
+      else { buildPalette(); pal.hidden = !pal.innerHTML; }           // pen/eraser → no secondary palette
+      if(ctx.enterFs && !noFs && !fv.classList.contains('fake-fs')) ctx.enterFs();   // enter focus mode to edit
+      lockSwipe(true);                                                      // freeze paging while editing
+    } else { pal.hidden=true; lockSwipe(false); }
+    fv.classList.toggle('ann-active', !!annTool);
+    colorpop.hidden = true; thickpop.hidden = true;
+    buildColorbar();   // colour swatch reflects the active tool / selected mark
+  }
+  function enterEdit(){   // open the edit menu (stays until Done)
+    fv.classList.add('ann-editing');
+    colorpop.hidden = true; thickpop.hidden = true;
+    if(ctx.pokePanel) ctx.pokePanel();   // keep the bar pinned (pokePanel won't schedule a hide while editing)
+  }
+  function exitEdit(){   // Done → back to the main menu
+    setTool(null);
+    fv.classList.remove('ann-editing');
+    colorpop.hidden = true; thickpop.hidden = true; pal.hidden = true;
+    if(ctx.pokePanel) ctx.pokePanel();   // restart the 30s auto-hide timer
+  }
+  annOnSel = ()=>{   // selection change in adjust mode
+    if(annTool!=='select') return;
+    if(annSel){ buildPalette(); pal.hidden=false; }   // picked a mark → show its thickness/size
+    else { setTool(null); }                            // tapped empty space → finish adjusting
+    buildColorbar();                                    // reflect the selected mark's colour
+  };
+  fv._annExit = ()=>{ if(annTool) setTool(null); };   // exiting fullscreen finishes editing + hides palette
+  fv._annPick = (lsvg, el)=>{   // tap a created mark (no tool) → jump into adjust mode for it
+    if(annTool!=='select') setTool('select', true);   // no forced fullscreen on a direct tap
+    const bb = el.getBBox();
+    annSel = { svg:lsvg, idx:+el.dataset.i, bx:bb.x, by:bb.y, ow:bb.width, oh:bb.height };
+    annDrawSel(lsvg);
+    if(annOnSel) annOnSel();   // shows the colour/thickness palette for the tapped mark
+  };
+  btns.pen.addEventListener('click', ()=>setTool('pen'));
+  btns.text.addEventListener('click', ()=>setTool('text'));
+  btns.shape.addEventListener('click', ()=>setTool('shape'));
+  if(btns.note) btns.note.addEventListener('click', ()=>setTool('note'));
+  if(btns.eraser) btns.eraser.addEventListener('click', ()=>setTool('eraser'));
+  if(editBtn) editBtn.addEventListener('click', enterEdit);
+  if(doneBtn) doneBtn.addEventListener('click', exitEdit);
+  if(undoBtn) undoBtn.addEventListener('click', ()=>{ const svg=annLastSvg||fv.querySelector('.ann-layer'); if(svg){ const items=annData(svg.dataset.piece,+svg.dataset.page); items.pop(); save(); annRender(svg); } });
+  pal.addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    const selIt = annTool==='select' ? annSelItem() : null;   // editing an existing mark?
+    if(b.dataset.w){ annWidth=+b.dataset.w; if(selIt && selIt.t!=='t'){ selIt.w=annWidth; save(); annRender(annSel.svg); annDrawSel(annSel.svg); } buildPalette(); }
+    else if(b.dataset.s){ annTSize=+b.dataset.s; if(selIt && selIt.t==='t'){ selIt.s=annTSize; save(); annRender(annSel.svg); annDrawSel(annSel.svg); } buildPalette(); }
+    else if(b.dataset.ns){ annSymSize=+b.dataset.ns; buildPalette(); }
+    else if(b.dataset.sym){ annSym=b.dataset.sym; buildPalette(); }
+    else if(b.dataset.shape){ annShape=b.dataset.shape; buildPalette(); }
+    else if(b.dataset.fill){ annShapeFill=b.dataset.fill; if(selIt && (selIt.t==='r'||selIt.t==='c')){ selIt.f=annShapeFill; save(); annRender(annSel.svg); annDrawSel(annSel.svg); } else if(annLastItem && (annLastItem.t==='r'||annLastItem.t==='c')){ annLastItem.f=annShapeFill; save(); if(annLastItemSvg) annRender(annLastItemSvg); } buildPalette(); }
+    else if(b.dataset.act==='del'){ if(annSel){ const svg=annSel.svg; annData(svg.dataset.piece,+svg.dataset.page).splice(annSel.idx,1); save(); annSel=null; annRender(svg); pal.hidden=true; } }
+    else if(b.dataset.act==='undo'){ const svg=annLastSvg||fv.querySelector('.ann-layer'); if(svg){ const items=annData(svg.dataset.piece,+svg.dataset.page); items.pop(); save(); annRender(svg); } }
+    else if(b.dataset.act==='done'){ setTool('select'); }   // finish drawing → adjust/move mode
+  });
+
+  // Show/hide the whole annotation layer (a view mode — marks stay saved, just hidden).
+  const eye = pane.querySelector('#annEye');
+  function applyHidden(){
+    const hid = !!S.annoHidden;
+    fv.classList.toggle('ann-hidden', hid);
+    if(hid) setTool(null);
+    if(eye){ eye.classList.toggle('is-on', hid); eye.innerHTML = hid ? ANN_EYEOFF : ANN_EYE; eye.title = hid ? 'Show marks' : 'Hide marks'; }
+  }
+  if(eye) eye.addEventListener('click', ()=>{ S.annoHidden = !S.annoHidden; save(); applyHidden(); });
+  applyHidden();
 }
 
 /* Pinch-to-zoom on the score (phone/iPad): two fingers scale the page under the fingers,
@@ -4074,7 +4668,7 @@ function wirePinchZoom(fv, scroll){
       const m = mid(e.touches);
       if (!tgt){
         const el = document.elementFromPoint(m.x, m.y), pg = el && el.closest(".pdf-page");
-        tgt = (pg && (pg.querySelector(".pdf-img") || pg)) || scroll.querySelector(".wu-figure, .osmd-host, .focus-zoom");
+        tgt = pg || scroll.querySelector(".wu-figure, .osmd-host, .focus-zoom");   // whole page so annotation overlay scales with the image
         if (!tgt) return;
       }
       const r = tgt.getBoundingClientRect();
@@ -4110,7 +4704,7 @@ function wirePinchZoom(fv, scroll){
   const ensureTgt = (x,y)=>{
     if (tgt) return tgt;
     const el = document.elementFromPoint(x,y), pg = el && el.closest(".pdf-page");
-    tgt = (pg && (pg.querySelector(".pdf-img") || pg)) || scroll.querySelector(".wu-figure, .osmd-host, .focus-zoom");
+    tgt = pg || scroll.querySelector(".wu-figure, .osmd-host, .focus-zoom");   // whole page so annotation overlay scales with the image
     if (tgt){ const r = tgt.getBoundingClientRect(); bw = r.width/scale; bh = r.height/scale; }
     return tgt;
   };
@@ -4496,6 +5090,25 @@ function bumpWake(){
 (function(){ const sc=document.getElementById("screen"); if(sc) sc.addEventListener("scroll", bumpWake, {passive:true}); })();
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") bumpWake(); });
 bumpWake();
+
+/* iOS WKWebView returns from background (app switcher / Stage Manager / split view) with
+   a stale viewport: for a few frames it reports a narrow width, so the responsive grid
+   snaps to its 1-column breakpoint, then jumps to 2-column once the real width lands.
+   To hide that reflow we (1) hide the frame, (2) nudge a relayout and wait for the width
+   to actually settle, then (3) fade it back in. A hard cap + failsafe guarantee the UI is
+   never left hidden, so it can't blank the screen even if something throws. */
+/* On resume, nudge a relayout so %/dvh sizes recompute to the real webview box. The home
+   grids are pinned to 2 columns on tablets (.tablet class), so they can't flip. */
+(function(){
+  function nudge(){
+    try{
+      var d = document.querySelector(".device");
+      if(d) void d.offsetHeight;
+      window.dispatchEvent(new Event("resize"));
+    }catch(e){}
+  }
+  document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="visible") nudge(); });
+})();
 routeTo(location.hash);
 </script>
 </body>
