@@ -579,7 +579,7 @@
   .focus-actions button { width: 36px; height: 36px; border: none; background: transparent; border-radius: 50%;
     cursor: pointer; color: var(--mu-ink-2); display: inline-flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
   .focus-actions button:hover { background: var(--mu-gray-100); }
-  .focus-actions button.is-on, .focus-actions button.is-marked { background: var(--mu-gray-900); color: #fff; }
+  .focus-actions button.is-on, .focus-actions button.is-marked { background: var(--mu-gray-300); color: var(--mu-ink); }
   .focus-actions button:disabled { opacity: .45; pointer-events: none; cursor: default; }
   .focus-actions #metroToggle svg, .focus-actions #fMark svg { width: 17px; height: 17px; }
   .focus-actions #zoomVal { font-family: var(--mu-mono); font-size: 13.5px; color: var(--mu-ink-2); min-width: 42px; text-align: center; }
@@ -4324,22 +4324,29 @@ let annLastItem = null, annLastItemSvg = null;   // most-recently created mark (
 // A real eraser: for freehand strokes it removes only the portion under the eraser circle
 // (splitting the stroke); shapes / text / notes / arrows are atomic so they're removed whole on contact.
 function annTrimPath(el, it, P, r, e, svg){
+  // Compare everything in SCREEN pixels (via getScreenCTM) — unambiguous under viewBox + pinch-zoom.
+  const sm = svg.getScreenCTM(); if(!sm) return null;
+  const pxR = r * sm.a;                                   // eraser radius in screen px
   const rect = el.getBoundingClientRect();
-  const m = svg.getScreenCTM(); const px = r * (m ? m.a : 1);
-  if(e.clientX < rect.left-px || e.clientX > rect.right+px || e.clientY < rect.top-px || e.clientY > rect.bottom+px) return null; // far: untouched
+  if(e.clientX < rect.left-pxR || e.clientX > rect.right+pxR || e.clientY < rect.top-pxR || e.clientY > rect.bottom+pxR) return null;
   let L=0; try{ L = el.getTotalLength(); }catch(_){ return null; }
   if(!L) return null;
-  const ctm = el.getCTM();
+  const esm = el.getScreenCTM(); if(!esm) return null;    // path-local → screen
+  const smInv = sm.inverse();                             // screen → viewBox (for rebuilding the stored path)
+  const sp = svg.createSVGPoint();
   const step = Math.max(0.8, r*0.5);
-  const pts=[];
-  for(let d=0; d<=L; d+=step){ const q=el.getPointAtLength(d);
-    let sx=q.x, sy=q.y; if(ctm){ sx=ctm.a*q.x+ctm.c*q.y+ctm.e; sy=ctm.b*q.x+ctm.d*q.y+ctm.f; }
-    pts.push({x:sx,y:sy}); }
-  let touched=false;
-  const keep = pts.map(pt=>{ if(Math.hypot(pt.x-P.x, pt.y-P.y) <= r){ touched=true; return false; } return true; });
+  const pts=[]; let touched=false;
+  for(let d=0; d<=L; d+=step){
+    const q = el.getPointAtLength(d);
+    sp.x=q.x; sp.y=q.y; const scr = sp.matrixTransform(esm);          // screen px
+    const near = Math.hypot(scr.x - e.clientX, scr.y - e.clientY) <= pxR;
+    if(near) touched = true;
+    const vb = scr.matrixTransform(smInv);                            // viewBox coords
+    pts.push({ x: vb.x, y: vb.y, keep: !near });
+  }
   if(!touched) return null;
   const runs=[]; let run=[];
-  for(let j=0;j<pts.length;j++){ if(keep[j]) run.push(pts[j]); else { if(run.length>1) runs.push(run); run=[]; } }
+  for(const pt of pts){ if(pt.keep) run.push(pt); else { if(run.length>1) runs.push(run); run=[]; } }
   if(run.length>1) runs.push(run);
   return runs.map(rn=>({ t:'p', c:it.c, w:it.w, d:annPathD(rn) }));   // 0+ surviving sub-strokes, transform baked out
 }
