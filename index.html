@@ -592,16 +592,19 @@
   /* divider that always stays visible (unlike .fa-sep, which collapses in book/zoom views) */
   .fa-div { width: 1px; height: 22px; background: var(--mu-border); margin: 0 4px; flex: none; }
   /* the Done pill: text, not a fixed-width circle (higher specificity beats the touch 50px rule) */
-  .focus-view .focus-actions .ann-done { width: auto; min-width: 0; height: 38px; padding: 0 18px; border-radius: var(--mu-radius-full); background: var(--mu-gray-900); color: #fff; font-weight: 600; font-size: 15px; }
+  .focus-view .focus-actions .ann-done { width: auto; min-width: 0; height: 38px; margin: 0 6px; padding: 0 20px; border-radius: var(--mu-radius-full); background: var(--mu-gray-900); color: #fff; font-weight: 600; font-size: 15px; }
   .focus-view .focus-actions .ann-done:hover { background: var(--mu-gray-900); filter: brightness(1.15); }
-  /* thickness slider popover (same glass styling as the colour popover) */
+  .focus-actions .ann-donesep { margin: 0 8px; }   /* extra breathing room on the left of Done */
+  /* thickness slider popover — bigger, same height as the other secondary menus */
   .ann-thickpop { position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%); z-index: 23;
-    display: flex; align-items: center; gap: 12px; border-radius: var(--mu-radius-full); padding: 8px 18px;
+    display: flex; align-items: center; gap: 14px; min-height: 54px; box-sizing: border-box;
+    border-radius: var(--mu-radius-full); padding: 10px 26px;
     background: rgba(255,255,255,0.86); border: 1px solid var(--mu-border); box-shadow: var(--mu-shadow-md);
     -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); }
   .ann-thickpop[hidden] { display: none !important; }
   .focus-view.fake-fs .ann-thickpop, .focus-view.pdf-book .ann-thickpop { bottom: calc(env(safe-area-inset-bottom) + 92px); }
-  .ann-thickpop input[type=range] { width: 160px; accent-color: var(--mu-ink); }
+  .ann-thickpop input[type=range] { width: 240px; height: 28px; accent-color: var(--mu-ink); }
+  @media (pointer: coarse) { .ann-thickpop { min-height: 64px; } .ann-thickpop input[type=range] { width: 280px; } }
   .ann-thickdot { background: var(--mu-ink); border-radius: 50%; flex: none; }
   .metro-group { display: contents; }
   .focus-scroll { border: 1px solid var(--mu-border); border-radius: var(--mu-radius-lg);
@@ -665,9 +668,10 @@
     -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); }
   .ann-palette[hidden] { display: none !important; }   /* the display:flex above otherwise defeats the hidden attribute */
   .ann-palette::-webkit-scrollbar { display: none; }
-  /* notes: one wider panel that wraps to multiple rows — no horizontal scroll */
-  .ann-palette.note-pal { flex-wrap: wrap; overflow: visible; justify-content: center;
+  /* notes: one wider panel that wraps to multiple rows — no horizontal scroll, 24px corners */
+  .ann-palette.note-pal { flex-wrap: wrap; overflow: visible; justify-content: center; border-radius: 24px;
     max-width: min(560px, calc(100vw - 20px)); gap: 5px; row-gap: 5px; }
+  .ann-palette.note-pal .ann-break { flex-basis: 100%; height: 0; margin: 0; }   /* force A–G and 1–7 onto their own rows */
   /* eraser size indicator — a translucent circle that follows the finger */
   .ann-erasecursor { position: absolute; z-index: 25; pointer-events: none; border-radius: 50%;
     transform: translate(-50%, -50%); border: 1.5px solid rgba(0,0,0,0.45); background: rgba(255,255,255,0.28); }
@@ -4041,6 +4045,7 @@ function renderSheetPane(p, toggleMark){
     const thickIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7" stroke-width="1.2"/><line x1="4" y1="12" x2="20" y2="12" stroke-width="2.6"/><line x1="4" y1="17.5" x2="20" y2="17.5" stroke-width="4.4"/></svg>`;
     const eraserIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>`;
     const undoIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>`;
+    const binIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>`;
     const isPdf = !SCORE_SVG[p.id] && !!(window.SCORE_IMG && window.SCORE_IMG[p.id]);   // page-strips render as PDF
     // book pager only for true per-page scores; legacy tall combined strips stay vertical (contain-fit would shrink them)
     const isBook = isPdf && ((window.SCORE_PAGE_AR && window.SCORE_PAGE_AR[p.id] || 1.4) < 2.2);
@@ -4074,7 +4079,8 @@ function renderSheetPane(p, toggleMark){
             <span class="fa-div"></span>
             <button id="annUndo" class="ann-tool" title="Undo">${undoIc}</button>
             <button id="annEraser" class="ann-tool" title="Eraser">${eraserIc}</button>
-            <span class="fa-div"></span>
+            <button id="annBin" class="ann-tool" title="Delete selected" hidden>${binIc}</button>
+            <span class="fa-div ann-donesep"></span>
             <button id="annDone" class="ann-done" title="Done">Done</button>
           </div>`:``}
         </div>
@@ -4192,8 +4198,7 @@ function renderSheetPane(p, toggleMark){
       pokePanel();
     }
     function exitFs(){
-      if (fv._annExit) fv._annExit();   // leaving fullscreen also finishes any annotation editing
-      fv.classList.remove("ann-editing");   // and closes the edit menu back to the main menu
+      // leaving fullscreen keeps you in edit mode (only Done exits) and keeps the active tool
       const pg = currentPage();
       fv.classList.remove("fake-fs", "panel-hidden"); document.body.classList.remove("fs-active");
       clearTimeout(panelTimer);
@@ -4263,6 +4268,7 @@ function annSetFill(el, it){   // shape fill: outline-only (default) or solid ti
   if(it.f==='fill'){ el.setAttribute('fill', it.c); el.setAttribute('fill-opacity','0.1'); }
   else el.setAttribute('fill','none');
 }
+let annAfterCreate = null;   // hook: after a text mark commits, select it so it can be moved
 // ---- undo history (snapshot the page's marks before each mutation; up to 50 steps) ----
 let annUndo = [];
 function annSnapshot(svg){
@@ -4422,10 +4428,9 @@ function annAttachDraw(svg){
   }
   svg.addEventListener('pointerdown', e=>{
     if(!annTool){
-      // no tool active: a tap directly on a created mark jumps into adjust mode for it
-      if(e.target && e.target!==svg && e.target.dataset && e.target.dataset.i!=null){
-        const fv = svg.closest('.focus-view');
-        if(fv && fv._annPick){ e.preventDefault(); e.stopPropagation(); fv._annPick(svg, e.target); }
+      // Only inside edit mode does tapping a mark select it for adjust. In preview mode taps do nothing.
+      if(_fv && _fv.classList.contains('ann-editing') && e.target && e.target!==svg && e.target.dataset && e.target.dataset.i!=null){
+        if(_fv._annPick){ e.preventDefault(); e.stopPropagation(); _fv._annPick(svg, e.target); }
       }
       return;
     }
@@ -4446,7 +4451,7 @@ function annAttachDraw(svg){
     annLastSvg = svg;
     const pt = annPoint(svg, e.clientX, e.clientY);
     if(annTool==='note'){ annSnapshot(svg); const _it={t:'t',m:1,c:annColor,x:pt.x,y:pt.y,s:annSymSize,v:annSym}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); return; }
-    if(annTool==='text'){ annCreateText(svg, pt); return; }
+    if(annTool==='text'){ return; }   // text is created from the T button (keyboard opens immediately), not by tapping the score
     if(annTool==='arrow'){ cur = { type:'arrow', id:e.pointerId, start:pt, el:annMake({t:'a',c:annColor,w:annWidth,x:pt.x,y:pt.y,x2:pt.x,y2:pt.y}) }; svg.appendChild(cur.el); return; }
     cur = { type:'pen', id:e.pointerId, pts:[pt], el:annMake({t:'p',c:annColor,w:annWidth,d:`M${pt.x} ${pt.y}`}) };
     svg.appendChild(cur.el);
@@ -4470,7 +4475,8 @@ function annAttachDraw(svg){
   });
   const end = e=>{
     if(annErasing===e.pointerId){ try{ svg.releasePointerCapture(e.pointerId); }catch(_){} annErasing=null; eraseCursor(null);
-      if(!annErasedAny){ annUndo.pop(); const f=svg.closest('.focus-view'); if(f && f._annExit) f._annExit(); } return; }
+      if(!annErasedAny) annUndo.pop();   // nothing erased → drop the empty undo step (tool stays active)
+      return; }
     if(annDrag && annDrag.svg===svg && e.pointerId===annDrag.id){
       try{ svg.releasePointerCapture(e.pointerId); }catch(_){}
       const it = annSel && annData(svg.dataset.piece, +svg.dataset.page)[annSel.idx];
@@ -4490,8 +4496,8 @@ function annAttachDraw(svg){
       else cur.el.remove();
     }
     cur = null;
-    // a plain tap on empty space (nothing drawn) closes the secondary menu / finishes editing
-    if(!created){ const f=svg.closest('.focus-view'); if(f && f._annExit) f._annExit(); return; }
+    // a plain tap with nothing drawn keeps the current tool active (exit only via another tool or Done)
+    if(!created) return;
     annRender(svg);   // re-index elements (data-i) so they're selectable/movable
   };
   svg.addEventListener('pointerup', end);
@@ -4513,7 +4519,7 @@ function annCreateText(svg, pt){
   setTimeout(()=>input.focus(), 0);
   let done = false;
   const commit = ()=>{ if(done) return; done=true; const v=input.value.trim();
-    if(v){ annSnapshot(svg); const _it={t:'t',c:annColor,x:pt.x,y:pt.y,s:annTSize,v}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); }
+    if(v){ annSnapshot(svg); const _it={t:'t',c:annColor,x:pt.x,y:pt.y,s:annTSize,v}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); input.remove(); if(typeof annAfterCreate==='function') annAfterCreate(svg); return; }
     input.remove();
   };
   input.addEventListener('blur', commit);
@@ -4548,6 +4554,8 @@ function setupAnnotations(pane, p, ctx){
   if(!btns.pen) return;
   const editBtn = pane.querySelector('#annEdit'), doneBtn = pane.querySelector('#annDone');
   const thickBtn = pane.querySelector('#annThick'), undoBtn = pane.querySelector('#annUndo');
+  const binBtn = pane.querySelector('#annBin');   // appears next to the eraser only when a mark is selected
+  function updateBin(){ if(binBtn) binBtn.hidden = !(annTool==='select' && annSelItem()); }
   const pal = document.createElement('div'); pal.className='ann-palette'; pal.hidden=true; fv.appendChild(pal);
   const colorBtn = pane.querySelector('#annColorBtn');   // current-colour swatch in the edit toolbar
   const colorpop = document.createElement('div'); colorpop.className='ann-colorpop'; colorpop.hidden=true; fv.appendChild(colorpop);
@@ -4571,25 +4579,17 @@ function setupAnnotations(pane, p, ctx){
     // colours + thickness live on the main edit toolbar; this secondary panel holds per-tool extras
     pal.classList.toggle('note-pal', annTool==='note');   // notes use a wider wrapping grid (no scroll)
     let html = "";
-    if(annTool==='select'){
-      // adjust: shows ONLY when a mark is selected — thickness (strokes) / fill (shapes) + delete.
-      // Text & notes have no size buttons here — drag the handle to resize.
-      const it = annSelItem();
-      if(!it){ pal.innerHTML = ""; return; }
-      if(it.t==='p' || it.t==='a') html += ANN_WIDTHS.map(([l,w])=>wdot(l,w,w===it.w)).join("") + `<span class="ann-div"></span>`;
-      if(it.t==='r' || it.t==='c') html +=
-        `<button class="ann-pb${(it.f||'none')==='none'?' is-sel':''}" data-fill="none" title="Outline">${fillNoneIc}</button>` +
-        `<button class="ann-pb${it.f==='fill'?' is-sel':''}" data-fill="fill" title="Solid (10%)">${fillSolidIc}</button><span class="ann-div"></span>`;
-      html += `<button class="ann-pb" data-act="del" title="Delete">${trashIc}</button>`;
-      pal.innerHTML = html; return;
-    }
+    if(annTool==='select'){ pal.innerHTML = ""; return; }   // adjust = blue border + resize handle only; colour/thickness on the toolbar, delete via the bin
     if(annTool==='note'){
-      // all symbols in one wider panel (wraps, no horizontal scroll); no S/M/L. '✓ ✗ Ped. ✱' included.
-      html += ANN_SYMS.map(grp => grp.map(s=>`<button class="ann-pb ann-sym${s===annSym?' is-sel':''}" data-sym="${s}">${s}</button>`).join("")).join("");
-      html += `<button class="ann-pb" data-arrowtool title="Arrow — drag on the score to draw">${arrowIc}</button>`;
+      // one wider panel, no scroll, no S/M/L. Rows: symbols+✓✗+arrow flow, then A–G, then 1–7.
+      const symBtn = s => `<button class="ann-pb ann-sym${s===annSym?' is-sel':''}" data-sym="${s}">${s}</button>`;
+      [0,1,2,3,4].forEach(gi => { html += ANN_SYMS[gi].map(symBtn).join(""); });     // accidentals·dynamics·pedal·accents·✓✗
+      html += `<button class="ann-pb" data-arrowtool title="Arrow — drag on the score to draw">${arrowIc}</button>`;  // arrow next to ✗
+      html += `<span class="ann-break"></span>` + ANN_SYMS[5].map(symBtn).join("");    // A–G on its own row
+      html += `<span class="ann-break"></span>` + ANN_SYMS[6].map(symBtn).join("");    // 1–7 on its own row
       pal.innerHTML = html; return;
     }
-    if(annTool==='text'){ pal.innerHTML = ""; return; }   // text: tap the score to place a box directly (no S/M/L)
+    if(annTool==='text'){ pal.innerHTML = ""; return; }   // text: tap T → keyboard opens; no S/M/L
     if(annTool==='shape'){
       // 4 one-tap options (no pre-select): square/circle · outline/solid. Tapping stamps it and closes this menu.
       html += `<button class="ann-pb" data-add="rect:none" title="Square outline">${rectIc}</button>`
@@ -4648,7 +4648,26 @@ function setupAnnotations(pane, p, ctx){
     if(el){ const bb=el.getBBox(); annSel={ svg, idx, bx:bb.x, by:bb.y, ow:bb.width, oh:bb.height }; annDrawSel(svg); }
     annLastSvg = svg;
     pal.hidden = true; colorpop.hidden = true; thickpop.hidden = true;
-    buildColorbar();
+    buildColorbar(); updateBin();
+  }
+  function selectMark(svg, idx){   // enter adjust mode on a mark: blue border + resize handle, no palette
+    if(annTool!=='select') setTool('select', true);
+    const el = svg.querySelector(`[data-i="${idx}"]`); if(!el) return;
+    const bb = el.getBBox(); annSel = { svg, idx, bx:bb.x, by:bb.y, ow:bb.width, oh:bb.height };
+    annDrawSel(svg); annLastSvg = svg; pal.hidden = true; buildColorbar(); updateBin();
+  }
+  annAfterCreate = (svg)=>{   // after a text commit: select it so the user can drag it into place
+    const items = annData(svg.dataset.piece, +svg.dataset.page);
+    if(items.length) selectMark(svg, items.length-1);
+  };
+  function annAddTextCentered(){   // T button → open an input (keyboard) centred on the visible page
+    const svg = annVisibleLayer(); if(!svg) return;
+    const pg = svg.closest('.pdf-page') || svg;
+    const r = pg.getBoundingClientRect();
+    const sc = ctx.scroll ? ctx.scroll.getBoundingClientRect() : r;
+    const ccx = r.left + r.width/2;
+    const ccy = (Math.max(r.top, sc.top) + Math.min(r.bottom, sc.bottom)) / 2;
+    annCreateText(svg, annPoint(svg, ccx, ccy));
   }
   function showPalForTool(){   // restore the tool's own secondary menu (after a popover closes)
     if(annTool==='select'){ if(annSelItem()){ buildPalette(); pal.hidden=false; } else pal.hidden=true; }
@@ -4698,6 +4717,7 @@ function setupAnnotations(pane, p, ctx){
     fv.classList.toggle('ann-active', !!annTool);
     colorpop.hidden = true; thickpop.hidden = true;
     buildColorbar();   // colour swatch reflects the active tool / selected mark
+    updateBin();
   }
   function enterEdit(){   // open the edit menu (stays until Done)
     fv.classList.add('ann-editing');
@@ -4710,22 +4730,16 @@ function setupAnnotations(pane, p, ctx){
     colorpop.hidden = true; thickpop.hidden = true; pal.hidden = true;
     if(ctx.pokePanel) ctx.pokePanel();   // restart the 30s auto-hide timer
   }
-  annOnSel = ()=>{   // selection change in adjust mode
+  annOnSel = ()=>{   // selection change in adjust mode — just border+handle (no palette), toolbar reflects colour
     if(annTool!=='select') return;
-    if(annSel){ buildPalette(); pal.hidden=false; }   // picked a mark → show its thickness/size
-    else { setTool(null); }                            // tapped empty space → finish adjusting
-    buildColorbar();                                    // reflect the selected mark's colour
+    if(annSel){ pal.hidden = true; }      // selected a mark: blue border + resize handle only
+    else { setTool(null); }               // tapped empty → back to the page-able adjust default (still in edit mode)
+    buildColorbar(); updateBin();
   };
-  fv._annExit = ()=>{ if(annTool) setTool(null); };   // exiting fullscreen finishes editing + hides palette
-  fv._annPick = (lsvg, el)=>{   // tap a created mark (no tool) → jump into adjust mode for it
-    if(annTool!=='select') setTool('select', true);   // no forced fullscreen on a direct tap
-    const bb = el.getBBox();
-    annSel = { svg:lsvg, idx:+el.dataset.i, bx:bb.x, by:bb.y, ow:bb.width, oh:bb.height };
-    annDrawSel(lsvg);
-    if(annOnSel) annOnSel();   // shows the colour/thickness palette for the tapped mark
-  };
+  fv._annExit = ()=>{ if(annTool) setTool(null); };
+  fv._annPick = (lsvg, el)=>{ selectMark(lsvg, +el.dataset.i); };   // tap a mark (edit mode only) → adjust it
   btns.pen.addEventListener('click', ()=>setTool('pen'));
-  btns.text.addEventListener('click', ()=>setTool('text'));
+  btns.text.addEventListener('click', ()=>{ setTool('text'); if(annTool==='text') requestAnimationFrame(annAddTextCentered); });
   btns.shape.addEventListener('click', ()=>setTool('shape'));
   if(btns.note) btns.note.addEventListener('click', ()=>setTool('note'));
   if(btns.eraser) btns.eraser.addEventListener('click', ()=>setTool('eraser'));
@@ -4738,8 +4752,12 @@ function setupAnnotations(pane, p, ctx){
     let svg = null; fv.querySelectorAll('.ann-layer').forEach(l=>{ if(l.dataset.piece===u.piece && +l.dataset.page===u.page) svg=l; });
     if(svg) annRender(svg);
     if(annTool==='select') pal.hidden = true; else showPalForTool();
+    updateBin();
   }
   if(undoBtn) undoBtn.addEventListener('click', doUndo);
+  if(binBtn) binBtn.addEventListener('click', ()=>{
+    if(annSel){ const svg=annSel.svg; annSnapshot(svg); annData(svg.dataset.piece,+svg.dataset.page).splice(annSel.idx,1); save(); annSel=null; annRender(svg); pal.hidden=true; updateBin(); }
+  });
   pal.addEventListener('click', e=>{
     const b = e.target.closest('button'); if(!b) return;
     const selIt = annTool==='select' ? annSelItem() : null;   // editing an existing mark?
