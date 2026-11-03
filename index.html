@@ -228,9 +228,9 @@
   .home-col { display: flex; flex-direction: column; }
   .home-block-title { font-size: 19px; font-weight: 650; letter-spacing: -0.015em; margin-bottom: 12px; flex-shrink: 0; }
   .home-card { border: 1px solid var(--mu-border); border-radius: var(--mu-radius-lg); background: var(--mu-white); padding: 6px 16px; }
-  /* left: recent play — fixed height (~8 rows), scrolls if more */
-  /* 2-col layout: playlist fits ~8 rows */
-  .home-grid > .home-col:first-child .home-card { height: 531px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  /* left: recent play — fixed height (~10 rows), scrolls if more */
+  /* 2-col layout: playlist shows up to 10 rows, then scrolls */
+  .home-grid > .home-col:first-child .home-card { height: 664px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
   /* right: practice + calendar — practice taller, 'on this day' shorter (~5:2) */
   .home-grid > .home-col:last-child .home-card { min-height: 0; display: flex; flex-direction: column; justify-content: center; }
   .home-grid > .home-col:last-child .practice-card { flex: 5; }
@@ -1052,7 +1052,7 @@
   html.is-native.tablet .toolgrid  { grid-template-columns: 1fr 1fr !important; }
   /* playlist card: cap the height (~12 rows) and scroll inside if there are more, instead
      of growing unbounded on iPad */
-  html.is-native.tablet .home-grid > .home-col:first-child .home-card { height: min(760px, 60dvh) !important; max-height: none !important; overflow-y: auto !important; }
+  html.is-native.tablet .home-grid > .home-col:first-child .home-card { height: 664px !important; max-height: none !important; overflow-y: auto !important; }
 </style>
 </head>
 <body>
@@ -4747,6 +4747,7 @@ function setupAnnotations(pane, p, ctx){
     updateBin();
   }
   function enterEdit(){   // open the edit menu (stays until Done)
+    if(S.annoHidden){ S.annoHidden = false; save(); applyHidden(); }   // can't edit hidden marks → turn preview back on
     fv.classList.add('ann-editing');
     colorpop.hidden = true; thickpop.hidden = true;
     if(ctx.pokePanel) ctx.pokePanel();   // keep the bar pinned (pokePanel won't schedule a hide while editing)
