@@ -580,6 +580,7 @@
     cursor: pointer; color: var(--mu-ink-2); display: inline-flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
   .focus-actions button:hover { background: var(--mu-gray-100); }
   .focus-actions button.is-on, .focus-actions button.is-marked { background: var(--mu-gray-900); color: #fff; }
+  .focus-actions button:disabled { opacity: .3; pointer-events: none; cursor: default; }
   .focus-actions #metroToggle svg, .focus-actions #fMark svg { width: 17px; height: 17px; }
   .focus-actions #zoomVal { font-family: var(--mu-mono); font-size: 13.5px; color: var(--mu-ink-2); min-width: 42px; text-align: center; }
   .fa-sep { width: 1px; height: 20px; background: var(--mu-border); margin: 0 3px; }
@@ -4079,7 +4080,7 @@ function renderSheetPane(p, toggleMark){
             <span class="fa-div"></span>
             <button id="annUndo" class="ann-tool" title="Undo">${undoIc}</button>
             <button id="annEraser" class="ann-tool" title="Eraser">${eraserIc}</button>
-            <button id="annBin" class="ann-tool" title="Delete selected" hidden>${binIc}</button>
+            <button id="annBin" class="ann-tool" title="Delete selected" disabled>${binIc}</button>
             <span class="fa-div ann-donesep"></span>
             <button id="annDone" class="ann-done" title="Done">Done</button>
           </div>`:``}
@@ -4555,7 +4556,7 @@ function setupAnnotations(pane, p, ctx){
   const editBtn = pane.querySelector('#annEdit'), doneBtn = pane.querySelector('#annDone');
   const thickBtn = pane.querySelector('#annThick'), undoBtn = pane.querySelector('#annUndo');
   const binBtn = pane.querySelector('#annBin');   // appears next to the eraser only when a mark is selected
-  function updateBin(){ if(binBtn) binBtn.hidden = !(annTool==='select' && annSelItem()); }
+  function updateBin(){ if(binBtn) binBtn.disabled = !(annTool==='select' && annSelItem()); }   // greyed-out until a mark is selected
   const pal = document.createElement('div'); pal.className='ann-palette'; pal.hidden=true; fv.appendChild(pal);
   const colorBtn = pane.querySelector('#annColorBtn');   // current-colour swatch in the edit toolbar
   const colorpop = document.createElement('div'); colorpop.className='ann-colorpop'; colorpop.hidden=true; fv.appendChild(colorpop);
