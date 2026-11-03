@@ -4337,25 +4337,21 @@ let annLastItem = null, annLastItemSvg = null;   // most-recently created mark (
 // A real eraser: for freehand strokes it removes only the portion under the eraser circle
 // (splitting the stroke); shapes / text / notes / arrows are atomic so they're removed whole on contact.
 function annTrimPath(el, it, P, r, e, svg){
-  // Compare everything in SCREEN pixels (via getScreenCTM) — unambiguous under viewBox + pinch-zoom.
-  const sm = svg.getScreenCTM(); if(!sm) return null;
-  const pxR = r * sm.a;                                   // eraser radius in screen px
+  // Compare in svg viewBox units: P is from annPoint (zoom-correct); sample points via getPointAtLength
+  // then map local→viewBox with the item's own transform. No getScreenCTM (iOS ignores ancestor zoom).
+  const pxR = r * annPxPerVb(svg);
   const rect = el.getBoundingClientRect();
   if(e.clientX < rect.left-pxR || e.clientX > rect.right+pxR || e.clientY < rect.top-pxR || e.clientY > rect.bottom+pxR) return null;
   let L=0; try{ L = el.getTotalLength(); }catch(_){ return null; }
   if(!L) return null;
-  const esm = el.getScreenCTM(); if(!esm) return null;    // path-local → screen
-  const smInv = sm.inverse();                             // screen → viewBox (for rebuilding the stored path)
-  const sp = svg.createSVGPoint();
   const step = Math.max(0.8, r*0.5);
   const pts=[]; let touched=false;
   for(let d=0; d<=L; d+=step){
     const q = el.getPointAtLength(d);
-    sp.x=q.x; sp.y=q.y; const scr = sp.matrixTransform(esm);          // screen px
-    const near = Math.hypot(scr.x - e.clientX, scr.y - e.clientY) <= pxR;
+    const v = annItemVB(it, q.x, q.y);                      // viewBox coords
+    const near = Math.hypot(v.x - P.x, v.y - P.y) <= r;
     if(near) touched = true;
-    const vb = scr.matrixTransform(smInv);                            // viewBox coords
-    pts.push({ x: vb.x, y: vb.y, keep: !near });
+    pts.push({ x: v.x, y: v.y, keep: !near });
   }
   if(!touched) return null;
   const runs=[]; let run=[];
@@ -4364,8 +4360,8 @@ function annTrimPath(el, it, P, r, e, svg){
   return runs.map(rn=>({ t:'p', c:it.c, w:it.w, d:annPathD(rn) }));   // 0+ surviving sub-strokes, transform baked out
 }
 function annMarkHit(el, e, r, svg){
-  const rect = el.getBoundingClientRect();
-  const m = svg.getScreenCTM(); const px = r * (m ? m.a : 1);
+  const rect = el.getBoundingClientRect();   // getBoundingClientRect includes the zoom transform
+  const px = r * annPxPerVb(svg);
   const nx = Math.max(rect.left, Math.min(e.clientX, rect.right));
   const ny = Math.max(rect.top,  Math.min(e.clientY, rect.bottom));
   return Math.hypot(e.clientX-nx, e.clientY-ny) <= px;   // eraser circle intersects the mark's box
@@ -4398,7 +4394,7 @@ function annDrawSel(svg){
   if(!annSel || annSel.svg!==svg) return;
   const it = annData(svg.dataset.piece, +svg.dataset.page)[annSel.idx]; if(!it){ annSel=null; return; }
   const b = annVisBox(it, annSel); annSel.box = b;
-  const ctm = svg.getScreenCTM(); const r = annSel.hr = ctm ? 14/ctm.a : 18;
+  const pv = annPxPerVb(svg); const r = annSel.hr = pv ? 14/pv : 18;   // ~14px handle regardless of zoom
   const g = document.createElementNS(ANN_NS,'g'); g.setAttribute('class','ann-selui');
   const rect = document.createElementNS(ANN_NS,'rect');
   rect.setAttribute('x',b.x); rect.setAttribute('y',b.y); rect.setAttribute('width',Math.max(1,b.w)); rect.setAttribute('height',Math.max(1,b.h));
@@ -4426,11 +4422,24 @@ function annSelectDown(svg, e){
   else { annSel=null; annDrawSel(svg); }
   if(typeof annOnSel==='function') annOnSel();   // refresh palette (show selected mark's colour/thickness)
 }
+// Client (screen) point → svg viewBox coords, computed from getBoundingClientRect so it stays correct
+// under a pinch-zoom CSS transform on an ancestor (iOS getScreenCTM ignores ancestor CSS transforms).
 function annPoint(svg, cx, cy){
-  const m = svg.getScreenCTM(); if(!m) return {x:0,y:0};
-  const pt = svg.createSVGPoint(); pt.x=cx; pt.y=cy;
-  const u = pt.matrixTransform(m.inverse());
-  return { x: Math.round(u.x*10)/10, y: Math.round(u.y*10)/10 };
+  const r = svg.getBoundingClientRect();
+  const vb = svg.viewBox && svg.viewBox.baseVal;
+  const vbw = (vb && vb.width) || r.width || 1, vbh = (vb && vb.height) || r.height || 1;
+  const vx = (vb && vb.x) || 0, vy = (vb && vb.y) || 0;
+  if(!r.width || !r.height){ const m=svg.getScreenCTM(); if(m){ const p=svg.createSVGPoint(); p.x=cx; p.y=cy; const u=p.matrixTransform(m.inverse()); return {x:Math.round(u.x*10)/10, y:Math.round(u.y*10)/10}; } return {x:0,y:0}; }
+  const s = Math.min(r.width/vbw, r.height/vbh);        // preserveAspectRatio="xMidYMid meet"
+  const ox = r.left + (r.width - vbw*s)/2, oy = r.top + (r.height - vbh*s)/2;
+  return { x: Math.round(((cx-ox)/s + vx)*10)/10, y: Math.round(((cy-oy)/s + vy)*10)/10 };
+}
+function annPxPerVb(svg){ const r=svg.getBoundingClientRect(); const vb=svg.viewBox&&svg.viewBox.baseVal; const vbw=(vb&&vb.width)||r.width||1, vbh=(vb&&vb.height)||r.height||1; return Math.min(r.width/vbw, r.height/vbh); }
+function annItemVB(it, qx, qy){   // a mark's local point → viewBox coords (apply its stored transform, if any)
+  const sx = it.scx!=null?it.scx:(it.sc||1), sy = it.scy!=null?it.scy:(it.sc||1), tx = it.tx||0, ty = it.ty||0;
+  if(tx===0 && ty===0 && sx===1 && sy===1) return { x:qx, y:qy };
+  const bx = it.bx0!=null?it.bx0:0, by = it.by0!=null?it.by0:0;
+  return { x: tx + bx + (qx-bx)*sx, y: ty + by + (qy-by)*sy };
 }
 function annShapeAttrs(el, s, e){
   const x=Math.min(s.x,e.x), y=Math.min(s.y,e.y), w=Math.abs(e.x-s.x), h=Math.abs(e.y-s.y);
@@ -4445,7 +4454,7 @@ function annAttachDraw(svg){
     let c = _fv.querySelector('.ann-erasecursor');
     if(!e){ if(c) c.remove(); return; }
     if(!c){ c=document.createElement('div'); c.className='ann-erasecursor'; _fv.appendChild(c); }
-    const m = svg.getScreenCTM(); const px = r*(m?m.a:1); const fr=_fv.getBoundingClientRect();
+    const px = r*annPxPerVb(svg); const fr=_fv.getBoundingClientRect();
     c.style.width=c.style.height=(px*2)+'px'; c.style.left=(e.clientX-fr.left)+'px'; c.style.top=(e.clientY-fr.top)+'px';
   }
   svg.addEventListener('pointerdown', e=>{
@@ -4545,9 +4554,13 @@ function annAttachDraw(svg){
 }
 function annCreateText(svg, pt){
   const fv = svg.closest('.focus-view'); if(!fv) return;
-  const m = svg.getScreenCTM(); if(!m) return;
-  const sp = svg.createSVGPoint(); sp.x=pt.x; sp.y=pt.y;
-  const scr = sp.matrixTransform(m);
+  // viewBox point → client, via getBoundingClientRect (zoom-correct), matching annPoint's letterbox math
+  const r = svg.getBoundingClientRect();
+  const vb = svg.viewBox && svg.viewBox.baseVal;
+  const vbw = (vb&&vb.width)||r.width||1, vbh = (vb&&vb.height)||r.height||1, vx=(vb&&vb.x)||0, vy=(vb&&vb.y)||0;
+  const s = Math.min(r.width/vbw, r.height/vbh);
+  const ox = r.left + (r.width - vbw*s)/2, oy = r.top + (r.height - vbh*s)/2;
+  const scr = { x: ox + (pt.x - vx)*s, y: oy + (pt.y - vy)*s };
   const fr = fv.getBoundingClientRect();
   const input = document.createElement('input');
   input.type='text'; input.className='ann-textin'; input.placeholder='Type…';
@@ -4555,7 +4568,7 @@ function annCreateText(svg, pt){
   input.style.top  = (scr.y - fr.top) + 'px';
   input.style.color = annColor;
   input.style.fontFamily = annTextFont || ANN_TEXT_SANS;   // live preview of the chosen font style
-  input.style.fontSize = Math.max(12, annTSize * m.a) + 'px';   // match on-page size
+  input.style.fontSize = Math.max(12, annTSize * s) + 'px';   // match on-page size
   fv.appendChild(input);
   setTimeout(()=>input.focus(), 0);
   let done = false;
