@@ -231,9 +231,9 @@
   /* left: recent play — fixed height (~8 rows), scrolls if more */
   /* 2-col layout: playlist fits ~8 rows */
   .home-grid > .home-col:first-child .home-card { height: 531px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
-  /* right: practice + calendar split 3:2 */
+  /* right: practice + calendar — practice taller, 'on this day' shorter (~5:2) */
   .home-grid > .home-col:last-child .home-card { min-height: 0; display: flex; flex-direction: column; justify-content: center; }
-  .home-grid > .home-col:last-child .practice-card { flex: 3; }
+  .home-grid > .home-col:last-child .practice-card { flex: 5; }
   .home-grid > .home-col:last-child .home-cal { flex: 2; }
   /* Your practice — cat illustration background + top scrim for readable stats */
   .practice-card { position: relative; overflow: hidden; justify-content: flex-start !important;
