@@ -695,10 +695,11 @@
   .ann-done:hover { background: var(--mu-gray-900); filter: brightness(1.15); }
   .ann-wdot { background: currentColor; border-radius: 50%; display: block; }
   .ann-hint { flex: none; white-space: nowrap; font-size: 13px; color: var(--mu-ink-2); padding: 0 4px; }
-  .ann-textin { position: absolute; z-index: 30; background: rgba(255,255,255,.92); border: 1px solid var(--mu-ink);
-    border-radius: 5px; padding: 1px 5px; font-weight: 600; line-height: 1.1; outline: none; min-width: 40px;
-    font-family: -apple-system, system-ui, sans-serif; -webkit-user-select: text; user-select: text; }
-  html[data-theme="dark"] .ann-textin { background: rgba(30,30,34,.92); }
+  .ann-textin { position: absolute; z-index: 30; -webkit-appearance: none; appearance: none; background: #fff;
+    border: 1.5px solid var(--mu-ink); border-radius: 4px; box-shadow: none; padding: 2px 6px; font-weight: 600;
+    line-height: 1.15; outline: none; min-width: 28px; white-space: nowrap; -webkit-user-select: text; user-select: text; }
+  .ann-textin:empty::before { content: attr(data-ph); color: var(--mu-ink-3); }
+  html[data-theme="dark"] .ann-textin { background: #1e1e22; }
   .focus-view:fullscreen { background: var(--mu-bg); padding: 16px; box-sizing: border-box; }
   .focus-view:fullscreen .focus-scroll { max-height: none; height: calc(100vh - 32px); }
   .focus-view:-webkit-full-screen { background: var(--mu-bg); padding: 16px; box-sizing: border-box; }
@@ -4562,8 +4563,11 @@ function annCreateText(svg, pt){
   const ox = r.left + (r.width - vbw*s)/2, oy = r.top + (r.height - vbh*s)/2;
   const scr = { x: ox + (pt.x - vx)*s, y: oy + (pt.y - vy)*s };
   const fr = fv.getBoundingClientRect();
-  const input = document.createElement('input');
-  input.type='text'; input.className='ann-textin'; input.placeholder='Type…';
+  // contenteditable (not <input>) so iOS doesn't show the form-field accessory bar (prev/next ▲▼, AutoFill)
+  const input = document.createElement('div');
+  input.className='ann-textin'; input.contentEditable='true';
+  input.setAttribute('role','textbox'); input.setAttribute('data-ph','Type…');
+  input.setAttribute('autocorrect','off'); input.setAttribute('autocapitalize','sentences'); input.setAttribute('spellcheck','false');
   input.style.left = (scr.x - fr.left) + 'px';
   input.style.top  = (scr.y - fr.top) + 'px';
   input.style.color = annColor;
@@ -4572,7 +4576,7 @@ function annCreateText(svg, pt){
   fv.appendChild(input);
   setTimeout(()=>input.focus(), 0);
   let done = false;
-  const commit = ()=>{ if(done) return; done=true; const v=input.value.trim();
+  const commit = ()=>{ if(done) return; done=true; const v=(input.textContent||'').trim();
     if(v){ annSnapshot(svg); const _it={t:'t',c:annColor,x:pt.x,y:pt.y,s:annTSize,v,ff:annTextFont||undefined}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); input.remove(); if(typeof annAfterCreate==='function') annAfterCreate(svg); return; }
     input.remove();
   };
