@@ -4306,7 +4306,7 @@ function annRender(svg){
   items.forEach((it, idx)=>{
     const el = annMake(it); if(!el) return;
     el.dataset.i = idx; svg.appendChild(el);
-    if(it.tx || it.ty || (it.sc && it.sc!==1)){
+    if(it.tx || it.ty || (it.sc && it.sc!==1) || (it.scx!=null && it.scx!==1) || (it.scy!=null && it.scy!==1)){
       let bx = it.bx0, by = it.by0;
       if(bx==null){ const bb = el.getBBox(); bx = bb.x; by = bb.y; }   // fallback (layer must be visible)
       annApplyTransform(el, it, { bx, by });
@@ -4365,13 +4365,14 @@ function annEraseStroke(svg, e, r){
   if(mutated){ items.length=0; out.forEach(x=>items.push(x)); save(); annRender(svg); }
   return mutated;
 }
+function annScale(it){ return { sx: it.scx!=null?it.scx:(it.sc||1), sy: it.scy!=null?it.scy:(it.sc||1) }; }
 function annApplyTransform(el, it, sel){
-  const tx=it.tx||0, ty=it.ty||0, sc=it.sc||1;
-  if(!tx && !ty && sc===1){ el.removeAttribute('transform'); return; }
+  const tx=it.tx||0, ty=it.ty||0, {sx,sy}=annScale(it);
+  if(!tx && !ty && sx===1 && sy===1){ el.removeAttribute('transform'); return; }
   const bx = sel ? sel.bx : 0, by = sel ? sel.by : 0;
-  el.setAttribute('transform', `translate(${tx} ${ty}) translate(${bx} ${by}) scale(${sc}) translate(${-bx} ${-by})`);
+  el.setAttribute('transform', `translate(${tx} ${ty}) translate(${bx} ${by}) scale(${sx} ${sy}) translate(${-bx} ${-by})`);
 }
-function annVisBox(it, s){ const sc=it.sc||1, tx=it.tx||0, ty=it.ty||0; return { x:s.bx+tx, y:s.by+ty, w:s.ow*sc, h:s.oh*sc }; }
+function annVisBox(it, s){ const {sx,sy}=annScale(it), tx=it.tx||0, ty=it.ty||0; return { x:s.bx+tx, y:s.by+ty, w:s.ow*sx, h:s.oh*sy }; }
 function annDrawSel(svg){
   const old = svg.querySelector('.ann-selui'); if(old) old.remove();
   if(!annSel || annSel.svg!==svg) return;
@@ -4464,7 +4465,14 @@ function annAttachDraw(svg){
       const it = annData(svg.dataset.piece, +svg.dataset.page)[annSel.idx]; if(!it) return;
       const pt = annPoint(svg, e.clientX, e.clientY);
       if(annDrag.mode==='move'){ it.tx=(it.tx||0)+(pt.x-annDrag.ox); it.ty=(it.ty||0)+(pt.y-annDrag.oy); annDrag.ox=pt.x; annDrag.oy=pt.y; }
-      else { const nw = pt.x - (annSel.bx + (it.tx||0)); it.sc = Math.max(0.15, nw/Math.max(1, annSel.ow)); }
+      else {
+        const nw = pt.x - (annSel.bx + (it.tx||0)), nh = pt.y - (annSel.by + (it.ty||0));
+        if(it.t==='r' || it.t==='c'){   // shapes: free resize — width & height independent (size + aspect ratio)
+          it.scx = Math.max(0.1, nw/Math.max(1, annSel.ow));
+          it.scy = Math.max(0.1, nh/Math.max(1, annSel.oh));
+          if('sc' in it) delete it.sc;
+        } else { it.sc = Math.max(0.15, nw/Math.max(1, annSel.ow)); }   // others: uniform (keep ratio)
+      }
       const el = svg.querySelector(`[data-i="${annSel.idx}"]`); if(el) annApplyTransform(el, it, annSel);
       annDrawSel(svg); return;
     }
