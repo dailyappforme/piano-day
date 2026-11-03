@@ -4821,7 +4821,9 @@ function wirePinchZoom(fv, scroll){
       c0 = { x: r.left + r.width/2 - tx, y: r.top + r.height/2 - ty };       // untransformed centre
       q0 = { x: (m.x - c0.x - tx)/scale, y: (m.y - c0.y - ty)/scale };       // content point under the fingers
       s0 = scale; d0 = dist(e.touches) || 1; pinching = true; pan = null;
-    } else if (e.touches.length===1 && scale>1){
+    } else if (e.touches.length===1 && scale>1 && !fv.classList.contains('ann-active')){
+      // single-finger pans the zoomed page — BUT not while a draw/erase/adjust tool is active,
+      // so one finger can draw / move marks on a zoomed-in sheet
       pan = { x: e.touches[0].clientX - tx, y: e.touches[0].clientY - ty };
     }
   }, { passive:false });
