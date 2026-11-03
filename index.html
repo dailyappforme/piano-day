@@ -4403,7 +4403,7 @@ function annSelectDown(svg, e){
   const pt = annPoint(svg, e.clientX, e.clientY);
   if(annSel && annSel.svg===svg && annSel.box){
     const b = annSel.box, r = annSel.hr || 18;
-    if(annHit(pt, b.x+b.w, b.y+b.h, r)){ annSnapshot(svg); annDrag={mode:'resize', svg, id:e.pointerId}; return; }   // resize
+    if(annHit(pt, b.x+b.w, b.y+b.h, r)){ annSnapshot(svg); annDrag={mode:'resize', svg, id:e.pointerId, ax:b.x, ay:b.y}; return; }   // resize (anchor = top-left of the displayed box)
     if(pt.x>=b.x-r*0.6 && pt.x<=b.x+b.w+r*0.6 && pt.y>=b.y-r*0.6 && pt.y<=b.y+b.h+r*0.6){           // move
       annSnapshot(svg); annDrag={mode:'move', svg, id:e.pointerId, ox:pt.x, oy:pt.y}; return;
     }
@@ -4471,16 +4471,27 @@ function annAttachDraw(svg){
       e.preventDefault();
       const it = annData(svg.dataset.piece, +svg.dataset.page)[annSel.idx]; if(!it) return;
       const pt = annPoint(svg, e.clientX, e.clientY);
-      if(annDrag.mode==='move'){ it.tx=(it.tx||0)+(pt.x-annDrag.ox); it.ty=(it.ty||0)+(pt.y-annDrag.oy); annDrag.ox=pt.x; annDrag.oy=pt.y; }
-      else {
-        const nw = pt.x - (annSel.bx + (it.tx||0)), nh = pt.y - (annSel.by + (it.ty||0));
-        if(it.t==='r' || it.t==='c'){   // shapes: free resize — width & height independent (size + aspect ratio)
-          it.scx = Math.max(0.1, nw/Math.max(1, annSel.ow));
-          it.scy = Math.max(0.1, nh/Math.max(1, annSel.oh));
-          if('sc' in it) delete it.sc;
-        } else { it.sc = Math.max(0.15, nw/Math.max(1, annSel.ow)); }   // others: uniform (keep ratio)
+      const el = svg.querySelector(`[data-i="${annSel.idx}"]`);
+      if(annDrag.mode==='move'){
+        it.tx=(it.tx||0)+(pt.x-annDrag.ox); it.ty=(it.ty||0)+(pt.y-annDrag.oy); annDrag.ox=pt.x; annDrag.oy=pt.y;
+        if(el) annApplyTransform(el, it, annSel);
+      } else if(it.t==='r' || it.t==='c'){
+        // shapes: resize by baking the geometry (width/height / rx/ry) so the border stays an even
+        // thickness on every side — NOT a non-uniform transform scale (which distorts the stroke).
+        const nw = Math.max(6, pt.x - annDrag.ax), nh = Math.max(6, pt.y - annDrag.ay);
+        it.tx=0; it.ty=0; delete it.scx; delete it.scy; delete it.sc; delete it.bx0; delete it.by0;
+        if(it.t==='r'){ it.x=annDrag.ax; it.y=annDrag.ay; it.w2=nw; it.h2=nh; }
+        else { it.w2=nw/2; it.h2=nh/2; it.x=annDrag.ax+nw/2; it.y=annDrag.ay+nh/2; }   // ellipse centre
+        if(el){ el.removeAttribute('transform');
+          if(it.t==='r'){ el.setAttribute('x',it.x); el.setAttribute('y',it.y); el.setAttribute('width',it.w2); el.setAttribute('height',it.h2); el.setAttribute('rx',(Math.min(it.w2,it.h2)*0.03).toFixed(1)); }
+          else { el.setAttribute('cx',it.x); el.setAttribute('cy',it.y); el.setAttribute('rx',it.w2); el.setAttribute('ry',it.h2); } }
+        annSel.bx = (it.t==='r') ? it.x : it.x-it.w2; annSel.by = (it.t==='r') ? it.y : it.y-it.h2;
+        annSel.ow = (it.t==='r') ? it.w2 : it.w2*2; annSel.oh = (it.t==='r') ? it.h2 : it.h2*2;
+      } else {
+        const nw = pt.x - (annSel.bx + (it.tx||0));
+        it.sc = Math.max(0.15, nw/Math.max(1, annSel.ow));   // pen/arrow/text: uniform scale (stroke stays even)
+        if(el) annApplyTransform(el, it, annSel);
       }
-      const el = svg.querySelector(`[data-i="${annSel.idx}"]`); if(el) annApplyTransform(el, it, annSel);
       annDrawSel(svg); return;
     }
     if(!cur || e.pointerId!==cur.id) return;
