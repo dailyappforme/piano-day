@@ -665,6 +665,13 @@
     -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); }
   .ann-palette[hidden] { display: none !important; }   /* the display:flex above otherwise defeats the hidden attribute */
   .ann-palette::-webkit-scrollbar { display: none; }
+  /* notes: one wider panel that wraps to multiple rows — no horizontal scroll */
+  .ann-palette.note-pal { flex-wrap: wrap; overflow: visible; justify-content: center;
+    max-width: min(560px, calc(100vw - 20px)); gap: 5px; row-gap: 5px; }
+  /* eraser size indicator — a translucent circle that follows the finger */
+  .ann-erasecursor { position: absolute; z-index: 25; pointer-events: none; border-radius: 50%;
+    transform: translate(-50%, -50%); border: 1.5px solid rgba(0,0,0,0.45); background: rgba(255,255,255,0.28); }
+  html[data-theme="dark"] .ann-erasecursor { border-color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.12); }
   .focus-view.fake-fs .ann-palette, .focus-view.pdf-book .ann-palette { bottom: calc(env(safe-area-inset-bottom) + 92px); }
   /* keep the palette shown while editing, in sync with the (pinned) main toolbar */
   .focus-view.ann-active .ann-palette { opacity: 1; pointer-events: auto; }
@@ -4224,6 +4231,7 @@ const ANN_SYMS = [
   ["pp","p","mp","mf","f","ff"],
   ["Ped.","✱"],
   [">","^","sf","sfz"],
+  ["✓","✗"],
   ["A","B","C","D","E","F","G"],
   ["1","2","3","4","5","6","7"],
 ];
@@ -4251,18 +4259,38 @@ function annPathD(pts){
   const last = pts[pts.length-1]; d += ` L${last.x} ${last.y}`;
   return d;
 }
-function annSetFill(el, it){   // shape fill: outline-only (default) or solid tint at 10% opacity
+function annSetFill(el, it){   // shape fill: outline-only (default) or solid tint at 10% opacity, no outline
   if(it.f==='fill'){ el.setAttribute('fill', it.c); el.setAttribute('fill-opacity','0.1'); }
   else el.setAttribute('fill','none');
+}
+// ---- undo history (snapshot the page's marks before each mutation; up to 50 steps) ----
+let annUndo = [];
+function annSnapshot(svg){
+  if(!svg) return;
+  const pid = svg.dataset.piece, pg = +svg.dataset.page;
+  annUndo.push({ piece: pid, page: pg, snap: JSON.stringify(annData(pid, pg)) });
+  if(annUndo.length > 50) annUndo.shift();
+}
+function annEraserR(){ return Math.max(5, annWidth * 1.8); }   // eraser radius (viewBox units) from the thickness slider
+function annArrowD(x1,y1,x2,y2,w){   // shaft + arrowhead path for a draggable arrow
+  const ang=Math.atan2(y2-y1,x2-x1), len=Math.hypot(x2-x1,y2-y1);
+  const hl=Math.min(len*0.5, Math.max(9, (w||3)*3));
+  const a1=ang+Math.PI*0.82, a2=ang-Math.PI*0.82;
+  return `M${x1} ${y1} L${x2} ${y2} M${(x2+hl*Math.cos(a2)).toFixed(1)} ${(y2+hl*Math.sin(a2)).toFixed(1)} L${x2} ${y2} L${(x2+hl*Math.cos(a1)).toFixed(1)} ${(y2+hl*Math.sin(a1)).toFixed(1)}`;
 }
 function annMake(it){
   let el;
   if(it.t==='p'){ el=document.createElementNS(ANN_NS,'path'); el.setAttribute('d',it.d); el.setAttribute('fill','none'); el.setAttribute('stroke-linecap','round'); el.setAttribute('stroke-linejoin','round'); }
+  else if(it.t==='a'){ el=document.createElementNS(ANN_NS,'path'); el.setAttribute('d',annArrowD(it.x,it.y,it.x2,it.y2,it.w)); el.setAttribute('fill','none'); el.setAttribute('stroke-linecap','round'); el.setAttribute('stroke-linejoin','round'); }
   else if(it.t==='r'){ el=document.createElementNS(ANN_NS,'rect'); el.setAttribute('x',it.x); el.setAttribute('y',it.y); el.setAttribute('width',it.w2); el.setAttribute('height',it.h2); el.setAttribute('rx',(Math.min(it.w2,it.h2)*0.03).toFixed(1)); annSetFill(el,it); }
   else if(it.t==='c'){ el=document.createElementNS(ANN_NS,'ellipse'); el.setAttribute('cx',it.x); el.setAttribute('cy',it.y); el.setAttribute('rx',it.w2); el.setAttribute('ry',it.h2); annSetFill(el,it); }
   else if(it.t==='t'){ el=document.createElementNS(ANN_NS,'text'); el.setAttribute('x',it.x); el.setAttribute('y',it.y); el.setAttribute('font-size',it.s); el.setAttribute('font-weight', it.m?'700':'600'); el.setAttribute('font-family', it.m ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : '-apple-system, system-ui, sans-serif'); el.setAttribute('dominant-baseline','hanging'); el.textContent=it.v; el.setAttribute('fill',it.c); }
   if(!el) return null;
-  if(it.t!=='t'){ el.setAttribute('stroke',it.c); el.setAttribute('stroke-width',it.w); }
+  if(it.t!=='t'){
+    const noStroke = (it.t==='r'||it.t==='c') && it.f==='fill';   // filled shape = tint only, no outline
+    el.setAttribute('stroke', noStroke ? 'none' : it.c);
+    el.setAttribute('stroke-width', it.w);
+  }
   return el;
 }
 function annRender(svg){
@@ -4286,12 +4314,49 @@ let annErasing = null;// pointerId currently erasing
 let annErasedAny = false;
 let annOnSel = null;  // callback to refresh the palette when selection changes
 let annLastItem = null, annLastItemSvg = null;   // most-recently created mark (for quick recolour)
-function annEraseAt(svg, e){
-  const el = document.elementFromPoint(e.clientX, e.clientY);
-  if(el && el!==svg && svg.contains(el) && el.dataset && el.dataset.i!=null){
-    annData(svg.dataset.piece, +svg.dataset.page).splice(+el.dataset.i, 1); save(); annRender(svg); return true;
+// A real eraser: for freehand strokes it removes only the portion under the eraser circle
+// (splitting the stroke); shapes / text / notes / arrows are atomic so they're removed whole on contact.
+function annTrimPath(el, it, P, r, e, svg){
+  const rect = el.getBoundingClientRect();
+  const m = svg.getScreenCTM(); const px = r * (m ? m.a : 1);
+  if(e.clientX < rect.left-px || e.clientX > rect.right+px || e.clientY < rect.top-px || e.clientY > rect.bottom+px) return null; // far: untouched
+  let L=0; try{ L = el.getTotalLength(); }catch(_){ return null; }
+  if(!L) return null;
+  const ctm = el.getCTM();
+  const step = Math.max(0.8, r*0.5);
+  const pts=[];
+  for(let d=0; d<=L; d+=step){ const q=el.getPointAtLength(d);
+    let sx=q.x, sy=q.y; if(ctm){ sx=ctm.a*q.x+ctm.c*q.y+ctm.e; sy=ctm.b*q.x+ctm.d*q.y+ctm.f; }
+    pts.push({x:sx,y:sy}); }
+  let touched=false;
+  const keep = pts.map(pt=>{ if(Math.hypot(pt.x-P.x, pt.y-P.y) <= r){ touched=true; return false; } return true; });
+  if(!touched) return null;
+  const runs=[]; let run=[];
+  for(let j=0;j<pts.length;j++){ if(keep[j]) run.push(pts[j]); else { if(run.length>1) runs.push(run); run=[]; } }
+  if(run.length>1) runs.push(run);
+  return runs.map(rn=>({ t:'p', c:it.c, w:it.w, d:annPathD(rn) }));   // 0+ surviving sub-strokes, transform baked out
+}
+function annMarkHit(el, e, r, svg){
+  const rect = el.getBoundingClientRect();
+  const m = svg.getScreenCTM(); const px = r * (m ? m.a : 1);
+  const nx = Math.max(rect.left, Math.min(e.clientX, rect.right));
+  const ny = Math.max(rect.top,  Math.min(e.clientY, rect.bottom));
+  return Math.hypot(e.clientX-nx, e.clientY-ny) <= px;   // eraser circle intersects the mark's box
+}
+function annEraseStroke(svg, e, r){
+  const items = annData(svg.dataset.piece, +svg.dataset.page);
+  const P = annPoint(svg, e.clientX, e.clientY);
+  const out = []; let mutated = false;
+  for(let i=0;i<items.length;i++){
+    const it = items[i], el = svg.querySelector(`[data-i="${i}"]`);
+    if(it.t==='p' && el){
+      const res = annTrimPath(el, it, P, r, e, svg);
+      if(res===null) out.push(it); else { mutated=true; res.forEach(ni=>out.push(ni)); }
+    } else if(el && annMarkHit(el, e, r, svg)){ mutated=true; /* drop whole */ }
+    else out.push(it);
   }
-  return false;
+  if(mutated){ items.length=0; out.forEach(x=>items.push(x)); save(); annRender(svg); }
+  return mutated;
 }
 function annApplyTransform(el, it, sel){
   const tx=it.tx||0, ty=it.ty||0, sc=it.sc||1;
@@ -4323,9 +4388,9 @@ function annSelectDown(svg, e){
   const pt = annPoint(svg, e.clientX, e.clientY);
   if(annSel && annSel.svg===svg && annSel.box){
     const b = annSel.box, r = annSel.hr || 18;
-    if(annHit(pt, b.x+b.w, b.y+b.h, r)){ annDrag={mode:'resize', svg, id:e.pointerId}; return; }   // resize
+    if(annHit(pt, b.x+b.w, b.y+b.h, r)){ annSnapshot(svg); annDrag={mode:'resize', svg, id:e.pointerId}; return; }   // resize
     if(pt.x>=b.x-r*0.6 && pt.x<=b.x+b.w+r*0.6 && pt.y>=b.y-r*0.6 && pt.y<=b.y+b.h+r*0.6){           // move
-      annDrag={mode:'move', svg, id:e.pointerId, ox:pt.x, oy:pt.y}; return;
+      annSnapshot(svg); annDrag={mode:'move', svg, id:e.pointerId, ox:pt.x, oy:pt.y}; return;
     }
   }
   const el = (e.target && e.target!==svg && e.target.dataset && e.target.dataset.i!=null) ? e.target : null;
@@ -4345,7 +4410,16 @@ function annShapeAttrs(el, s, e){
   else { el.setAttribute('x',x); el.setAttribute('y',y); el.setAttribute('width',w); el.setAttribute('height',h); el.setAttribute('rx',(Math.min(w,h)*0.03).toFixed(1)); }
 }
 function annAttachDraw(svg){
-  let cur = null;   // active stroke/shape: {type,id,pts|start,el}
+  let cur = null;   // active freehand/arrow draw: {type:'pen'|'arrow', id, pts|start, el}
+  const _fv = svg.closest('.focus-view');
+  function eraseCursor(e, r){   // translucent circle showing the eraser size (follows the finger)
+    if(!_fv) return;
+    let c = _fv.querySelector('.ann-erasecursor');
+    if(!e){ if(c) c.remove(); return; }
+    if(!c){ c=document.createElement('div'); c.className='ann-erasecursor'; _fv.appendChild(c); }
+    const m = svg.getScreenCTM(); const px = r*(m?m.a:1); const fr=_fv.getBoundingClientRect();
+    c.style.width=c.style.height=(px*2)+'px'; c.style.left=(e.clientX-fr.left)+'px'; c.style.top=(e.clientY-fr.top)+'px';
+  }
   svg.addEventListener('pointerdown', e=>{
     if(!annTool){
       // no tool active: a tap directly on a created mark jumps into adjust mode for it
@@ -4356,29 +4430,29 @@ function annAttachDraw(svg){
       return;
     }
     if(annTool==='select'){ annSelectDown(svg, e); return; }
-    if(annTool==='eraser'){   // touch a mark to erase it; drag across several to wipe them
+    if(annTool==='eraser'){
       e.preventDefault(); e.stopPropagation();
       try{ svg.setPointerCapture(e.pointerId); }catch(_){}
       annLastSvg = svg; annErasing = e.pointerId; annErasedAny = false;
-      if(annEraseAt(svg, e)) annErasedAny = true;
+      annSnapshot(svg);                     // one undo step per erase gesture (popped if nothing erased)
+      const r = annEraserR(); eraseCursor(e, r);
+      if(annEraseStroke(svg, e, r)) annErasedAny = true;
       return;
     }
+    if(annTool==='shape') return;           // shapes are stamped from the menu, not dragged on the canvas
     if(cur) return;
     e.preventDefault(); e.stopPropagation();
     try{ svg.setPointerCapture(e.pointerId); }catch(_){}
     annLastSvg = svg;
     const pt = annPoint(svg, e.clientX, e.clientY);
-    if(annTool==='note'){ const _it={t:'t',m:1,c:annColor,x:pt.x,y:pt.y,s:annSymSize,v:annSym}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); return; }
+    if(annTool==='note'){ annSnapshot(svg); const _it={t:'t',m:1,c:annColor,x:pt.x,y:pt.y,s:annSymSize,v:annSym}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); return; }
     if(annTool==='text'){ annCreateText(svg, pt); return; }
-    if(annTool==='pen'){
-      cur = { type:'pen', id:e.pointerId, pts:[pt], el:annMake({t:'p',c:annColor,w:annWidth,d:`M${pt.x} ${pt.y}`}) };
-    } else {
-      cur = { type:'shape', id:e.pointerId, start:pt, el:annMake(annShape==='circle'?{t:'c',c:annColor,w:annWidth,f:annShapeFill,x:pt.x,y:pt.y,w2:0,h2:0}:{t:'r',c:annColor,w:annWidth,f:annShapeFill,x:pt.x,y:pt.y,w2:0,h2:0}) };
-    }
+    if(annTool==='arrow'){ cur = { type:'arrow', id:e.pointerId, start:pt, el:annMake({t:'a',c:annColor,w:annWidth,x:pt.x,y:pt.y,x2:pt.x,y2:pt.y}) }; svg.appendChild(cur.el); return; }
+    cur = { type:'pen', id:e.pointerId, pts:[pt], el:annMake({t:'p',c:annColor,w:annWidth,d:`M${pt.x} ${pt.y}`}) };
     svg.appendChild(cur.el);
   });
   svg.addEventListener('pointermove', e=>{
-    if(annErasing===e.pointerId){ e.preventDefault(); if(annEraseAt(svg, e)) annErasedAny=true; return; }
+    if(annErasing===e.pointerId){ e.preventDefault(); const r=annEraserR(); eraseCursor(e, r); if(annEraseStroke(svg, e, r)) annErasedAny=true; return; }
     if(annDrag && annDrag.svg===svg && e.pointerId===annDrag.id && annSel){
       e.preventDefault();
       const it = annData(svg.dataset.piece, +svg.dataset.page)[annSel.idx]; if(!it) return;
@@ -4392,10 +4466,11 @@ function annAttachDraw(svg){
     e.preventDefault();
     const pt = annPoint(svg, e.clientX, e.clientY);
     if(cur.type==='pen'){ cur.pts.push(pt); cur.el.setAttribute('d', annPathD(cur.pts)); }
-    else annShapeAttrs(cur.el, cur.start, pt);
+    else if(cur.type==='arrow'){ cur.el.setAttribute('d', annArrowD(cur.start.x,cur.start.y,pt.x,pt.y,annWidth)); }
   });
   const end = e=>{
-    if(annErasing===e.pointerId){ try{ svg.releasePointerCapture(e.pointerId); }catch(_){} annErasing=null; if(!annErasedAny){ const _fv=svg.closest('.focus-view'); if(_fv && _fv._annExit) _fv._annExit(); } return; }
+    if(annErasing===e.pointerId){ try{ svg.releasePointerCapture(e.pointerId); }catch(_){} annErasing=null; eraseCursor(null);
+      if(!annErasedAny){ annUndo.pop(); const f=svg.closest('.focus-view'); if(f && f._annExit) f._annExit(); } return; }
     if(annDrag && annDrag.svg===svg && e.pointerId===annDrag.id){
       try{ svg.releasePointerCapture(e.pointerId); }catch(_){}
       const it = annSel && annData(svg.dataset.piece, +svg.dataset.page)[annSel.idx];
@@ -4407,24 +4482,20 @@ function annAttachDraw(svg){
     const items = annData(svg.dataset.piece, +svg.dataset.page);
     let created = false;
     if(cur.type==='pen'){
-      if(cur.pts.length>1){ items.push({t:'p',c:annColor,w:annWidth,d:annPathD(cur.pts)}); annLastItem=items[items.length-1]; annLastItemSvg=svg; save(); created=true; }
+      if(cur.pts.length>1){ annSnapshot(svg); items.push({t:'p',c:annColor,w:annWidth,d:annPathD(cur.pts)}); annLastItem=items[items.length-1]; annLastItemSvg=svg; save(); created=true; }
       else cur.el.remove();
-    } else {
+    } else if(cur.type==='arrow'){
       const s=cur.start, f=annPoint(svg, e.clientX, e.clientY);
-      const x=Math.min(s.x,f.x), y=Math.min(s.y,f.y), w=Math.abs(f.x-s.x), h=Math.abs(f.y-s.y);
-      if(w>8 && h>8){
-        if(annShape==='circle') items.push({t:'c',c:annColor,w:annWidth,f:annShapeFill,x:x+w/2,y:y+h/2,w2:w/2,h2:h/2});
-        else items.push({t:'r',c:annColor,w:annWidth,f:annShapeFill,x,y,w2:w,h2:h});
-        annLastItem=items[items.length-1]; annLastItemSvg=svg; save(); created=true;
-      } else cur.el.remove();
+      if(Math.hypot(f.x-s.x, f.y-s.y) > 8){ annSnapshot(svg); items.push({t:'a',c:annColor,w:annWidth,x:s.x,y:s.y,x2:f.x,y2:f.y}); annLastItem=items[items.length-1]; annLastItemSvg=svg; save(); created=true; }
+      else cur.el.remove();
     }
     cur = null;
     // a plain tap on empty space (nothing drawn) closes the secondary menu / finishes editing
-    if(!created){ const _fv=svg.closest('.focus-view'); if(_fv && _fv._annExit) _fv._annExit(); return; }
+    if(!created){ const f=svg.closest('.focus-view'); if(f && f._annExit) f._annExit(); return; }
     annRender(svg);   // re-index elements (data-i) so they're selectable/movable
   };
   svg.addEventListener('pointerup', end);
-  svg.addEventListener('pointercancel', e=>{ if(annErasing===e.pointerId){ annErasing=null; } if(annDrag&&e.pointerId===annDrag.id){ annDrag=null; } if(cur&&e.pointerId===cur.id){ cur.el.remove(); cur=null; } });
+  svg.addEventListener('pointercancel', e=>{ if(annErasing===e.pointerId){ if(!annErasedAny) annUndo.pop(); annErasing=null; eraseCursor(null); } if(annDrag&&e.pointerId===annDrag.id){ annDrag=null; } if(cur&&e.pointerId===cur.id){ cur.el.remove(); cur=null; } });
 }
 function annCreateText(svg, pt){
   const fv = svg.closest('.focus-view'); if(!fv) return;
@@ -4442,7 +4513,7 @@ function annCreateText(svg, pt){
   setTimeout(()=>input.focus(), 0);
   let done = false;
   const commit = ()=>{ if(done) return; done=true; const v=input.value.trim();
-    if(v){ const _it={t:'t',c:annColor,x:pt.x,y:pt.y,s:annTSize,v}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); }
+    if(v){ annSnapshot(svg); const _it={t:'t',c:annColor,x:pt.x,y:pt.y,s:annTSize,v}; annData(svg.dataset.piece, +svg.dataset.page).push(_it); annLastItem=_it; annLastItemSvg=svg; save(); annRender(svg); }
     input.remove();
   };
   input.addEventListener('blur', commit);
@@ -4489,40 +4560,46 @@ function setupAnnotations(pane, p, ctx){
   const circIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>`;
   const fillNoneIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>`;
   const fillSolidIc = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="currentColor" fill-opacity="0.28"/></svg>`;
+  const rectFillIc = `<svg viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.85"><rect x="4" y="6" width="16" height="12" rx="1.8"/></svg>`;
+  const circFillIc = `<svg viewBox="0 0 24 24" fill="currentColor" fill-opacity="0.85"><circle cx="12" cy="12" r="8"/></svg>`;
+  const arrowIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>`;
   const undoIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>`;
   const trashIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>`;
   const xIc = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>`;
 
   function buildPalette(){
-    // colours are NOT here anymore — they're in the main toolbar colour-bar
+    // colours + thickness live on the main edit toolbar; this secondary panel holds per-tool extras
+    pal.classList.toggle('note-pal', annTool==='note');   // notes use a wider wrapping grid (no scroll)
     let html = "";
     if(annTool==='select'){
-      // adjust: shows ONLY when a mark is selected — its thickness/size + delete
+      // adjust: shows ONLY when a mark is selected — thickness (strokes) / fill (shapes) + delete.
+      // Text & notes have no size buttons here — drag the handle to resize.
       const it = annSelItem();
       if(!it){ pal.innerHTML = ""; return; }
-      if(it.t!=='t') html += ANN_WIDTHS.map(([l,w])=>wdot(l,w,w===it.w)).join("");
-      else html += ANN_TSIZES.map(([l,s])=>tdot(l,s,s===it.s)).join("");
-      if(it.t==='r' || it.t==='c') html += `<span class="ann-div"></span>` +
+      if(it.t==='p' || it.t==='a') html += ANN_WIDTHS.map(([l,w])=>wdot(l,w,w===it.w)).join("") + `<span class="ann-div"></span>`;
+      if(it.t==='r' || it.t==='c') html +=
         `<button class="ann-pb${(it.f||'none')==='none'?' is-sel':''}" data-fill="none" title="Outline">${fillNoneIc}</button>` +
-        `<button class="ann-pb${it.f==='fill'?' is-sel':''}" data-fill="fill" title="Solid (10%)">${fillSolidIc}</button>`;
-      html += `<span class="ann-div"></span><button class="ann-pb" data-act="del" title="Delete">${trashIc}</button>`;
+        `<button class="ann-pb${it.f==='fill'?' is-sel':''}" data-fill="fill" title="Solid (10%)">${fillSolidIc}</button><span class="ann-div"></span>`;
+      html += `<button class="ann-pb" data-act="del" title="Delete">${trashIc}</button>`;
       pal.innerHTML = html; return;
     }
     if(annTool==='note'){
-      html += ANN_SYMS.map(grp => grp.map(s=>`<button class="ann-pb ann-sym${s===annSym?' is-sel':''}" data-sym="${s}">${s}</button>`).join("")).join(`<span class="ann-div"></span>`);
-      html += `<span class="ann-div"></span>` + ANN_TSIZES.map(([l,s])=>`<button class="ann-pb${s===annSymSize?' is-sel':''}" data-ns="${s}" style="font-weight:700">${l}</button>`).join("");
+      // all symbols in one wider panel (wraps, no horizontal scroll); no S/M/L. '✓ ✗ Ped. ✱' included.
+      html += ANN_SYMS.map(grp => grp.map(s=>`<button class="ann-pb ann-sym${s===annSym?' is-sel':''}" data-sym="${s}">${s}</button>`).join("")).join("");
+      html += `<button class="ann-pb" data-arrowtool title="Arrow — drag on the score to draw">${arrowIc}</button>`;
       pal.innerHTML = html; return;
     }
-    if(annTool==='text'){ html += ANN_TSIZES.map(([l,s])=>tdot(l,s,s===annTSize)).join(""); pal.innerHTML = html; return; }
-    if(annTool==='shape'){ html +=
-      `<button class="ann-pb${annShape==='rect'?' is-sel':''}" data-shape="rect">${rectIc}</button>` +
-      `<button class="ann-pb${annShape==='circle'?' is-sel':''}" data-shape="circle">${circIc}</button>` +
-      `<span class="ann-div"></span>` +
-      `<button class="ann-pb${annShapeFill==='none'?' is-sel':''}" data-fill="none" title="Outline">${fillNoneIc}</button>` +
-      `<button class="ann-pb${annShapeFill==='fill'?' is-sel':''}" data-fill="fill" title="Solid (10%)">${fillSolidIc}</button>`;
+    if(annTool==='text'){ pal.innerHTML = ""; return; }   // text: tap the score to place a box directly (no S/M/L)
+    if(annTool==='shape'){
+      // 4 one-tap options (no pre-select): square/circle · outline/solid. Tapping stamps it and closes this menu.
+      html += `<button class="ann-pb" data-add="rect:none" title="Square outline">${rectIc}</button>`
+            + `<button class="ann-pb" data-add="circle:none" title="Circle outline">${circIc}</button>`
+            + `<span class="ann-div"></span>`
+            + `<button class="ann-pb" data-add="rect:fill" title="Square — filled">${rectFillIc}</button>`
+            + `<button class="ann-pb" data-add="circle:fill" title="Circle — filled">${circFillIc}</button>`;
       pal.innerHTML = html; return;
     }
-    // pen / eraser / no-tool: no secondary palette (thickness lives on the toolbar slider)
+    // pen / arrow / eraser / no-tool: no secondary palette (thickness lives on the toolbar slider)
     pal.innerHTML = "";
   }
   function buildThick(){   // thickness slider — shared by pen (mark) and shape border
@@ -4537,6 +4614,41 @@ function setupAnnotations(pane, p, ctx){
     const cur = selIt ? selIt.c : annColor;
     if(colorBtn) colorBtn.style.background = cur;
     colorpop.innerHTML = ANN_COLORS.map(c=>`<button class="ann-sw${c===cur?' is-sel':''}" data-c="${c}" style="background:${c}"></button>`).join("");
+  }
+  function annVisibleLayer(){   // the overlay whose page is most centred in the scroll viewport
+    const sc = ctx.scroll; const layers = fv.querySelectorAll('.ann-layer');
+    if(!sc || !layers.length) return layers[0] || null;
+    const vb = sc.getBoundingClientRect(), vcx=vb.left+vb.width/2, vcy=vb.top+vb.height/2;
+    let best=layers[0], bestD=Infinity;
+    layers.forEach(l=>{ const pg=l.closest('.pdf-page')||l; const r=pg.getBoundingClientRect();
+      if(r.bottom<vb.top || r.top>vb.bottom || r.right<vb.left || r.left>vb.right) return;   // off-screen
+      const d=Math.hypot((r.left+r.width/2)-vcx, (r.top+r.height/2)-vcy); if(d<bestD){ bestD=d; best=l; } });
+    return best;
+  }
+  function annStampShape(kind, fill){   // add a default-sized shape centred on the visible page, then select it
+    const svg = annVisibleLayer(); if(!svg) return;
+    const pg = svg.closest('.pdf-page') || svg;
+    const r = pg.getBoundingClientRect();
+    const sc = ctx.scroll ? ctx.scroll.getBoundingClientRect() : r;
+    const ccx = r.left + r.width/2;
+    const ccy = (Math.max(r.top, sc.top) + Math.min(r.bottom, sc.bottom)) / 2;   // centre of the visible slice
+    const half = Math.min(r.width, r.height) * 0.14;
+    const c = annPoint(svg, ccx, ccy), q = annPoint(svg, ccx+half, ccy+half);
+    const hw = Math.abs(q.x-c.x) || 30, hh = Math.abs(q.y-c.y) || 30;
+    const items = annData(svg.dataset.piece, +svg.dataset.page);
+    annSnapshot(svg);
+    const it = (kind==='circle')
+      ? { t:'c', c:annColor, w:annWidth, f:fill, x:c.x, y:c.y, w2:hw, h2:hh }
+      : { t:'r', c:annColor, w:annWidth, f:fill, x:c.x-hw, y:c.y-hh, w2:hw*2, h2:hh*2 };
+    items.push(it); annLastItem=it; annLastItemSvg=svg; save(); annRender(svg);
+    // close the chooser and drop into adjust mode on the new shape (handles shown, no palette) so it can be moved/resized
+    const idx = items.length-1;
+    setTool('select', true);
+    const el = svg.querySelector(`[data-i="${idx}"]`);
+    if(el){ const bb=el.getBBox(); annSel={ svg, idx, bx:bb.x, by:bb.y, ow:bb.width, oh:bb.height }; annDrawSel(svg); }
+    annLastSvg = svg;
+    pal.hidden = true; colorpop.hidden = true; thickpop.hidden = true;
+    buildColorbar();
   }
   function showPalForTool(){   // restore the tool's own secondary menu (after a popover closes)
     if(annTool==='select'){ if(annSelItem()){ buildPalette(); pal.hidden=false; } else pal.hidden=true; }
@@ -4619,19 +4731,25 @@ function setupAnnotations(pane, p, ctx){
   if(btns.eraser) btns.eraser.addEventListener('click', ()=>setTool('eraser'));
   if(editBtn) editBtn.addEventListener('click', enterEdit);
   if(doneBtn) doneBtn.addEventListener('click', exitEdit);
-  if(undoBtn) undoBtn.addEventListener('click', ()=>{ const svg=annLastSvg||fv.querySelector('.ann-layer'); if(svg){ const items=annData(svg.dataset.piece,+svg.dataset.page); items.pop(); save(); annRender(svg); } });
+  function doUndo(){   // restore the last snapshot (up to 50 steps; includes erases, moves, deletes)
+    const u = annUndo.pop(); if(!u) return;
+    const arr = annData(u.piece, u.page); arr.length = 0; JSON.parse(u.snap).forEach(x=>arr.push(x)); save();
+    annSel = null;
+    let svg = null; fv.querySelectorAll('.ann-layer').forEach(l=>{ if(l.dataset.piece===u.piece && +l.dataset.page===u.page) svg=l; });
+    if(svg) annRender(svg);
+    if(annTool==='select') pal.hidden = true; else showPalForTool();
+  }
+  if(undoBtn) undoBtn.addEventListener('click', doUndo);
   pal.addEventListener('click', e=>{
     const b = e.target.closest('button'); if(!b) return;
     const selIt = annTool==='select' ? annSelItem() : null;   // editing an existing mark?
-    if(b.dataset.w){ annWidth=+b.dataset.w; if(selIt && selIt.t!=='t'){ selIt.w=annWidth; save(); annRender(annSel.svg); annDrawSel(annSel.svg); } buildPalette(); }
-    else if(b.dataset.s){ annTSize=+b.dataset.s; if(selIt && selIt.t==='t'){ selIt.s=annTSize; save(); annRender(annSel.svg); annDrawSel(annSel.svg); } buildPalette(); }
+    if(b.dataset.add){ const [k,f] = b.dataset.add.split(':'); annStampShape(k, f); }
+    else if(b.dataset.arrowtool!==undefined){ setTool('arrow'); }   // drag on the score to draw an arrow
+    else if(b.dataset.w){ annWidth=+b.dataset.w; if(selIt && (selIt.t==='p'||selIt.t==='a')){ annSnapshot(annSel.svg); selIt.w=annWidth; save(); annRender(annSel.svg); annDrawSel(annSel.svg); } buildPalette(); }
     else if(b.dataset.ns){ annSymSize=+b.dataset.ns; buildPalette(); }
     else if(b.dataset.sym){ annSym=b.dataset.sym; buildPalette(); }
-    else if(b.dataset.shape){ annShape=b.dataset.shape; buildPalette(); }
-    else if(b.dataset.fill){ annShapeFill=b.dataset.fill; if(selIt && (selIt.t==='r'||selIt.t==='c')){ selIt.f=annShapeFill; save(); annRender(annSel.svg); annDrawSel(annSel.svg); } else if(annLastItem && (annLastItem.t==='r'||annLastItem.t==='c')){ annLastItem.f=annShapeFill; save(); if(annLastItemSvg) annRender(annLastItemSvg); } buildPalette(); }
-    else if(b.dataset.act==='del'){ if(annSel){ const svg=annSel.svg; annData(svg.dataset.piece,+svg.dataset.page).splice(annSel.idx,1); save(); annSel=null; annRender(svg); pal.hidden=true; } }
-    else if(b.dataset.act==='undo'){ const svg=annLastSvg||fv.querySelector('.ann-layer'); if(svg){ const items=annData(svg.dataset.piece,+svg.dataset.page); items.pop(); save(); annRender(svg); } }
-    else if(b.dataset.act==='done'){ setTool('select'); }   // finish drawing → adjust/move mode
+    else if(b.dataset.fill){ annShapeFill=b.dataset.fill; if(selIt && (selIt.t==='r'||selIt.t==='c')){ annSnapshot(annSel.svg); selIt.f=annShapeFill; save(); annRender(annSel.svg); annDrawSel(annSel.svg); } buildPalette(); }
+    else if(b.dataset.act==='del'){ if(annSel){ const svg=annSel.svg; annSnapshot(svg); annData(svg.dataset.piece,+svg.dataset.page).splice(annSel.idx,1); save(); annSel=null; annRender(svg); pal.hidden=true; } }
   });
 
   // Show/hide the whole annotation layer (a view mode — marks stay saved, just hidden).
