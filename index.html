@@ -862,6 +862,49 @@
   .empty-sub { font-size: 14px; margin-top: 4px; }
   .home-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 5px; padding: 40px 20px; color: var(--mu-ink-3); }
   .home-empty svg { width: 30px; height: 30px; color: var(--mu-gray-400); margin-bottom: 4px; }
+
+  /* ---- My Scores (uploads) ---- */
+  .appbar-rowtop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .btn-primary { -webkit-appearance: none; appearance: none; border: none; cursor: pointer; background: var(--mu-gray-900); color: #fff;
+    font-size: 14px; font-weight: 600; border-radius: var(--mu-radius-full); padding: 10px 16px; white-space: nowrap; }
+  .btn-primary:hover { filter: brightness(1.12); }
+  html[data-theme="dark"] .btn-primary { color: #17171b; }
+  .ms-add { padding: 8px 14px; flex-shrink: 0; }
+  .prow-thumb { width: 40px; height: 52px; flex-shrink: 0; border-radius: 6px; border: 1px solid var(--mu-border);
+    background: var(--mu-gray-100) center/cover no-repeat; }
+  .my-del { -webkit-appearance: none; appearance: none; border: none; background: transparent; color: var(--mu-ink-3);
+    width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .my-del:hover { background: var(--mu-gray-100); color: var(--mu-ink); }
+  /* editor overlay */
+  .ms-editor { position: fixed; inset: 0; z-index: 400; background: var(--mu-bg); display: flex; flex-direction: column;
+    padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  .ms-ed-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--mu-border); }
+  .ms-ed-title { font-size: 16px; font-weight: 650; }
+  .ms-ed-x, .ms-ed-save { -webkit-appearance: none; appearance: none; border: none; background: transparent; font-size: 15px; cursor: pointer; padding: 6px 4px; color: var(--mu-ink-2); }
+  .ms-ed-save { font-weight: 650; color: var(--mu-ink); }
+  .ms-ed-save:disabled { color: var(--mu-gray-400); cursor: default; }
+  .ms-ed-scroll { flex: 1; overflow-y: auto; padding: 18px 16px 40px; }
+  .ms-field { display: block; margin-bottom: 16px; }
+  .ms-field > span { display: block; font-size: 13px; font-weight: 600; color: var(--mu-ink-2); margin-bottom: 6px; }
+  .ms-field input { -webkit-appearance: none; appearance: none; width: 100%; box-sizing: border-box; font-size: 16px;
+    padding: 11px 13px; border: 1px solid var(--mu-border); border-radius: var(--mu-radius-md); background: var(--mu-white); color: var(--mu-ink); outline: none; }
+  .ms-field input:focus { border-color: var(--mu-gray-900); box-shadow: var(--mu-focus-ring); }
+  .ms-toggle { display: flex; align-items: center; gap: 10px; font-size: 14.5px; color: var(--mu-ink); margin-bottom: 22px; cursor: pointer; }
+  .ms-toggle input { width: 20px; height: 20px; accent-color: var(--mu-gray-900); }
+  .ms-pages-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .ms-pages-head > span { font-size: 13px; font-weight: 600; color: var(--mu-ink-2); }
+  .ms-addpages { -webkit-appearance: none; appearance: none; border: 1px solid var(--mu-border); background: var(--mu-white);
+    border-radius: var(--mu-radius-full); font-size: 13px; font-weight: 600; color: var(--mu-ink); padding: 7px 13px; cursor: pointer; }
+  .ms-empty-pages { font-size: 13.5px; color: var(--mu-ink-3); line-height: 1.5; padding: 18px; border: 1px dashed var(--mu-border); border-radius: var(--mu-radius-md); text-align: center; }
+  .ms-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+  .ms-pg { position: relative; border: 1px solid var(--mu-border); border-radius: var(--mu-radius-md); overflow: hidden; background: #fff; }
+  .ms-pg img { width: 100%; height: 150px; object-fit: cover; display: block; }
+  .ms-pg-n { position: absolute; top: 6px; left: 6px; z-index: 1; width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(0,0,0,.6); color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+  .ms-pg-actions { position: absolute; bottom: 0; left: 0; right: 0; display: flex; background: rgba(0,0,0,.55); }
+  .ms-pg-actions button { -webkit-appearance: none; appearance: none; flex: 1; border: none; background: transparent; color: #fff;
+    font-size: 13px; padding: 7px 0; cursor: pointer; }
+  .ms-pg-actions button:disabled { opacity: .35; cursor: default; }
   .home-empty-title { font-size: 15px; font-weight: 600; color: var(--mu-ink-2); }
   .home-empty-sub { font-size: 13px; color: var(--mu-ink-3); max-width: 240px; line-height: 1.45; }
 
@@ -1071,6 +1114,8 @@
       <section class="view" id="view-sheet"></section>
       <!-- SAVED -->
       <section class="view" id="view-saved"></section>
+      <!-- MY SCORES (uploads) -->
+      <section class="view" id="view-myscores"></section>
       <!-- PROFILE -->
       <section class="view" id="view-profile"></section>
       <section class="view" id="view-setting"></section>
@@ -1092,6 +1137,11 @@
         <svg class="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z"/></svg>
         <svg class="ic-fill" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 2.5h12a1.3 1.3 0 0 1 1.3 1.3v17.4a.8.8 0 0 1-1.2.7L12 18.1l-6.1 3.8a.8.8 0 0 1-1.2-.7V3.8A1.3 1.3 0 0 1 6 2.5Z"/></svg>
         <span class="tb-lbl" data-k="Playlist">Playlist</span>
+      </button>
+      <button class="tabbtn" data-tab="myscores">
+        <svg class="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a1 1 0 0 1 1-1h5l2 2h7a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"/><path d="M12 11v5M9.5 13.5h5"/></svg>
+        <svg class="ic-fill" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 4h5l2 2h7a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm6.3 7v2.1H9.2v1.5h2.1v2.1h1.5v-2.1h2.1v-1.5h-2.1V11Z"/></svg>
+        <span class="tb-lbl" data-k="My Scores">My Scores</span>
       </button>
       <button class="tabbtn" data-tab="profile">
         <svg class="ic-line" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
@@ -1942,7 +1992,7 @@ const CALENDAR = window.MUSIC_CALENDAR || [
    Persistent state (localStorage)
    ================================================================ */
 const LS_KEY = "pp_v1";
-const DEFAULT_STATE = { progress:{}, practiceSec:{}, saved:[], recent:["rav-menuet-haydn","cho-pre284"], viewedAt:{}, lang:"en", theme:"light", keepAwake:10, entitlement:"free", installedAt:null, activeDays:[], gradeSystem:"abrsm", analytics:true };
+const DEFAULT_STATE = { progress:{}, practiceSec:{}, saved:[], recent:["rav-menuet-haydn","cho-pre284"], viewedAt:{}, uploads:[], lang:"en", theme:"light", keepAwake:10, entitlement:"free", installedAt:null, activeDays:[], gradeSystem:"abrsm", analytics:true };
 function applyTheme(){
   const dark = (S.theme==="dark");
   document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -2091,6 +2141,12 @@ function pdfViewer(p, variant){
   const base = p.id;
   const n = (window.SCORE_IMG && window.SCORE_IMG[base]) || 1;
   let imgs = "";
+  if (p.up) {   // user upload: page images come from IndexedDB (preloaded into UPLOAD_PAGES)
+    const urls = (window.UPLOAD_PAGES && window.UPLOAD_PAGES[base]) || [];
+    for (let i = 0; i < urls.length; i++)
+      imgs += `<div class="pdf-page"><img class="pdf-img" src="${urls[i]}" alt="${p.title} score" draggable="false"></div>`;
+    return `<div class="pdf-imgwrap">${imgs}</div>`;
+  }
   for (let i = 1; i <= n; i++)
     imgs += `<div class="pdf-page"><img class="pdf-img" src="${SCORE_BASE}library/${p.c}/img/${base}_${i}.webp?v=${SCORE_VER}" alt="${p.title} score" loading="lazy" draggable="false" onerror="scoreImgError(this)"></div>`;
   return `<div class="pdf-imgwrap">${imgs}</div>`;
@@ -2165,7 +2221,37 @@ function setAnalyticsConsent(on){
   else if (_ph && _ph.opt_out_capturing) _ph.opt_out_capturing();
 }
 
-const pieceById = id => PIECES.find(p => p.id === id);
+const pieceById = id => PIECES.find(p => p.id === id) || uploadPiece(id);
+// ---- user uploads ("My Scores"): metadata in S.uploads, page images in IndexedDB ----
+function uploadMeta(id){ return (S.uploads||[]).find(u=>u.id===id); }
+function uploadPiece(id){   // build a piece-like object for an uploaded score so it flows through the viewer
+  const u = uploadMeta(id); if(!u) return null;
+  if(!COMPOSERS['_up_'+id]) COMPOSERS['_up_'+id] = { name: u.composer || t("Unknown"), era:"", bio:"", born:"", died:"" };
+  return { id:u.id, c:'_up_'+u.id, composer:u.composer||"", title:u.name||t("Untitled"), sub:"", coll:"",
+           key:"", level:1, year:"", dur:0, story:"", up:true, pageCount:(u.pages||[]).length };
+}
+const UPDB_NAME = 'pianoUploads';
+function idbOpen(){ return new Promise((res,rej)=>{ let r; try{ r=indexedDB.open(UPDB_NAME,1); }catch(e){ return rej(e); }
+  r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains('pages')) r.result.createObjectStore('pages'); };
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbPut(key,val){ const db=await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction('pages','readwrite'); tx.objectStore('pages').put(val,key); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+async function idbGet(key){ const db=await idbOpen(); return new Promise((res,rej)=>{ const rq=db.transaction('pages','readonly').objectStore('pages').get(key); rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error); }); }
+async function idbDel(key){ const db=await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction('pages','readwrite'); tx.objectStore('pages').delete(key); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+window.UPLOAD_PAGES = window.UPLOAD_PAGES || {};
+async function preloadUpload(id){   // pull a score's page images from IndexedDB into memory + register page count/aspect
+  const u = uploadMeta(id); if(!u) return false;
+  uploadPiece(id);   // ensure the synthetic composer entry exists
+  const urls = [];
+  for(const pid of (u.pages||[])){ const d = await idbGet(pid); if(d) urls.push(d); }
+  if(!urls.length) return false;
+  window.UPLOAD_PAGES[id] = urls;
+  window.SCORE_IMG = window.SCORE_IMG || {}; window.SCORE_IMG[id] = urls.length;
+  window.SCORE_PAGE_AR = window.SCORE_PAGE_AR || {};
+  const ar = await new Promise(r=>{ const im=new Image(); im.onload=()=>r(im.naturalHeight/(im.naturalWidth||1)||1.4); im.onerror=()=>r(1.4); im.src=urls[0]; });
+  window.SCORE_PAGE_AR[id] = ar;
+  return true;
+}
+async function openUpload(id){ if(await preloadUpload(id)) openSheet(id); else alert(t("Couldn't open this score")); }
 const piecesOf = cId => cId === "__all" ? PIECES.slice() : PIECES.filter(p => p.c === cId);
 const modeOf = p => /minor/i.test(p.key) ? "minor" : "major";
 // display: "E major" → "E Major", "A minor" → "A Minor" (logic still parses lowercase)
@@ -2501,6 +2587,7 @@ function routeTo(hash) {
   else if (seg === "piece" && pieceById(arg)) openSheet(arg);
   else if (seg === "library") { renderLibrary(); show("library","library"); }
   else if (seg === "saved") { renderSaved(); show("saved","saved"); }
+  else if (seg === "myscores") { renderMyScores(); show("myscores","myscores"); }
   else if (seg === "setting" && arg) { openSetting(arg); }
   else if (seg === "profile") { renderProfile(); show("profile","profile"); }
   else { renderHome(); show("home","home"); }
@@ -2516,6 +2603,7 @@ document.getElementById("tabbar").addEventListener("click", e => {
   if (t === "home") { renderHome(); show("home","home"); }
   else if (t === "library") { renderLibrary(); show("library","library"); }
   else if (t === "saved") { renderSaved(); show("saved","saved"); }
+  else if (t === "myscores") { renderMyScores(); show("myscores","myscores"); }
   else if (t === "profile") { renderProfile(); show("profile","profile"); }
 });
 
@@ -3913,6 +4001,7 @@ const SPOTIFY = {
 
 // A dedicated row on the score page showing the piece's grade across all three boards.
 function sheetLevelsHTML(p){
+  if (p.up) return "";   // uploads have no syllabus grades
   return `<div class="sheet-levels">${GRADE_SYS.map(s=>`<span class="slv"><span class="slv-sys">${s.name}</span> <b class="slv-val">${gradeVal(p.level,s.key,p.id)||"—"}</b></span>`).join("")}</div>`;
 }
 function renderSheet() {
@@ -3920,9 +4009,10 @@ function renderSheet() {
   const c = COMPOSERS[p.c];
   const isMarked = S.saved.includes(p.id);
   const v = document.getElementById("view-sheet");
-  const hasWarmup = warmupItems(p).length > 0;   // keyless pieces (whole-tone/no key) have none → hide the tab
-  if (sheetCtx.tab === "practice" && !hasWarmup) sheetCtx.tab = "focus";
-  const TABS = [["focus",t("Score")], ...(hasWarmup ? [["practice",t("Warm-Up")]] : []), ["explore",t("Explore")]];
+  const hasWarmup = !p.up && warmupItems(p).length > 0;   // keyless pieces (whole-tone/no key) have none → hide the tab
+  if (sheetCtx.tab !== "focus" && (p.up || (sheetCtx.tab === "practice" && !hasWarmup))) sheetCtx.tab = "focus";
+  // uploads: Score tab only (no warm-up / explore composer bio)
+  const TABS = p.up ? [["focus",t("Score")]] : [["focus",t("Score")], ...(hasWarmup ? [["practice",t("Warm-Up")]] : []), ["explore",t("Explore")]];
   v.innerHTML = `
     <div class="appbar">
       <button class="appbar-back" id="sBack">${IC.back}</button>
@@ -3935,13 +4025,13 @@ function renderSheet() {
       <div class="sheet-title">${pieceNameHTML(p)}</div>
       <div class="sheet-metawrap">
         <div class="sheet-meta">
+          ${p.up ? `<span>${p.pageCount} ${p.pageCount===1?t("page"):t("pages")}</span>` : `
           <span>${p.year}</span>
           <span>${fmtDur(p.dur)}</span>
           <span>${fmtKey(p.key)}</span>
-          <span id="bpmTag">♩ ${sheetCtx.bpm}</span>
+          <span id="bpmTag">♩ ${sheetCtx.bpm}</span>`}
         </div>
-        <span class="meta-div"></span>
-        ${sheetLevelsHTML(p)}
+        ${p.up ? "" : `<span class="meta-div"></span>${sheetLevelsHTML(p)}`}
       </div>
     </div>
 
@@ -4989,7 +5079,7 @@ function wireProgress(p, root){
   if (!range) return;
   range.addEventListener("input", ()=>{ S.progress[p.id]=+range.value; save(); ringHost.innerHTML=ringSVG(+range.value); });
 }
-function backFromSheet(){ if (rootTab==="home"){ renderHome(); show("home","home"); } else if (rootTab==="saved"){ renderSaved(); show("saved","saved"); } else { renderPianist(); show("pianist","library","composer/"+pianistState.id); } }
+function backFromSheet(){ if (rootTab==="home"){ renderHome(); show("home","home"); } else if (rootTab==="saved"){ renderSaved(); show("saved","saved"); } else if (rootTab==="myscores"){ renderMyScores(); show("myscores","myscores"); } else { renderPianist(); show("pianist","library","composer/"+pianistState.id); } }
 
 /* ---- metronome via Web Audio ---- */
 let audioCtx = null, metroInterval = null, metroBeat = 0;
@@ -5135,6 +5225,147 @@ function renderSavedList() {
   if (q) list = list.filter(p => searchMatch(p, q));
   if (!list.length) { wrap.innerHTML = `<div class="empty"><div class="empty-title">${t("No saved pieces yet")}</div></div>`; return; }
   renderGroups(wrap, groupPieces(list, savedState.sort), savedState.sort, savedState.dir);
+}
+
+/* ================================================================
+   MY SCORES (user uploads)
+   ================================================================ */
+const SORT_LABELS_MY = { recentlyViewed:"Recently viewed", name:"Name", composer:"Composer" };
+let myState = { sort:"recentlyViewed", q:"", dir:"asc" };
+const escH = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function renderMyScores() {
+  const v = document.getElementById("view-myscores");
+  const n = (S.uploads||[]).length;
+  v.innerHTML = `
+    <div class="appbar" style="flex-direction:column;align-items:stretch;gap:2px">
+      <div class="appbar-rowtop"><div><div class="appbar-title">${t("My Scores")}</div>
+      <div class="appbar-sub">${n ? (S.lang==='en' ? `${n} ${n===1?"score":"scores"}` : `${n} 份`) : t("Your own sheet music")}</div></div>
+      ${n ? `<button class="btn btn-primary ms-add" id="msAdd">+ ${t("Add score")}</button>` : ""}</div>
+    </div>
+    ${n ? `
+      <div class="sortchips stick" id="mySort">${sortBarHTML(myState, null, SORT_LABELS_MY)}</div>
+      <div id="myListWrap"></div>` :
+      `<div class="empty">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a1 1 0 0 1 1-1h5l2 2h7a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z"/><path d="M12 11v5M9.5 13.5h5"/></svg>
+        <div class="empty-title">${t("No scores yet")}</div>
+        <div class="empty-sub">${t("Upload a photo or scan of your sheet music to practice and annotate it here.")}</div>
+        <button class="btn btn-primary" id="msAddEmpty" style="margin-top:18px">+ ${t("Add score")}</button>
+      </div>`}`;
+  const addBtn = v.querySelector("#msAdd") || v.querySelector("#msAddEmpty");
+  if (addBtn) addBtn.addEventListener("click", ()=>openScoreEditor());
+  if (n) { wireSortBar(v.querySelector("#mySort"), myState, renderMyList, SORT_LABELS_MY); renderMyList(); }
+}
+function sortMyList(list){
+  const vA = id => (S.viewedAt && S.viewedAt[id]) || 0;
+  const arr = list.slice();
+  if (myState.sort === "composer") arr.sort((a,b)=> (a.composer||"").localeCompare(b.composer||"",undefined,{numeric:true}) || (a.title||"").localeCompare(b.title||"",undefined,{numeric:true}));
+  else if (myState.sort === "name") arr.sort((a,b)=> (a.title||"").localeCompare(b.title||"",undefined,{numeric:true}));
+  else arr.sort((a,b)=> vA(b.id) - vA(a.id));   // recently viewed (newest first)
+  if (myState.dir === "desc") arr.reverse();
+  return arr;
+}
+function renderMyList(){
+  const wrap = document.getElementById("myListWrap"); if (!wrap) return;
+  let list = (S.uploads||[]).map(u=>uploadPiece(u.id)).filter(Boolean);
+  list = sortMyList(list);
+  wrap.innerHTML = `<div class="rowlist">${list.map(p=>{
+    const pages = p.pageCount;
+    const trash = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>`;
+    return `<div class="prow" data-upload="${p.id}">
+      <div class="prow-thumb" id="th-${p.id}"></div>
+      <div class="prow-body">
+        <div class="prow-title">${escH(p.title)}</div>
+        <div class="prow-meta">${[p.composer||t("Unknown"), `${pages} ${pages===1?t("page"):t("pages")}`].map((m,i)=>`<span class="${i?'dot-sep':''}">${escH(m)}</span>`).join("")}</div>
+      </div>
+      <div class="prow-right"><button class="my-del" data-del="${p.id}" aria-label="${t('Delete')}">${trash}</button></div>
+    </div>`;
+  }).join("")}</div>`;
+  wrap.querySelectorAll(".prow[data-upload]").forEach(r=>r.addEventListener("click", e=>{ if(e.target.closest("[data-del]")) return; openUpload(r.dataset.upload); }));
+  wrap.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); deleteUpload(b.dataset.del); }));
+  // lazy thumbnails from IndexedDB (first page)
+  list.forEach(async p=>{ const u=uploadMeta(p.id); const first=(u.pages||[])[0]; if(!first) return; const d=await idbGet(first); const el=document.getElementById("th-"+p.id); if(el&&d) el.style.backgroundImage=`url("${d}")`; });
+}
+async function deleteUpload(id){
+  const u = uploadMeta(id); if(!u) return;
+  if(!confirm(t("Delete this score?"))) return;
+  for(const pid of (u.pages||[])){ try{ await idbDel(pid); }catch(e){} }
+  S.uploads = (S.uploads||[]).filter(x=>x.id!==id); save();
+  renderMyScores();
+}
+// ---- add / edit score flow ----
+let editorPages = [];   // [{dataURL}] working set while editing
+function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(file); }); }
+function processPage(dataURL, enhance){   // downscale for storage; optionally apply a scan-clean filter
+  return new Promise(res=>{ const img=new Image(); img.onload=()=>{
+    const maxEdge=1700; let w=img.naturalWidth||1, h=img.naturalHeight||1; const sc=Math.min(1, maxEdge/Math.max(w,h)); w=Math.max(1,Math.round(w*sc)); h=Math.max(1,Math.round(h*sc));
+    const cv=document.createElement("canvas"); cv.width=w; cv.height=h; const ctx=cv.getContext("2d"); ctx.drawImage(img,0,0,w,h);
+    if(enhance){ try{
+      const im=ctx.getImageData(0,0,w,h), px=im.data;
+      for(let i=0;i<px.length;i+=4){ let g=0.299*px[i]+0.587*px[i+1]+0.114*px[i+2];
+        g=(g-62)*(255/(188-62)); g=g<0?0:g>255?255:g; if(g>205) g=255;   // contrast stretch + whiten paper
+        px[i]=px[i+1]=px[i+2]=g; }
+      ctx.putImageData(im,0,0);
+    }catch(e){} }
+    res(cv.toDataURL("image/jpeg", 0.85));
+  }; img.onerror=()=>res(dataURL); img.src=dataURL; });
+}
+function openScoreEditor(){
+  editorPages = [];
+  const ov = document.createElement("div"); ov.className="ms-editor"; ov.id="msEditor";
+  ov.innerHTML = `
+    <div class="ms-ed-bar">
+      <button class="ms-ed-x" id="msEdCancel">${t("Cancel")}</button>
+      <div class="ms-ed-title">${t("New score")}</div>
+      <button class="ms-ed-save" id="msEdSave" disabled>${t("Save")}</button>
+    </div>
+    <div class="ms-ed-scroll">
+      <label class="ms-field"><span>${t("Score name")}</span><input id="msName" type="text" autocomplete="off" placeholder="${t("e.g. Chopin Nocturne")}"></label>
+      <label class="ms-field"><span>${t("Composer")}</span><input id="msComposer" type="text" autocomplete="off" placeholder="${t("e.g. Chopin")}"></label>
+      <label class="ms-toggle"><input id="msEnhance" type="checkbox" checked> <span>${t("Clean up & whiten (scan look)")}</span></label>
+      <div class="ms-pages-head"><span>${t("Pages")}</span><button class="ms-addpages" id="msAddPages">+ ${t("Add pages")}</button></div>
+      <div class="ms-pages" id="msPages"></div>
+      <div class="ms-empty-pages" id="msEmptyPages">${t("Add photos or scans of your sheet music. You can reorder them below.")}</div>
+    </div>
+    <input id="msFile" type="file" accept="image/*" multiple style="display:none">`;
+  document.body.appendChild(ov);
+  const fileInput = ov.querySelector("#msFile");
+  const addPages = async files=>{ for(const f of files){ if(!f.type.startsWith("image/")) continue; try{ editorPages.push({dataURL: await fileToDataURL(f)}); }catch(e){} } renderEditorPages(); };
+  ov.querySelector("#msAddPages").addEventListener("click", ()=>fileInput.click());
+  fileInput.addEventListener("change", e=>{ addPages([...e.target.files]); fileInput.value=""; });
+  ov.querySelector("#msEdCancel").addEventListener("click", ()=>ov.remove());
+  ov.querySelector("#msName").addEventListener("input", refreshEditorSave);
+  ov.querySelector("#msEdSave").addEventListener("click", saveScore);
+  fileInput.click();   // open the picker straight away
+  function renderEditorPages(){
+    const box = ov.querySelector("#msPages");
+    ov.querySelector("#msEmptyPages").style.display = editorPages.length ? "none" : "block";
+    box.innerHTML = editorPages.map((pg,i)=>`
+      <div class="ms-pg">
+        <div class="ms-pg-n">${i+1}</div>
+        <img src="${pg.dataURL}" alt="page ${i+1}">
+        <div class="ms-pg-actions">
+          <button data-mv="up" data-i="${i}" ${i===0?"disabled":""} aria-label="Up">▲</button>
+          <button data-mv="dn" data-i="${i}" ${i===editorPages.length-1?"disabled":""} aria-label="Down">▼</button>
+          <button data-rm="${i}" aria-label="Remove">✕</button>
+        </div>
+      </div>`).join("");
+    box.querySelectorAll("[data-mv]").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.i, j=b.dataset.mv==="up"?i-1:i+1; if(j<0||j>=editorPages.length) return; const tmp=editorPages[i]; editorPages[i]=editorPages[j]; editorPages[j]=tmp; renderEditorPages(); }));
+    box.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",()=>{ editorPages.splice(+b.dataset.rm,1); renderEditorPages(); }));
+    refreshEditorSave();
+  }
+  function refreshEditorSave(){ ov.querySelector("#msEdSave").disabled = !(editorPages.length && ov.querySelector("#msName").value.trim()); }
+  async function saveScore(){
+    const saveBtn = ov.querySelector("#msEdSave"); saveBtn.disabled=true; saveBtn.textContent=t("Saving…");
+    const name=ov.querySelector("#msName").value.trim(), composer=ov.querySelector("#msComposer").value.trim();
+    const enhance=ov.querySelector("#msEnhance").checked;
+    const id="up-"+Date.now().toString(36)+"-"+Math.floor(Math.random()*1e4).toString(36);
+    const pageKeys=[];
+    try{
+      for(let i=0;i<editorPages.length;i++){ const out=await processPage(editorPages[i].dataURL, enhance); const key=`${id}_${i}`; await idbPut(key, out); pageKeys.push(key); }
+    }catch(e){ alert(t("Couldn't save — your device storage may be full.")); saveBtn.disabled=false; saveBtn.textContent=t("Save"); return; }
+    S.uploads = S.uploads || []; S.uploads.unshift({ id, name, composer, pages:pageKeys, createdAt: Date.now() }); save();
+    ov.remove(); renderMyScores();
+  }
 }
 
 /* ================================================================
