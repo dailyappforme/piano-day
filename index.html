@@ -5308,19 +5308,36 @@ async function deleteUpload(id){
 // ---- add / edit score flow ----
 let editorPages = [];   // [{dataURL}] working set while editing
 function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(file); }); }
-function processPage(dataURL, enhance){   // downscale for storage; gentle optional clean-up (NO auto-crop — unreliable)
+// Document-scan look via local adaptive thresholding (illumination normalization) — flattens uneven
+// lighting/shadows to clean white paper + crisp dark ink, the way a scanner app does. No crop.
+function scanLook(ctx, w, h){
+  const im = ctx.getImageData(0,0,w,h), px = im.data, n = w*h;
+  const gray = new Float32Array(n);
+  for(let i=0,j=0;i<n;i++,j+=4) gray[i] = 0.299*px[j]+0.587*px[j+1]+0.114*px[j+2];
+  // summed-area table for O(1) local means
+  const W1 = w+1, I = new Float64Array(W1*(h+1));
+  for(let y=0;y<h;y++){ let row=0; const o=(y+1)*W1, p=y*W1; for(let x=0;x<w;x++){ row += gray[y*w+x]; I[o+x+1] = I[p+x+1] + row; } }
+  const r = Math.max(10, Math.round(Math.max(w,h)/14));   // local-average window
+  for(let y=0;y<h;y++){
+    const y0=Math.max(0,y-r), y1=Math.min(h-1,y+r), a=y0*W1, b=(y1+1)*W1;
+    for(let x=0;x<w;x++){
+      const x0=Math.max(0,x-r), x1=Math.min(w-1,x+r);
+      const mean = (I[b+x1+1]-I[a+x1+1]-I[b+x0]+I[a+x0]) / ((x1-x0+1)*(y1-y0+1));
+      let v = gray[y*w+x] / (mean>1?mean:1) * 255;   // normalize illumination → paper ≈ white
+      v = 255 - (255 - v) * 2.1;                      // deepen ink
+      if(v>236) v=255; else if(v<0) v=0;              // clean white paper
+      const j=(y*w+x)*4; px[j]=px[j+1]=px[j+2]=v;
+    }
+  }
+  ctx.putImageData(im,0,0);
+}
+function processPage(dataURL, enhance){   // downscale for storage; optional scanner-style clean-up (no auto-crop)
   return new Promise(res=>{ const img=new Image(); img.onload=()=>{
     const W=img.naturalWidth||1, H=img.naturalHeight||1;
     const maxEdge=1900, sc=Math.min(1, maxEdge/Math.max(W,H)), ow=Math.max(1,Math.round(W*sc)), oh=Math.max(1,Math.round(H*sc));
     const cv=document.createElement("canvas"); cv.width=ow; cv.height=oh; const ctx=cv.getContext("2d");
     ctx.drawImage(img, 0,0,ow,oh);
-    if(enhance){ try{   // gentle: mild contrast + lift the brightest paper to white; keep mid-grey pencil
-      const im=ctx.getImageData(0,0,ow,oh), px=im.data;
-      for(let i=0;i<px.length;i+=4){
-        for(let k=0;k<3;k++){ let v=px[i+k]; v=(v-120)*1.18+120+6; v=v<0?0:v>255?255:v; if(v>224) v=255; px[i+k]=v; }
-      }
-      ctx.putImageData(im,0,0);
-    }catch(e){} }
+    if(enhance){ try{ scanLook(ctx, ow, oh); }catch(e){} }
     res(cv.toDataURL("image/jpeg", 0.85));
   }; img.onerror=()=>res(dataURL); img.src=dataURL; });
 }
@@ -5336,7 +5353,7 @@ function openScoreEditor(){
     <div class="ms-ed-scroll">
       <label class="ms-field"><span>${t("Score name")}</span><input id="msName" type="text" autocomplete="off" placeholder="${t("e.g. Chopin Nocturne")}"></label>
       <label class="ms-field"><span>${t("Composer")}</span><input id="msComposer" type="text" autocomplete="off" placeholder="${t("e.g. Chopin")}"></label>
-      <label class="ms-toggle"><input id="msEnhance" type="checkbox"> <span>${t("Lighten & sharpen (optional)")}</span></label>
+      <label class="ms-toggle"><input id="msEnhance" type="checkbox" checked> <span>${t("Scan look — clean white background")}</span></label>
       <div class="ms-pages-head"><span>${t("Pages")}</span></div>
       <div class="ms-pages" id="msPages"></div>
     </div>
