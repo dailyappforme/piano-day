@@ -578,7 +578,7 @@
     display: flex; align-items: center; gap: 2px; padding: 2px 4px; border-radius: var(--mu-radius-full);
     background: rgba(255,255,255,0.8); border: 1px solid var(--mu-border); box-shadow: var(--mu-shadow-md);
     -webkit-backdrop-filter: saturate(180%) blur(12px); backdrop-filter: saturate(180%) blur(12px); }
-  .focus-actions button { width: 36px; height: 36px; border: none; background: transparent; border-radius: 50%;
+  .focus-actions button { -webkit-appearance: none; appearance: none; width: 36px; height: 36px; border: none; background: transparent; border-radius: 50%;
     cursor: pointer; color: var(--mu-ink-2); display: inline-flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
   .focus-actions button:hover { background: var(--mu-gray-100); }
   .focus-actions button.is-on, .focus-actions button.is-marked { background: var(--mu-gray-100); color: var(--mu-ink); }
@@ -685,11 +685,11 @@
   .ann-palette .ann-div { width: 1px; height: 26px; flex: none; margin: 0 1px; background: var(--mu-border); }
   .ann-sw { width: 34px; height: 34px; flex: none; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--mu-border); cursor: pointer; padding: 0; }
   .ann-sw.is-sel { box-shadow: 0 0 0 2px var(--mu-ink); transform: scale(1.09); }
-  .ann-pb { min-width: 40px; height: 40px; flex: none; padding: 0 10px; border: none; background: transparent;
+  .ann-pb { -webkit-appearance: none; appearance: none; min-width: 40px; height: 40px; flex: none; padding: 0 10px; border: none; background: transparent;
     border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: var(--mu-ink-2); font-size: 15px; }
   .ann-pb:hover { background: var(--mu-gray-100); }
   .ann-pb.is-sel { background: var(--mu-gray-100); color: var(--mu-ink); }   /* selected = light hover grey, not dark */
-  .ann-fontbtn { font-size: 15px; min-width: 0; padding: 0 13px; line-height: 1; white-space: nowrap; border-radius: 10px; }
+  .ann-fontbtn { font-size: 15px; min-width: 0; padding: 0 14px; line-height: 1; white-space: nowrap; border-radius: 99px; }
   .ann-pb svg { width: 20px; height: 20px; }
   .ann-done { width: auto; min-width: 0; padding: 0 16px; border-radius: var(--mu-radius-full); background: var(--mu-gray-900); color: #fff; font-weight: 600; }
   .ann-done:hover { background: var(--mu-gray-900); filter: brightness(1.15); }
