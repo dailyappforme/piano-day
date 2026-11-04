@@ -929,6 +929,9 @@
   .ms-crop-title { flex: 1; text-align: center; font-size: 15px; font-weight: 650; padding-left: 44px; }
   .msc-rotate { -webkit-appearance: none; appearance: none; width: 44px; height: 44px; flex: none; border: none; background: transparent; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
   .msc-rotate:active { background: rgba(255,255,255,.15); }
+  .ms-crop-rot { position: relative; z-index: 502; display: flex; align-items: center; gap: 14px; padding: 4px 20px 2px; }
+  .ms-crop-rot input[type=range] { flex: 1; height: 32px; accent-color: #fff; }
+  .msc-deg { color: #fff; font-family: var(--mu-mono); font-size: 13px; min-width: 44px; text-align: right; }
   .ms-crop-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 10px; }
   .ms-crop-wrap { position: relative; display: inline-flex; max-width: 100%; max-height: 100%; }
   .ms-crop-wrap img { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; -webkit-user-select: none; user-select: none; }
@@ -5435,16 +5438,20 @@ function openScoreEditor(editId){
       <div class="ms-crop-stage"><div class="ms-crop-wrap" id="mscWrap"><img id="mscImg" src="${page.dataURL}" draggable="false">
         <div class="ms-crop-box" id="mscBox"><span class="msc-h" data-h="tl"></span><span class="msc-h" data-h="tr"></span><span class="msc-h" data-h="bl"></span><span class="msc-h" data-h="br"></span></div>
       </div></div>
+      <div class="ms-crop-rot"><input type="range" id="mscDeg" min="-45" max="45" step="0.5" value="0"><span class="msc-deg" id="mscDegOut">0°</span></div>
       <div class="ms-crop-foot">
         <button class="ms-btn ms-btn-secondary" id="mscCancel">${t("Cancel")}</button>
         <button class="ms-btn ms-btn-primary" id="mscDone">${t("Done")}</button>
       </div>`;
     document.body.appendChild(cv);
     const img = cv.querySelector("#mscImg"), box = cv.querySelector("#mscBox");
-    let work = page.dataURL;   // working image (may be rotated before cropping)
+    const degSlider = cv.querySelector("#mscDeg"), degOut = cv.querySelector("#mscDegOut");
+    let work = page.dataURL;   // working image (may be flipped 90° before cropping)
     let frac = { l:0.05, t:0.05, r:0.95, b:0.95 };
+    let deg = 0;               // fine straighten angle from the slider
     const rotate90 = url => new Promise(r=>{ const im=new Image(); im.onload=()=>{ const c=document.createElement("canvas"); c.width=im.naturalHeight; c.height=im.naturalWidth; const x=c.getContext("2d"); x.translate(c.width/2,c.height/2); x.rotate(Math.PI/2); x.drawImage(im,-im.naturalWidth/2,-im.naturalHeight/2); r(c.toDataURL("image/jpeg",0.92)); }; im.onerror=()=>r(url); im.src=url; });
-    cv.querySelector("#mscRotate").addEventListener("click", async ()=>{ work = await rotate90(work); frac={l:0.05,t:0.05,r:0.95,b:0.95}; img.src = work; });
+    cv.querySelector("#mscRotate").addEventListener("click", async ()=>{ work = await rotate90(work); deg=0; degSlider.value=0; degOut.textContent="0°"; img.style.transform=""; frac={l:0.05,t:0.05,r:0.95,b:0.95}; img.src = work; });
+    degSlider.addEventListener("input", ()=>{ deg=+degSlider.value; degOut.textContent=Math.round(deg)+"°"; img.style.transform = deg ? `rotate(${deg}deg)` : ""; layout(); });
     const rect = () => img.getBoundingClientRect();
     function layout(){ const r = rect(); box.style.left = (r.left + frac.l*r.width) + "px"; box.style.top = (r.top + frac.t*r.height) + "px";
       box.style.width = ((frac.r-frac.l)*r.width) + "px"; box.style.height = ((frac.b-frac.t)*r.height) + "px"; }
@@ -5467,10 +5474,15 @@ function openScoreEditor(editId){
     const close=()=>{ window.removeEventListener("resize", layout); cv.remove(); };
     cv.querySelector("#mscCancel").addEventListener("click", close);
     cv.querySelector("#mscDone").addEventListener("click", ()=>{
-      const im=new Image(); im.onload=()=>{ const nw=im.naturalWidth, nh=im.naturalHeight;
-        const sx=frac.l*nw, sy=frac.t*nh, sw=Math.max(1,(frac.r-frac.l)*nw), sh=Math.max(1,(frac.b-frac.t)*nh);
+      const im=new Image(); im.onload=()=>{
+        // bake the straighten rotation (white fill for exposed corners), then crop the box region
+        const rad=deg*Math.PI/180, W=im.naturalWidth, H=im.naturalHeight;
+        const RW=Math.round(Math.abs(W*Math.cos(rad))+Math.abs(H*Math.sin(rad))), RH=Math.round(Math.abs(W*Math.sin(rad))+Math.abs(H*Math.cos(rad)));
+        const rc=document.createElement("canvas"); rc.width=RW; rc.height=RH; const rx=rc.getContext("2d");
+        rx.fillStyle="#fff"; rx.fillRect(0,0,RW,RH); rx.translate(RW/2,RH/2); rx.rotate(rad); rx.drawImage(im,-W/2,-H/2);
+        const sx=frac.l*RW, sy=frac.t*RH, sw=Math.max(1,(frac.r-frac.l)*RW), sh=Math.max(1,(frac.b-frac.t)*RH);
         const c=document.createElement("canvas"); c.width=Math.round(sw); c.height=Math.round(sh);
-        c.getContext("2d").drawImage(im, sx,sy,sw,sh, 0,0,c.width,c.height);
+        c.getContext("2d").drawImage(rc, sx,sy,sw,sh, 0,0,c.width,c.height);
         editorPages[idx] = { dataURL: c.toDataURL("image/jpeg", 0.9), processed:false }; close(); renderEditorPages();
       }; im.src = work; });
   }
