@@ -5335,7 +5335,7 @@ function openScoreEditor(){
         <span>${t("Tap to add photos or scans")}</span>
       </button>
     </div>
-    <input id="msFile" type="file" accept="image/*" multiple style="display:none">`;
+    <input id="msFile" type="file" accept="image/*" multiple style="position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;overflow:hidden;border:0;padding:0;">`;
   document.body.appendChild(ov);
   const fileInput = ov.querySelector("#msFile");
   const addPages = async files=>{ for(const f of files){ if(!f.type.startsWith("image/")) continue; try{ editorPages.push({dataURL: await fileToDataURL(f)}); }catch(e){} } renderEditorPages(); };

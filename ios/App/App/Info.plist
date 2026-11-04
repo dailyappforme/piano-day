@@ -53,5 +53,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo of your sheet music to add it to your scores.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose photos or scans of your sheet music to add to your scores.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save sheet-music images to your photo library.</string>
 </dict>
 </plist>
