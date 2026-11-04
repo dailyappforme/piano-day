@@ -5308,43 +5308,17 @@ async function deleteUpload(id){
 // ---- add / edit score flow ----
 let editorPages = [];   // [{dataURL}] working set while editing
 function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(file); }); }
-// find the bright page region (largest contiguous bright rows/cols) so we crop out desk/background/adjacent page
-function pageCropRect(srcCanvas, w, h){
-  const S=820, sc=Math.min(1, S/Math.max(w,h)), sw=Math.max(1,Math.round(w*sc)), sh=Math.max(1,Math.round(h*sc));
-  const tmp=document.createElement("canvas"); tmp.width=sw; tmp.height=sh;
-  const tctx=tmp.getContext("2d"); tctx.drawImage(srcCanvas,0,0,w,h,0,0,sw,sh);
-  const d=tctx.getImageData(0,0,sw,sh).data;
-  const rowMean=new Float32Array(sh), colMean=new Float32Array(sw);
-  for(let y=0;y<sh;y++){ let s=0; for(let x=0;x<sw;x++){ const i=(y*sw+x)*4; const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; s+=g; colMean[x]+=g; } rowMean[y]=s/sw; }
-  for(let x=0;x<sw;x++) colMean[x]/=sh;
-  const BRIGHT=150;
-  const bestRun=(arr)=>{ const gapMax=Math.round(arr.length*0.04); let best=[0,-1], s=-1, gap=0;
-    for(let k=0;k<arr.length;k++){ if(arr[k]>=BRIGHT){ if(s<0) s=k; gap=0; } else if(s>=0){ gap++; if(gap>gapMax){ if(k-gap-s>best[1]-best[0]) best=[s,k-gap]; s=-1; gap=0; } } }
-    if(s>=0 && arr.length-s>best[1]-best[0]) best=[s,arr.length-1];
-    return best; };
-  const ry=bestRun(rowMean), cx=bestRun(colMean);
-  if(ry[1]-ry[0] < sh*0.4 || cx[1]-cx[0] < sw*0.4) return null;   // not confident → skip crop
-  const mx=sw*0.012, my=sh*0.012;
-  const x0=Math.max(0,cx[0]-mx), x1=Math.min(sw,cx[1]+mx), y0=Math.max(0,ry[0]-my), y1=Math.min(sh,ry[1]+my);
-  return { x:Math.round(x0/sc), y:Math.round(y0/sc), w:Math.round((x1-x0)/sc), h:Math.round((y1-y0)/sc) };
-}
-function processPage(dataURL, enhance){   // auto-crop to the page + clean scan look; always downscale for storage
+function processPage(dataURL, enhance){   // downscale for storage; gentle optional clean-up (NO auto-crop — unreliable)
   return new Promise(res=>{ const img=new Image(); img.onload=()=>{
     const W=img.naturalWidth||1, H=img.naturalHeight||1;
-    const full=document.createElement("canvas"); full.width=W; full.height=H; full.getContext("2d").drawImage(img,0,0);
-    let cr={x:0,y:0,w:W,h:H};
-    if(enhance){ try{ const r=pageCropRect(full,W,H); if(r) cr=r; }catch(e){} }
-    const maxEdge=1800, sc=Math.min(1, maxEdge/Math.max(cr.w,cr.h)), ow=Math.max(1,Math.round(cr.w*sc)), oh=Math.max(1,Math.round(cr.h*sc));
+    const maxEdge=1900, sc=Math.min(1, maxEdge/Math.max(W,H)), ow=Math.max(1,Math.round(W*sc)), oh=Math.max(1,Math.round(H*sc));
     const cv=document.createElement("canvas"); cv.width=ow; cv.height=oh; const ctx=cv.getContext("2d");
-    ctx.drawImage(full, cr.x,cr.y,cr.w,cr.h, 0,0,ow,oh);
-    if(enhance){ try{
+    ctx.drawImage(img, 0,0,ow,oh);
+    if(enhance){ try{   // gentle: mild contrast + lift the brightest paper to white; keep mid-grey pencil
       const im=ctx.getImageData(0,0,ow,oh), px=im.data;
-      for(let i=0;i<px.length;i+=4){ let g=0.299*px[i]+0.587*px[i+1]+0.114*px[i+2];
-        if(g>176) g=255;                              // paper + light speckle → clean white
-        else if(g<70) g=g*0.65;                       // ink → deeper black
-        else g=(g-70)*(255/(176-70));                 // mid tones (pencil marks) → stretched but kept
-        g=g<0?0:g>255?255:g;
-        px[i]=px[i+1]=px[i+2]=g; }
+      for(let i=0;i<px.length;i+=4){
+        for(let k=0;k<3;k++){ let v=px[i+k]; v=(v-120)*1.18+120+6; v=v<0?0:v>255?255:v; if(v>224) v=255; px[i+k]=v; }
+      }
       ctx.putImageData(im,0,0);
     }catch(e){} }
     res(cv.toDataURL("image/jpeg", 0.85));
@@ -5362,7 +5336,7 @@ function openScoreEditor(){
     <div class="ms-ed-scroll">
       <label class="ms-field"><span>${t("Score name")}</span><input id="msName" type="text" autocomplete="off" placeholder="${t("e.g. Chopin Nocturne")}"></label>
       <label class="ms-field"><span>${t("Composer")}</span><input id="msComposer" type="text" autocomplete="off" placeholder="${t("e.g. Chopin")}"></label>
-      <label class="ms-toggle"><input id="msEnhance" type="checkbox" checked> <span>${t("Auto-crop & clean up (scan look)")}</span></label>
+      <label class="ms-toggle"><input id="msEnhance" type="checkbox"> <span>${t("Lighten & sharpen (optional)")}</span></label>
       <div class="ms-pages-head"><span>${t("Pages")}</span></div>
       <div class="ms-pages" id="msPages"></div>
     </div>
