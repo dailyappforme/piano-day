@@ -918,6 +918,22 @@
   .ms-btn-primary { flex: 1; background: var(--mu-gray-900); color: #fff; }
   .ms-btn-primary:disabled { background: var(--mu-gray-300); color: var(--mu-gray-500); cursor: default; }
   html[data-theme="dark"] .ms-btn-primary:not(:disabled) { color: #17171b; }
+  .ms-pg-crop { position: absolute; top: 8px; right: 8px; z-index: 1; }
+  /* manual crop overlay */
+  .ms-crop { position: fixed; inset: 0; z-index: 500; background: #111; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+  .ms-crop-bar, .ms-crop-foot { position: relative; z-index: 502; }   /* stay above the crop box's dark shade */
+  .ms-crop-bar { padding: 14px 16px 8px; color: #fff; text-align: center; }
+  .ms-crop-title { font-size: 15px; font-weight: 650; }
+  .ms-crop-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 10px; }
+  .ms-crop-wrap { position: relative; display: inline-flex; max-width: 100%; max-height: 100%; }
+  .ms-crop-wrap img { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; -webkit-user-select: none; user-select: none; }
+  .ms-crop-box { position: fixed; border: 2px solid #fff; box-shadow: 0 0 0 9999px rgba(0,0,0,.55); box-sizing: border-box; touch-action: none; cursor: move; z-index: 501; }
+  .msc-h { position: absolute; width: 44px; height: 44px; touch-action: none; z-index: 2; }
+  .msc-h::after { content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 20px; height: 20px; border: 3px solid #fff; border-radius: 4px; background: rgba(0,0,0,.35); }
+  .msc-h[data-h="tl"] { left: -22px; top: -22px; } .msc-h[data-h="tr"] { right: -22px; top: -22px; }
+  .msc-h[data-h="bl"] { left: -22px; bottom: -22px; } .msc-h[data-h="br"] { right: -22px; bottom: -22px; }
+  .ms-crop-foot { display: flex; gap: 10px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: #111; }
+  .ms-crop-foot .ms-btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,.4); color: #fff; }
   .home-empty-title { font-size: 15px; font-weight: 600; color: var(--mu-ink-2); }
   .home-empty-sub { font-size: 13px; color: var(--mu-ink-3); max-width: 240px; line-height: 1.45; }
 
@@ -5347,6 +5363,7 @@ function openScoreEditor(){
   const rightIc = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
   const binIc = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>`;
   const addIc = `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 10v6M9 13h6"/></svg>`;
+  const cropIc = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>`;
   const ov = document.createElement("div"); ov.className="ms-editor"; ov.id="msEditor";
   ov.innerHTML = `
     <div class="ms-ed-bar"><div class="ms-ed-title">${t("New score")}</div></div>
@@ -5383,6 +5400,7 @@ function openScoreEditor(){
     pagesBox.innerHTML = editorPages.map((pg,i)=>`
       <div class="ms-pg" data-i="${i}">
         <div class="ms-pg-n">${i+1}</div>
+        <button class="ms-pgbtn ms-pg-crop" data-crop="${i}" aria-label="${t('Crop')}">${cropIc}</button>
         <img src="${pg.dataURL}" alt="page ${i+1}" draggable="false">
         <div class="ms-pg-tools">
           <button class="ms-pgbtn" data-mv="l" data-i="${i}" ${i===0?"disabled":""} aria-label="${t('Move left')}">${leftIc}</button>
@@ -5392,9 +5410,54 @@ function openScoreEditor(){
       </div>`).join("")
       + `<button type="button" class="ms-addtile" id="msAddTile">${addIc}<span>${t("Add page")}</span></button>`;
     pagesBox.querySelector("#msAddTile").addEventListener("click", pickFiles);
+    pagesBox.querySelectorAll("[data-crop]").forEach(b=>b.addEventListener("click",()=>openCropEditor(+b.dataset.crop)));
     pagesBox.querySelectorAll("[data-mv]").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.i, j=b.dataset.mv==="l"?i-1:i+1; if(j<0||j>=editorPages.length) return; const tmp=editorPages[i]; editorPages[i]=editorPages[j]; editorPages[j]=tmp; renderEditorPages(); }));
     pagesBox.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",()=>{ editorPages.splice(+b.dataset.rm,1); renderEditorPages(); }));
     refreshEditorSave();
+  }
+  function openCropEditor(idx){   // manual rectangular crop: drag the box / corners to keep just the score
+    const page = editorPages[idx]; if(!page) return;
+    const cv = document.createElement("div"); cv.className = "ms-crop";
+    cv.innerHTML = `
+      <div class="ms-crop-bar"><div class="ms-crop-title">${t("Crop page")} ${idx+1}</div></div>
+      <div class="ms-crop-stage"><div class="ms-crop-wrap" id="mscWrap"><img id="mscImg" src="${page.dataURL}" draggable="false">
+        <div class="ms-crop-box" id="mscBox"><span class="msc-h" data-h="tl"></span><span class="msc-h" data-h="tr"></span><span class="msc-h" data-h="bl"></span><span class="msc-h" data-h="br"></span></div>
+      </div></div>
+      <div class="ms-crop-foot">
+        <button class="ms-btn ms-btn-secondary" id="mscCancel">${t("Cancel")}</button>
+        <button class="ms-btn ms-btn-primary" id="mscDone">${t("Done")}</button>
+      </div>`;
+    document.body.appendChild(cv);
+    const img = cv.querySelector("#mscImg"), box = cv.querySelector("#mscBox");
+    let frac = { l:0.05, t:0.05, r:0.95, b:0.95 };
+    const rect = () => img.getBoundingClientRect();
+    function layout(){ const r = rect(); box.style.left = (r.left + frac.l*r.width) + "px"; box.style.top = (r.top + frac.t*r.height) + "px";
+      box.style.width = ((frac.r-frac.l)*r.width) + "px"; box.style.height = ((frac.b-frac.t)*r.height) + "px"; }
+    if (img.complete) layout(); img.addEventListener("load", layout);
+    window.addEventListener("resize", layout);
+    let mode=null, pid=null, st=null;
+    box.addEventListener("pointerdown", e=>{ const h=e.target.closest(".msc-h"); mode = h ? "h"+h.dataset.h : "move"; pid=e.pointerId;
+      st = { x:e.clientX, y:e.clientY, f:{...frac}, r:rect() }; try{ box.setPointerCapture(e.pointerId); }catch(_){}
+      e.preventDefault(); e.stopPropagation(); });
+    box.addEventListener("pointermove", e=>{ if(mode==null || e.pointerId!==pid) return; e.preventDefault();
+      const dx=(e.clientX-st.x)/st.r.width, dy=(e.clientY-st.y)/st.r.height, f={...st.f}, MIN=0.08;
+      if(mode==="move"){ let nl=f.l+dx, nt=f.t+dy, nr=f.r+dx, nb=f.b+dy; if(nl<0){nr-=nl;nl=0;} if(nt<0){nb-=nt;nt=0;} if(nr>1){nl-=nr-1;nr=1;} if(nb>1){nt-=nb-1;nb=1;} frac={l:nl,t:nt,r:nr,b:nb}; }
+      else { const c=mode.slice(1); frac={...f};
+        if(c.includes("l")) frac.l=Math.min(Math.max(0,f.l+dx), f.r-MIN);
+        if(c.includes("r")) frac.r=Math.max(Math.min(1,f.r+dx), f.l+MIN);
+        if(c.includes("t")) frac.t=Math.min(Math.max(0,f.t+dy), f.b-MIN);
+        if(c.includes("b")) frac.b=Math.max(Math.min(1,f.b+dy), f.t+MIN); }
+      layout(); });
+    const endc=()=>{ mode=null; }; box.addEventListener("pointerup", endc); box.addEventListener("pointercancel", endc);
+    const close=()=>{ window.removeEventListener("resize", layout); cv.remove(); };
+    cv.querySelector("#mscCancel").addEventListener("click", close);
+    cv.querySelector("#mscDone").addEventListener("click", ()=>{
+      const im=new Image(); im.onload=()=>{ const nw=im.naturalWidth, nh=im.naturalHeight;
+        const sx=frac.l*nw, sy=frac.t*nh, sw=Math.max(1,(frac.r-frac.l)*nw), sh=Math.max(1,(frac.b-frac.t)*nh);
+        const c=document.createElement("canvas"); c.width=Math.round(sw); c.height=Math.round(sh);
+        c.getContext("2d").drawImage(im, sx,sy,sw,sh, 0,0,c.width,c.height);
+        editorPages[idx].dataURL = c.toDataURL("image/jpeg", 0.9); close(); renderEditorPages();
+      }; im.src = page.dataURL; });
   }
   renderEditorPages();
   function refreshEditorSave(){ ov.querySelector("#msEdSave").disabled = !(editorPages.length && ov.querySelector("#msName").value.trim()); }
