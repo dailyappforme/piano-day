@@ -1942,7 +1942,7 @@ const CALENDAR = window.MUSIC_CALENDAR || [
    Persistent state (localStorage)
    ================================================================ */
 const LS_KEY = "pp_v1";
-const DEFAULT_STATE = { progress:{}, practiceSec:{}, saved:[], recent:["rav-menuet-haydn","cho-pre284"], lang:"en", theme:"light", keepAwake:10, entitlement:"free", installedAt:null, activeDays:[], gradeSystem:"abrsm", analytics:true };
+const DEFAULT_STATE = { progress:{}, practiceSec:{}, saved:[], recent:["rav-menuet-haydn","cho-pre284"], viewedAt:{}, lang:"en", theme:"light", keepAwake:10, entitlement:"free", installedAt:null, activeDays:[], gradeSystem:"abrsm", analytics:true };
 function applyTheme(){
   const dark = (S.theme==="dark");
   document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -1972,7 +1972,7 @@ const TL = {
     "Name":"名稱","Level":"級數","Year":"年份","Length":"長度","Key":"調性","Work":"作品",
     "Score":"樂譜","Warm-Up":"暖身","Explore":"探索","The story":"樂曲故事",
     "Intermediate":"中階","Advanced":"進階","Early-virtuoso":"準演奏級","Virtuoso":"演奏級",
-    "marked":"已收藏","saved":"已收藏","Practice":"練習","Date added":"加入日期","Find your next piece to master":"尋找你想精通的下一首樂曲",
+    "marked":"已收藏","saved":"已收藏","Practice":"練習","Date added":"加入日期","Recently viewed":"最近開啟","Find your next piece to master":"尋找你想精通的下一首樂曲",
     "composers":"位作曲家","Account and settings":"帳戶與設定","Sort by":"排序方式","Asc":"升序","Desc":"降序",
     "On":"開啟","Off":"關閉","Anonymous data sharing":"匿名數據分享",
     "Anonymous usage helps improve the app. We never collect your name, account, or any personal data.":"匿名使用數據有助改善 App，我們絕不收集你的姓名、帳戶或任何個人資料。",
@@ -1997,7 +1997,7 @@ const TL = {
     "Name":"名称","Level":"考级","Year":"年份","Length":"时长","Key":"调性","Work":"作品",
     "Score":"乐谱","Warm-Up":"热身","Explore":"探索","The story":"乐曲故事",
     "Intermediate":"中阶","Advanced":"进阶","Early-virtuoso":"准演奏级","Virtuoso":"演奏级",
-    "marked":"已收藏","saved":"已收藏","Practice":"练习","Date added":"加入日期","Find your next piece to master":"寻找你想精通的下一首乐曲",
+    "marked":"已收藏","saved":"已收藏","Practice":"练习","Date added":"加入日期","Recently viewed":"最近打开","Find your next piece to master":"寻找你想精通的下一首乐曲",
     "composers":"位作曲家","Account and settings":"账户与设置","Sort by":"排序方式","Asc":"升序","Desc":"降序",
     "On":"开启","Off":"关闭","Anonymous data sharing":"匿名数据分享",
     "Anonymous usage helps improve the app. We never collect your name, account, or any personal data.":"匿名使用数据有助改善 App，我们绝不收集你的姓名、账户或任何个人资料。",
@@ -2178,6 +2178,8 @@ const fmtHrs = s => { const h=Math.floor(s/3600), m=Math.round((s%3600)/60); ret
 
 function pushRecent(id) {
   S.recent = [id, ...S.recent.filter(x => x !== id)].slice(0, 8);
+  if (!S.viewedAt) S.viewedAt = {};
+  S.viewedAt[id] = Date.now();   // last-viewed timestamp → powers the Playlist "Recently viewed" sort
   save();
 }
 
@@ -2921,7 +2923,7 @@ function renderLibraryBody(q) {
    ================================================================ */
 const SORT_LABELS = { name:"Name", year:"Year", length:"Length", key:"Key", level:"Level", coll:"Work" };
 const SORT_LABELS_ALL = { composer:"Composer", name:"Name", year:"Year", length:"Length", key:"Key", level:"Level" };
-const SORT_LABELS_SAVED = { dateAdded:"Date added", name:"Name", year:"Year", length:"Length", key:"Key", level:"Level", composer:"Composer" };
+const SORT_LABELS_SAVED = { recentlyViewed:"Recently viewed", name:"Name", year:"Year", length:"Length", key:"Key", level:"Level", composer:"Composer" };
 let pianistState = { id:null, sort:"name", tonality:"all", q:"", dir:"asc" };
 function openPianist(id) {
   pianistState = { id, sort: id === "__all" ? "composer" : "name", tonality:"all", q:"", dir:"asc" };
@@ -2968,7 +2970,10 @@ function renderPianist() {
 }
 // shared: sort a piece list into labelled groups by sort key
 function groupPieces(list, sort) {
-  if (sort === "dateAdded") return [["", list]];   // list is already in saved order (newest first)
+  if (sort === "recentlyViewed") {   // most-recently-opened first; never-viewed keep saved order (stable sort)
+    const vA = id => (S.viewedAt && S.viewedAt[id]) || 0;
+    return [["", list.slice().sort((a,b)=> vA(b.id) - vA(a.id))]];
+  }
   if (sort === "key") {
     list.sort((a,b)=>a.key.localeCompare(b.key));
     const maj = list.filter(p=>modeOf(p)==="major"), min = list.filter(p=>modeOf(p)==="minor");
@@ -3078,7 +3083,7 @@ function pieceRowWithSort(p, idx, sort) {
       <div class="prow-meta"><span>${p.year}</span><span class="dot-sep">${fmtDur(p.dur)}</span><span class="dot-sep">${fmtKey(p.key)}</span>${(gr=>gr?`<span class="dot-sep">${gr}</span>`:"")(gradeShort(p.level, null, p.id))}</div>
     </div>
     <div class="prow-right">
-      ${(sort==='coll'||sort==='name'||sort==='composer'||sort==='dateAdded')?"":`<span class="lvpill">${tag}</span>`}
+      ${(sort==='coll'||sort==='name'||sort==='composer'||sort==='recentlyViewed')?"":`<span class="lvpill">${tag}</span>`}
       ${pct>0?`<span class="prow-pct">${pct}%</span>`:""}
     </div>
   </div>`;
@@ -5098,7 +5103,7 @@ function togglePlay(id){
 /* ================================================================
    SAVED
    ================================================================ */
-let savedState = { sort:"dateAdded", q:"", dir:"asc" };
+let savedState = { sort:"recentlyViewed", q:"", dir:"asc" };
 function renderSaved() {
   const v = document.getElementById("view-saved");
   const total = S.saved.length;
