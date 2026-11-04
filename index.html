@@ -881,36 +881,43 @@
   .ms-editor { position: fixed; inset: 0; z-index: 400; background: var(--mu-bg); display: flex; flex-direction: column;
     padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
   .ms-ed-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--mu-border); }
-  .ms-ed-title { font-size: 16px; font-weight: 650; }
-  .ms-ed-x, .ms-ed-save { -webkit-appearance: none; appearance: none; border: none; background: transparent; font-size: 15px; cursor: pointer; padding: 6px 4px; color: var(--mu-ink-2); }
-  .ms-ed-save { font-weight: 650; color: var(--mu-ink); }
-  .ms-ed-save:disabled { color: var(--mu-gray-400); cursor: default; }
-  .ms-ed-scroll { flex: 1; overflow-y: auto; padding: 18px 16px 40px; }
+  .ms-ed-title { font-size: 16px; font-weight: 650; text-align: center; flex: 1; }
+  .ms-ed-scroll { flex: 1; overflow-y: auto; padding: 18px 16px 28px; }
   .ms-field { display: block; margin-bottom: 16px; }
   .ms-field > span { display: block; font-size: 13px; font-weight: 600; color: var(--mu-ink-2); margin-bottom: 6px; }
   .ms-field input { -webkit-appearance: none; appearance: none; width: 100%; box-sizing: border-box; font-size: 16px;
-    padding: 11px 13px; border: 1px solid var(--mu-border); border-radius: var(--mu-radius-md); background: var(--mu-white); color: var(--mu-ink); outline: none; }
+    padding: 12px 13px; border: 1px solid var(--mu-border); border-radius: var(--mu-radius-md); background: var(--mu-white); color: var(--mu-ink); outline: none; }
   .ms-field input:focus { border-color: var(--mu-gray-900); box-shadow: var(--mu-focus-ring); }
   .ms-toggle { display: flex; align-items: center; gap: 10px; font-size: 14.5px; color: var(--mu-ink); margin-bottom: 22px; cursor: pointer; }
   .ms-toggle input { width: 20px; height: 20px; accent-color: var(--mu-gray-900); }
-  .ms-pages-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .ms-pages-head { margin-bottom: 12px; }
   .ms-pages-head > span { font-size: 13px; font-weight: 600; color: var(--mu-ink-2); }
-  .ms-addpages { -webkit-appearance: none; appearance: none; border: 1px solid var(--mu-border); background: var(--mu-white);
-    border-radius: var(--mu-radius-full); font-size: 13px; font-weight: 600; color: var(--mu-ink); padding: 7px 13px; cursor: pointer; }
-  .ms-empty-pages { -webkit-appearance: none; appearance: none; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px;
-    font-size: 14px; font-weight: 600; color: var(--mu-ink-3); line-height: 1.5; padding: 32px 18px; cursor: pointer;
-    border: 1.5px dashed var(--mu-gray-300); border-radius: var(--mu-radius-lg); background: var(--mu-gray-50); text-align: center; }
-  .ms-empty-pages svg { color: var(--mu-gray-400); }
-  .ms-empty-pages:hover, .ms-empty-pages:active { border-color: var(--mu-gray-900); color: var(--mu-ink-2); background: var(--mu-gray-100); }
-  .ms-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
-  .ms-pg { position: relative; border: 1px solid var(--mu-border); border-radius: var(--mu-radius-md); overflow: hidden; background: #fff; }
-  .ms-pg img { width: 100%; height: 150px; object-fit: cover; display: block; }
-  .ms-pg-n { position: absolute; top: 6px; left: 6px; z-index: 1; width: 22px; height: 22px; border-radius: 50%;
-    background: rgba(0,0,0,.6); color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
-  .ms-pg-actions { position: absolute; bottom: 0; left: 0; right: 0; display: flex; background: rgba(0,0,0,.55); }
-  .ms-pg-actions button { -webkit-appearance: none; appearance: none; flex: 1; border: none; background: transparent; color: #fff;
-    font-size: 13px; padding: 7px 0; cursor: pointer; }
-  .ms-pg-actions button:disabled { opacity: .35; cursor: default; }
+  /* pages grid — bigger tiles, drag to reorder */
+  .ms-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 14px; }
+  .ms-pg { position: relative; aspect-ratio: 3/4; border: 1px solid var(--mu-border); border-radius: var(--mu-radius-lg); overflow: hidden; background: #fff; touch-action: none; }
+  .ms-pg img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-user-select: none; user-select: none; pointer-events: none; }
+  .ms-pg-lift { box-shadow: 0 10px 24px rgba(0,0,0,.28); transform: scale(1.03); z-index: 3; }
+  .ms-pg-n { position: absolute; top: 8px; left: 8px; z-index: 1; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px;
+    background: rgba(255,255,255,.92); color: var(--mu-ink); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .ms-pg-tools { position: absolute; left: 6px; right: 6px; bottom: 8px; display: flex; justify-content: center; gap: 5px; }
+  .ms-pgbtn { -webkit-appearance: none; appearance: none; width: 44px; height: 44px; flex: none; border: none; border-radius: 13px; cursor: pointer;
+    background: rgba(255,255,255,.9); color: var(--mu-ink); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.18);
+    -webkit-backdrop-filter: saturate(160%) blur(6px); backdrop-filter: saturate(160%) blur(6px); }
+  .ms-pgbtn:disabled { opacity: .4; cursor: default; }
+  .ms-pgbtn:active { background: #fff; }
+  /* add-page tile — same size as a page preview, dashed */
+  .ms-addtile { -webkit-appearance: none; appearance: none; aspect-ratio: 3/4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px;
+    border: 1.5px dashed var(--mu-gray-300); border-radius: var(--mu-radius-lg); background: var(--mu-gray-50); color: var(--mu-ink-3); font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .ms-addtile svg { color: var(--mu-gray-400); }
+  .ms-addtile:hover, .ms-addtile:active { border-color: var(--mu-gray-900); color: var(--mu-ink-2); background: var(--mu-gray-100); }
+  /* bottom action bar: Cancel (secondary) + full-width Save (primary) */
+  .ms-ed-foot { display: flex; gap: 10px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--mu-border); background: var(--mu-bg); }
+  .ms-btn { -webkit-appearance: none; appearance: none; border: none; cursor: pointer; height: 50px; border-radius: var(--mu-radius-full);
+    font-size: 15px; font-weight: 650; display: inline-flex; align-items: center; justify-content: center; }
+  .ms-btn-secondary { flex: 0 0 auto; padding: 0 24px; background: var(--mu-white); border: 1px solid var(--mu-border); color: var(--mu-ink); }
+  .ms-btn-primary { flex: 1; background: var(--mu-gray-900); color: #fff; }
+  .ms-btn-primary:disabled { background: var(--mu-gray-300); color: var(--mu-gray-500); cursor: default; }
+  html[data-theme="dark"] .ms-btn-primary:not(:disabled) { color: #17171b; }
   .home-empty-title { font-size: 15px; font-weight: 600; color: var(--mu-ink-2); }
   .home-empty-sub { font-size: 13px; color: var(--mu-ink-3); max-width: 240px; line-height: 1.45; }
 
@@ -4029,21 +4036,20 @@ function renderSheet() {
     <div class="sheet-hero">
       <div class="sheet-eyebrow">${cName(p.c)}</div>
       <div class="sheet-title">${pieceNameHTML(p)}</div>
-      <div class="sheet-metawrap">
+      ${p.up ? "" : `<div class="sheet-metawrap">
         <div class="sheet-meta">
-          ${p.up ? `<span>${p.pageCount} ${p.pageCount===1?t("page"):t("pages")}</span>` : `
           <span>${p.year}</span>
           <span>${fmtDur(p.dur)}</span>
           <span>${fmtKey(p.key)}</span>
-          <span id="bpmTag">♩ ${sheetCtx.bpm}</span>`}
+          <span id="bpmTag">♩ ${sheetCtx.bpm}</span>
         </div>
-        ${p.up ? "" : `<span class="meta-div"></span>${sheetLevelsHTML(p)}`}
-      </div>
+        <span class="meta-div"></span>${sheetLevelsHTML(p)}
+      </div>`}
     </div>
 
-    <div class="sheet-tabs"><div class="seg" id="sheetSeg">
+    ${TABS.length>1 ? `<div class="sheet-tabs"><div class="seg" id="sheetSeg">
       ${TABS.map(([k,l])=>`<button data-stab="${k}" class="${sheetCtx.tab===k?'is-active':''}">${l}</button>`).join("")}
-    </div></div>
+    </div></div>` : ""}
 
     <div id="sheetPane"></div>`;
 
@@ -4060,7 +4066,8 @@ function renderSheet() {
   markBtn.addEventListener("click", toggleMark);
   const hdrPlay = v.querySelector("#hdrPlay");
   if (hdrPlay) hdrPlay.addEventListener("click", ()=>togglePlay(p.id));
-  v.querySelector("#sheetSeg").addEventListener("click", e=>{
+  const segEl = v.querySelector("#sheetSeg");
+  if (segEl) segEl.addEventListener("click", e=>{
     const b=e.target.closest("button[data-stab]"); if(!b || b.dataset.stab===sheetCtx.tab) return;
     stopAllPractice();
     sheetCtx.tab=b.dataset.stab;
@@ -5301,14 +5308,42 @@ async function deleteUpload(id){
 // ---- add / edit score flow ----
 let editorPages = [];   // [{dataURL}] working set while editing
 function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(file); }); }
-function processPage(dataURL, enhance){   // downscale for storage; optionally apply a scan-clean filter
+// find the bright page region (largest contiguous bright rows/cols) so we crop out desk/background/adjacent page
+function pageCropRect(srcCanvas, w, h){
+  const S=820, sc=Math.min(1, S/Math.max(w,h)), sw=Math.max(1,Math.round(w*sc)), sh=Math.max(1,Math.round(h*sc));
+  const tmp=document.createElement("canvas"); tmp.width=sw; tmp.height=sh;
+  const tctx=tmp.getContext("2d"); tctx.drawImage(srcCanvas,0,0,w,h,0,0,sw,sh);
+  const d=tctx.getImageData(0,0,sw,sh).data;
+  const rowMean=new Float32Array(sh), colMean=new Float32Array(sw);
+  for(let y=0;y<sh;y++){ let s=0; for(let x=0;x<sw;x++){ const i=(y*sw+x)*4; const g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; s+=g; colMean[x]+=g; } rowMean[y]=s/sw; }
+  for(let x=0;x<sw;x++) colMean[x]/=sh;
+  const BRIGHT=150;
+  const bestRun=(arr)=>{ const gapMax=Math.round(arr.length*0.04); let best=[0,-1], s=-1, gap=0;
+    for(let k=0;k<arr.length;k++){ if(arr[k]>=BRIGHT){ if(s<0) s=k; gap=0; } else if(s>=0){ gap++; if(gap>gapMax){ if(k-gap-s>best[1]-best[0]) best=[s,k-gap]; s=-1; gap=0; } } }
+    if(s>=0 && arr.length-s>best[1]-best[0]) best=[s,arr.length-1];
+    return best; };
+  const ry=bestRun(rowMean), cx=bestRun(colMean);
+  if(ry[1]-ry[0] < sh*0.4 || cx[1]-cx[0] < sw*0.4) return null;   // not confident → skip crop
+  const mx=sw*0.012, my=sh*0.012;
+  const x0=Math.max(0,cx[0]-mx), x1=Math.min(sw,cx[1]+mx), y0=Math.max(0,ry[0]-my), y1=Math.min(sh,ry[1]+my);
+  return { x:Math.round(x0/sc), y:Math.round(y0/sc), w:Math.round((x1-x0)/sc), h:Math.round((y1-y0)/sc) };
+}
+function processPage(dataURL, enhance){   // auto-crop to the page + clean scan look; always downscale for storage
   return new Promise(res=>{ const img=new Image(); img.onload=()=>{
-    const maxEdge=1700; let w=img.naturalWidth||1, h=img.naturalHeight||1; const sc=Math.min(1, maxEdge/Math.max(w,h)); w=Math.max(1,Math.round(w*sc)); h=Math.max(1,Math.round(h*sc));
-    const cv=document.createElement("canvas"); cv.width=w; cv.height=h; const ctx=cv.getContext("2d"); ctx.drawImage(img,0,0,w,h);
+    const W=img.naturalWidth||1, H=img.naturalHeight||1;
+    const full=document.createElement("canvas"); full.width=W; full.height=H; full.getContext("2d").drawImage(img,0,0);
+    let cr={x:0,y:0,w:W,h:H};
+    if(enhance){ try{ const r=pageCropRect(full,W,H); if(r) cr=r; }catch(e){} }
+    const maxEdge=1800, sc=Math.min(1, maxEdge/Math.max(cr.w,cr.h)), ow=Math.max(1,Math.round(cr.w*sc)), oh=Math.max(1,Math.round(cr.h*sc));
+    const cv=document.createElement("canvas"); cv.width=ow; cv.height=oh; const ctx=cv.getContext("2d");
+    ctx.drawImage(full, cr.x,cr.y,cr.w,cr.h, 0,0,ow,oh);
     if(enhance){ try{
-      const im=ctx.getImageData(0,0,w,h), px=im.data;
+      const im=ctx.getImageData(0,0,ow,oh), px=im.data;
       for(let i=0;i<px.length;i+=4){ let g=0.299*px[i]+0.587*px[i+1]+0.114*px[i+2];
-        g=(g-62)*(255/(188-62)); g=g<0?0:g>255?255:g; if(g>205) g=255;   // contrast stretch + whiten paper
+        if(g>176) g=255;                              // paper + light speckle → clean white
+        else if(g<70) g=g*0.65;                       // ink → deeper black
+        else g=(g-70)*(255/(176-70));                 // mid tones (pencil marks) → stretched but kept
+        g=g<0?0:g>255?255:g;
         px[i]=px[i+1]=px[i+2]=g; }
       ctx.putImageData(im,0,0);
     }catch(e){} }
@@ -5317,53 +5352,60 @@ function processPage(dataURL, enhance){   // downscale for storage; optionally a
 }
 function openScoreEditor(){
   editorPages = [];
+  const leftIc = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
+  const rightIc = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+  const binIc = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>`;
+  const addIc = `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 10v6M9 13h6"/></svg>`;
   const ov = document.createElement("div"); ov.className="ms-editor"; ov.id="msEditor";
   ov.innerHTML = `
-    <div class="ms-ed-bar">
-      <button class="ms-ed-x" id="msEdCancel">${t("Cancel")}</button>
-      <div class="ms-ed-title">${t("New score")}</div>
-      <button class="ms-ed-save" id="msEdSave" disabled>${t("Save")}</button>
-    </div>
+    <div class="ms-ed-bar"><div class="ms-ed-title">${t("New score")}</div></div>
     <div class="ms-ed-scroll">
       <label class="ms-field"><span>${t("Score name")}</span><input id="msName" type="text" autocomplete="off" placeholder="${t("e.g. Chopin Nocturne")}"></label>
       <label class="ms-field"><span>${t("Composer")}</span><input id="msComposer" type="text" autocomplete="off" placeholder="${t("e.g. Chopin")}"></label>
-      <label class="ms-toggle"><input id="msEnhance" type="checkbox" checked> <span>${t("Clean up & whiten (scan look)")}</span></label>
-      <div class="ms-pages-head"><span>${t("Pages")}</span><button class="ms-addpages" id="msAddPages">+ ${t("Add pages")}</button></div>
+      <label class="ms-toggle"><input id="msEnhance" type="checkbox" checked> <span>${t("Auto-crop & clean up (scan look)")}</span></label>
+      <div class="ms-pages-head"><span>${t("Pages")}</span></div>
       <div class="ms-pages" id="msPages"></div>
-      <button type="button" class="ms-empty-pages" id="msEmptyPages">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15l5-4 4 3 3-2 6 5"/><circle cx="8.5" cy="9" r="1.4"/></svg>
-        <span>${t("Tap to add photos or scans")}</span>
-      </button>
+    </div>
+    <div class="ms-ed-foot">
+      <button class="ms-btn ms-btn-secondary" id="msEdCancel">${t("Cancel")}</button>
+      <button class="ms-btn ms-btn-primary" id="msEdSave" disabled>${t("Save")}</button>
     </div>
     <input id="msFile" type="file" accept="image/*" multiple style="position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;overflow:hidden;border:0;padding:0;">`;
   document.body.appendChild(ov);
   const fileInput = ov.querySelector("#msFile");
+  const pagesBox = ov.querySelector("#msPages");
   const addPages = async files=>{ for(const f of files){ if(!f.type.startsWith("image/")) continue; try{ editorPages.push({dataURL: await fileToDataURL(f)}); }catch(e){} } renderEditorPages(); };
   const pickFiles = ()=>fileInput.click();
-  ov.querySelector("#msAddPages").addEventListener("click", pickFiles);
-  ov.querySelector("#msEmptyPages").addEventListener("click", pickFiles);   // dotted area is tap-to-add
   fileInput.addEventListener("change", e=>{ addPages([...e.target.files]); fileInput.value=""; });
   ov.querySelector("#msEdCancel").addEventListener("click", ()=>ov.remove());
   ov.querySelector("#msName").addEventListener("input", refreshEditorSave);
   ov.querySelector("#msEdSave").addEventListener("click", saveScore);
-  // NOTE: no auto-open of the picker — it stole focus and fought taps on the fields
+  // drag-to-reorder (pointer-based; works on touch). Buttons below are the precise fallback.
+  let dragIdx=null, dragPid=null;
+  pagesBox.addEventListener("pointerdown", e=>{ const tile=e.target.closest(".ms-pg"); if(!tile||e.target.closest("button")) return; dragIdx=+tile.dataset.i; dragPid=e.pointerId; tile.classList.add("ms-pg-lift"); });
+  pagesBox.addEventListener("pointermove", e=>{ if(dragIdx==null||e.pointerId!==dragPid) return; e.preventDefault();
+    const el=document.elementFromPoint(e.clientX,e.clientY), over=el&&el.closest(".ms-pg");
+    if(over && over.dataset.i!=null){ const j=+over.dataset.i; if(j!==dragIdx){ const [m]=editorPages.splice(dragIdx,1); editorPages.splice(j,0,m); dragIdx=j; renderEditorPages(); pagesBox.querySelector(`.ms-pg[data-i="${j}"]`)?.classList.add("ms-pg-lift"); } } });
+  const endDrag=()=>{ dragIdx=null; dragPid=null; pagesBox.querySelectorAll(".ms-pg-lift").forEach(t=>t.classList.remove("ms-pg-lift")); };
+  pagesBox.addEventListener("pointerup", endDrag); pagesBox.addEventListener("pointercancel", endDrag);
   function renderEditorPages(){
-    const box = ov.querySelector("#msPages");
-    ov.querySelector("#msEmptyPages").style.display = editorPages.length ? "none" : "flex";
-    box.innerHTML = editorPages.map((pg,i)=>`
-      <div class="ms-pg">
+    pagesBox.innerHTML = editorPages.map((pg,i)=>`
+      <div class="ms-pg" data-i="${i}">
         <div class="ms-pg-n">${i+1}</div>
-        <img src="${pg.dataURL}" alt="page ${i+1}">
-        <div class="ms-pg-actions">
-          <button data-mv="up" data-i="${i}" ${i===0?"disabled":""} aria-label="Up">▲</button>
-          <button data-mv="dn" data-i="${i}" ${i===editorPages.length-1?"disabled":""} aria-label="Down">▼</button>
-          <button data-rm="${i}" aria-label="Remove">✕</button>
+        <img src="${pg.dataURL}" alt="page ${i+1}" draggable="false">
+        <div class="ms-pg-tools">
+          <button class="ms-pgbtn" data-mv="l" data-i="${i}" ${i===0?"disabled":""} aria-label="${t('Move left')}">${leftIc}</button>
+          <button class="ms-pgbtn" data-mv="r" data-i="${i}" ${i===editorPages.length-1?"disabled":""} aria-label="${t('Move right')}">${rightIc}</button>
+          <button class="ms-pgbtn" data-rm="${i}" aria-label="${t('Remove')}">${binIc}</button>
         </div>
-      </div>`).join("");
-    box.querySelectorAll("[data-mv]").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.i, j=b.dataset.mv==="up"?i-1:i+1; if(j<0||j>=editorPages.length) return; const tmp=editorPages[i]; editorPages[i]=editorPages[j]; editorPages[j]=tmp; renderEditorPages(); }));
-    box.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",()=>{ editorPages.splice(+b.dataset.rm,1); renderEditorPages(); }));
+      </div>`).join("")
+      + `<button type="button" class="ms-addtile" id="msAddTile">${addIc}<span>${t("Add page")}</span></button>`;
+    pagesBox.querySelector("#msAddTile").addEventListener("click", pickFiles);
+    pagesBox.querySelectorAll("[data-mv]").forEach(b=>b.addEventListener("click",()=>{ const i=+b.dataset.i, j=b.dataset.mv==="l"?i-1:i+1; if(j<0||j>=editorPages.length) return; const tmp=editorPages[i]; editorPages[i]=editorPages[j]; editorPages[j]=tmp; renderEditorPages(); }));
+    pagesBox.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click",()=>{ editorPages.splice(+b.dataset.rm,1); renderEditorPages(); }));
     refreshEditorSave();
   }
+  renderEditorPages();
   function refreshEditorSave(){ ov.querySelector("#msEdSave").disabled = !(editorPages.length && ov.querySelector("#msName").value.trim()); }
   async function saveScore(){
     const saveBtn = ov.querySelector("#msEdSave"); saveBtn.disabled=true; saveBtn.textContent=t("Saving…");
