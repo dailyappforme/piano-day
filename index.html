@@ -6,6 +6,8 @@
 <title>Piano Day</title>
 <link rel="stylesheet" href="mu-system/mu.css">
 <script src="vendor/opensheetmusicdisplay.min.js"></script>
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script>try{ if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdfjs/pdf.worker.min.js"; }catch(e){}</script>
 <script src="library/scores-xml.js"></script>
 <script src="library/scores-notes-chopin.js"></script>
 <script src="library/scores-notes-beethoven.js"></script>
@@ -5338,6 +5340,25 @@ async function deleteUpload(id){
 // ---- add / edit score flow ----
 let editorPages = [];   // [{dataURL}] working set while editing
 function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(file); }); }
+const isPdfFile = f => f && (f.type === "application/pdf" || /\.pdf$/i.test(f.name||""));
+async function pdfToPages(file){   // render each PDF page to an image dataURL (one page per editor page)
+  if(!window.pdfjsLib) throw new Error("pdfjs missing");
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const out = [];
+  for(let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const v0 = page.getViewport({ scale: 1 });
+    const scale = Math.max(1, Math.min(2.4, 1700 / Math.max(v0.width, v0.height)));
+    const vp = page.getViewport({ scale });
+    const cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+    const ctx = cv.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0,0,cv.width,cv.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    out.push({ dataURL: cv.toDataURL("image/jpeg", 0.85), processed:false });
+  }
+  try{ pdf.destroy(); }catch(e){}
+  return out;
+}
 // Document-scan look via local adaptive thresholding (illumination normalization) — flattens uneven
 // lighting/shadows to clean white paper + crisp dark ink, the way a scanner app does. No crop.
 function scanLook(ctx, w, h){
@@ -5393,11 +5414,17 @@ function openScoreEditor(editId){
       <button class="ms-btn ms-btn-secondary" id="msEdCancel">${t("Cancel")}</button>
       <button class="ms-btn ms-btn-primary" id="msEdSave" disabled>${t("Save")}</button>
     </div>
-    <input id="msFile" type="file" accept="image/*" multiple style="position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;overflow:hidden;border:0;padding:0;">`;
+    <input id="msFile" type="file" accept="image/*,application/pdf" multiple style="position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;overflow:hidden;border:0;padding:0;">`;
   document.body.appendChild(ov);
   const fileInput = ov.querySelector("#msFile");
   const pagesBox = ov.querySelector("#msPages");
-  const addPages = async files=>{ for(const f of files){ if(!f.type.startsWith("image/")) continue; try{ editorPages.push({dataURL: await fileToDataURL(f), processed:false}); }catch(e){} } renderEditorPages(); };
+  const addPages = async files=>{
+    for(const f of files){
+      if(isPdfFile(f)){ try{ const pgs = await pdfToPages(f); editorPages.push(...pgs); }catch(e){ alert(t("Couldn't read that PDF.")); } }
+      else if(f.type.startsWith("image/")){ try{ editorPages.push({dataURL: await fileToDataURL(f), processed:false}); }catch(e){} }
+    }
+    renderEditorPages();
+  };
   const pickFiles = ()=>fileInput.click();
   fileInput.addEventListener("change", e=>{ addPages([...e.target.files]); fileInput.value=""; });
   ov.querySelector("#msEdCancel").addEventListener("click", ()=>ov.remove());
