@@ -2815,15 +2815,16 @@ function pieceRowNameHTML(p){
 /* piece row markup */
 function pieceRow(p, idx, opts={}) {
   const pct = pctOf(p.id);
-  const meta = [cNameShort(p.c), fmtKey(p.key), `${fmtDur(p.dur)}`];
+  // uploads have no year/duration/key/level → show composer only, no grade pill
+  const meta = p.up ? [p.composer || t("Unknown")] : [cNameShort(p.c), fmtKey(p.key), `${fmtDur(p.dur)}`];
   return `<div class="prow" data-piece="${p.id}">
     ${opts.num ? `<div class="prow-num">${idx+1}</div>` : ""}
     <div class="prow-body">
-      <div class="prow-title">${pieceNameHTML(p)}${m2badge(p)}</div>
+      <div class="prow-title">${pieceNameHTML(p)}${p.up?"":m2badge(p)}</div>
       <div class="prow-meta">${meta.map((m,i)=>`<span class="${i?'dot-sep':''}">${m}</span>`).join("")}</div>
     </div>
     <div class="prow-right">
-      ${(gr=>gr?`<span class="lvpill">${gr}</span>`:"")(gradeShort(p.level, null, p.id))}
+      ${p.up ? "" : (gr=>gr?`<span class="lvpill">${gr}</span>`:"")(gradeShort(p.level, null, p.id))}
       ${pct>0?`<span class="prow-pct">${pct}%</span>`:""}
     </div>
   </div>`;
@@ -3222,6 +3223,8 @@ function pieceRowWithSort(p, idx, sort) {
    ================================================================ */
 let sheetCtx = null; // { id, playing, playT, timerOn, metroOn }
 function openSheet(id) {
+  // uploaded scores need their page images loaded from IndexedDB first (e.g. opened from Saved / Home)
+  if (uploadMeta(id) && !(window.UPLOAD_PAGES && window.UPLOAD_PAGES[id])) { openUpload(id); return; }
   pushRecent(id);
   const _p = pieceById(id); if (_p) track("piece_open", { id, title: _p.title, composer: _p.c, level: _p.level });
   stopAllPractice();
