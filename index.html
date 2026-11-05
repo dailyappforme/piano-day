@@ -3052,7 +3052,7 @@ function renderLibraryBody(q) {
    ================================================================ */
 const SORT_LABELS = { name:"Name", year:"Year", length:"Length", key:"Key", level:"Level", coll:"Work" };
 const SORT_LABELS_ALL = { composer:"Composer", name:"Name", year:"Year", length:"Length", key:"Key", level:"Level" };
-const SORT_LABELS_SAVED = { recentlyViewed:"Recently viewed", name:"Name", year:"Year", length:"Length", key:"Key", level:"Level", composer:"Composer" };
+const SORT_LABELS_SAVED = { recentlyViewed:"Recently viewed", name:"Name", year:"Year", length:"Length", key:"Key", level:"Level" };
 let pianistState = { id:null, sort:"name", tonality:"all", q:"", dir:"asc" };
 function openPianist(id) {
   pianistState = { id, sort: id === "__all" ? "composer" : "name", tonality:"all", q:"", dir:"asc" };
@@ -3135,10 +3135,10 @@ function groupPieces(list, sort) {
   return [["", list]];
 }
 // shared: render labelled groups into a wrap, honouring sort field + direction
-function renderGroups(wrap, groups, sort, dir) {
+function renderGroups(wrap, groups, sort, dir, rowOpts={}) {
   wrap.innerHTML = groups.map(([label, arr]) => {
     const rows = dir === "desc" ? arr.slice().reverse() : arr;
-    return `${label ? `<div class="grouphead">${label} · ${arr.length}</div>` : ""}<div class="rowlist">${rows.map((p,i)=>pieceRowWithSort(p,i,sort)).join("")}</div>`;
+    return `${label ? `<div class="grouphead">${label} · ${arr.length}</div>` : ""}<div class="rowlist">${rows.map((p,i)=>pieceRowWithSort(p,i,sort,rowOpts)).join("")}</div>`;
   }).join("");
   wirePieceRows(wrap);
 }
@@ -3198,7 +3198,7 @@ function renderPieceList() {
   if (!list.length) { wrap.innerHTML = `<div class="empty"><div class="empty-title">Nothing in this filter</div></div>`; return; }
   renderGroups(wrap, groupPieces(list, sort), sort, dir);
 }
-function pieceRowWithSort(p, idx, sort) {
+function pieceRowWithSort(p, idx, sort, opts={}) {
   const pct = pctOf(p.id);
   if (p.up) {   // uploaded score: composer only — no year/key/duration/level metadata
     return `<div class="prow" data-piece="${p.id}">
@@ -3215,10 +3215,14 @@ function pieceRowWithSort(p, idx, sort) {
   else if (sort === "length") tag = fmtDur(p.dur);
   else if (sort === "key") tag = fmtKey(p.key);
   else tag = gradeShort(p.level, null, p.id);   // name, level, coll — grade in the chosen board
+  // composerMeta mode (Saved list): subtitle is just the composer; the sort value moves to the right-side tag
+  const metaHTML = opts.composerMeta
+    ? `<span>${cName(p.c)}</span>`
+    : `<span>${p.year}</span><span class="dot-sep">${fmtDur(p.dur)}</span><span class="dot-sep">${fmtKey(p.key)}</span>${(gr=>gr?`<span class="dot-sep">${gr}</span>`:"")(gradeShort(p.level, null, p.id))}`;
   return `<div class="prow" data-piece="${p.id}">
     <div class="prow-body">
       <div class="prow-title">${sort==='coll'?movementLabel(p):pieceNameHTML(p)}${m2badge(p)}</div>
-      <div class="prow-meta"><span>${p.year}</span><span class="dot-sep">${fmtDur(p.dur)}</span><span class="dot-sep">${fmtKey(p.key)}</span>${(gr=>gr?`<span class="dot-sep">${gr}</span>`:"")(gradeShort(p.level, null, p.id))}</div>
+      <div class="prow-meta">${metaHTML}</div>
     </div>
     <div class="prow-right">
       ${(sort==='coll'||sort==='name'||sort==='composer'||sort==='recentlyViewed')?"":`<span class="lvpill">${tag}</span>`}
@@ -5276,7 +5280,7 @@ function renderSavedList() {
   const q = savedState.q;
   if (q) list = list.filter(p => searchMatch(p, q));
   if (!list.length) { wrap.innerHTML = `<div class="empty"><div class="empty-title">${t("No saved scores yet")}</div></div>`; return; }
-  renderGroups(wrap, groupPieces(list, savedState.sort), savedState.sort, savedState.dir);
+  renderGroups(wrap, groupPieces(list, savedState.sort), savedState.sort, savedState.dir, {composerMeta:true});
 }
 
 /* ================================================================
