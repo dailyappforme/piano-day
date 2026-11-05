@@ -27,6 +27,7 @@ post_install do |installer|
     target.build_configurations.each do |config|
       config.build_settings['ENABLE_MODULE_VERIFIER'] = 'NO'
       config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'   # App Store Connect requires 15.0+ (Apr 2027)
     end
   end
 end
