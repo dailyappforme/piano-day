@@ -3200,6 +3200,15 @@ function renderPieceList() {
 }
 function pieceRowWithSort(p, idx, sort) {
   const pct = pctOf(p.id);
+  if (p.up) {   // uploaded score: composer only — no year/key/duration/level metadata
+    return `<div class="prow" data-piece="${p.id}">
+      <div class="prow-body">
+        <div class="prow-title">${pieceNameHTML(p)}</div>
+        <div class="prow-meta"><span>${escH(p.composer||t("Unknown"))}</span></div>
+      </div>
+      <div class="prow-right">${pct>0?`<span class="prow-pct">${pct}%</span>`:""}</div>
+    </div>`;
+  }
   // right-side tag reflects the current sort dimension
   let tag;
   if (sort === "year") tag = p.year;
