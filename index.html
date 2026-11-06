@@ -597,6 +597,11 @@
   .focus-actions .fa-page { font-family: var(--mu-mono); font-size: 13px; color: var(--mu-ink-2); min-width: 44px; text-align: center; padding: 0 2px; }
   /* two-mode toolbar: main (page/edit/zoom) vs edit (annotation tools). Only one shows at a time. */
   .fa-main, .fa-edit { display: flex; align-items: center; gap: 2px; }
+  .fa-edit { min-width: 0; max-width: 100%; }
+  /* edit menu: tools live in a horizontally-scrollable strip; Done + its divider stay pinned on the right */
+  .fa-edit-scroll { display: flex; align-items: center; gap: 2px; min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .fa-edit-scroll::-webkit-scrollbar { display: none; }
+  .fa-edit > .ann-done, .fa-edit > .ann-donesep { flex: none; }
   .focus-view.ann-editing .fa-main { display: none; }
   .fa-edit { display: none; }
   .focus-view.ann-editing .fa-edit { display: flex; }
@@ -1092,8 +1097,11 @@
     .osmd-title-name { font-size: 16px; }
     .osmd-title-by { font-size: 12px; }
     /* floating toolbar: hug items, centered (metronome hidden on mobile) */
-    .focus-actions { max-width: calc(100vw - 24px); overflow-x: auto; }
+    .focus-actions { max-width: calc(100vw - 16px); }
     .focus-actions button { flex-shrink: 0; }
+    /* edit menu: Done pinned on the right, the tools scroll on their own */
+    .fa-main { overflow-x: auto; min-width: 0; }
+    .fa-main::-webkit-scrollbar { display: none; }
     /* declutter toolbar on mobile: hide zoom % and the whole metronome group */
     .focus-actions #zoomVal { display: none; }
     .metro-group { display: none; }
@@ -2067,6 +2075,7 @@ const TL = {
     "Your playlist":"我的收藏","Your practice":"練習概況","Practiced in 2026":"2026 年練習","days":"天","day":"天",
     "On this day":"歷史上的今天","View composer":"查看作曲家","Sort":"排序","Composer":"作曲家","Jump into the library":"進入曲庫","See all":"查看全部","Nothing played yet.":"尚無彈奏紀錄",
     "Search":"搜尋","Composers":"作曲家","Pieces":"樂曲","pieces":"首","piece":"首","scores":"首","score":"首","Scores":"樂譜","All scores":"全部樂譜",
+    "My Scores":"我的樂譜","Add score":"新增樂譜","Your own sheet music":"你自己的樂譜","No scores yet":"尚無樂譜","Upload a photo or scan of your sheet music to practice and annotate it here.":"上傳你的樂譜照片或掃描檔,即可在此練習與標註。","New score":"新樂譜","Edit score":"編輯樂譜","Score name":"樂譜名稱","e.g. Chopin Nocturne":"例如:蕭邦夜曲","e.g. Chopin":"例如:蕭邦","Scan look — clean white background":"掃描效果 — 乾淨白底","Pages":"頁面","Add page":"新增頁面","Move left":"左移","Move right":"右移","Remove":"移除","Crop":"裁切","Crop page":"裁切頁面","Rotate":"旋轉","Cancel":"取消","Save":"儲存","Saving…":"儲存中…","Done":"完成","Delete":"刪除","Edit":"編輯","Delete this score?":"刪除此樂譜?","Unknown":"未知","Untitled":"未命名","Couldn't open this score":"無法開啟此樂譜","Couldn't read that PDF.":"無法讀取此 PDF。","Couldn't save — your device storage may be full.":"無法儲存 — 裝置儲存空間可能已滿。","Open in Spotify":"在 Spotify 開啟","Spotify preview":"Spotify 預覽","Preview didn't load":"預覽載入失敗",
     "Saved":"已收藏","No saved scores yet":"尚未收藏樂曲","Tap the bookmark on any score to keep it here.":"點擊任一樂曲的書籤即可收藏。",
     "In progress":"進行中","Settings":"設定","Privacy Policy":"隱私政策","Dark mode":"深色模式","Language":"語言","Keep screen awake":"螢幕保持喚醒","Screen awake":"螢幕喚醒","While app is open":"開啟期間一直","5 minutes":"5 分鐘","10 minutes":"10 分鐘","15 minutes":"15 分鐘","30 minutes":"30 分鐘","1 hour":"1 小時","Advanced pianist":"進階鋼琴家","Grade":"級","Grading system":"評級系統","Not on this syllabus":"未列入此考綱","Grades are shown only for pieces listed on each board\u2019s official syllabus (RCM 2022, ABRSM 2021\u20132026, MTAC 2012 CM). Syllabi change between editions \u2014 always confirm with the board\u2019s current official syllabus before preparing for an exam. This app is not affiliated with or endorsed by RCM, ABRSM or MTAC.":"僅顯示各考試機構官方考綱曲目表收錄曲目的級數（RCM 2022、ABRSM 2021–2026、MTAC 2012 CM）。考綱會隨版本更新，備考前請以機構現行官方考綱為準。本 App 與 RCM、ABRSM、MTAC 無任何隸屬或背書關係。","Share anonymous usage":"分享匿名使用數據","Anonymous data sharing":"匿名數據分享","Exam board used for piece levels":"用於樂曲分級的考試制度","Keep the display on while practicing":"練習時保持螢幕開啟","Language for the app interface":"應用程式介面語言","Use a darker color theme":"使用較深的色彩主題","Help improve the app with anonymous usage":"以匿名使用數據協助改善應用程式","How your data is handled":"我們如何處理你的資料","Usage data":"使用數據","You're offline — some scores and previews may not load.":"目前離線 — 部分樂譜與預覽可能無法載入。","Couldn't load this score":"無法載入此樂譜","You appear to be offline. Reconnect to view it.":"你目前似乎離線，請重新連線以檢視。","Preview needs an internet connection":"預覽需要網路連線",
     "Name":"名稱","Level":"級數","Year":"年份","Length":"長度","Key":"調性","Work":"作品",
@@ -2092,6 +2101,7 @@ const TL = {
     "Your playlist":"我的收藏","Your practice":"练习概况","Practiced in 2026":"2026 年练习","days":"天","day":"天",
     "On this day":"历史上的今天","View composer":"查看作曲家","Sort":"排序","Composer":"作曲家","Jump into the library":"进入曲库","See all":"查看全部","Nothing played yet.":"尚无弹奏记录",
     "Search":"搜索","Composers":"作曲家","Pieces":"乐曲","pieces":"首","piece":"首","scores":"首","score":"首","Scores":"乐谱","All scores":"全部乐谱",
+    "My Scores":"我的乐谱","Add score":"新增乐谱","Your own sheet music":"你自己的乐谱","No scores yet":"尚无乐谱","Upload a photo or scan of your sheet music to practice and annotate it here.":"上传你的乐谱照片或扫描件,即可在此练习与标注。","New score":"新乐谱","Edit score":"编辑乐谱","Score name":"乐谱名称","e.g. Chopin Nocturne":"例如:肖邦夜曲","e.g. Chopin":"例如:肖邦","Scan look — clean white background":"扫描效果 — 干净白底","Pages":"页面","Add page":"新增页面","Move left":"左移","Move right":"右移","Remove":"移除","Crop":"裁剪","Crop page":"裁剪页面","Rotate":"旋转","Cancel":"取消","Save":"保存","Saving…":"保存中…","Done":"完成","Delete":"删除","Edit":"编辑","Delete this score?":"删除此乐谱?","Unknown":"未知","Untitled":"未命名","Couldn't open this score":"无法打开此乐谱","Couldn't read that PDF.":"无法读取此 PDF。","Couldn't save — your device storage may be full.":"无法保存 — 设备存储空间可能已满。","Open in Spotify":"在 Spotify 打开","Spotify preview":"Spotify 预览","Preview didn't load":"预览加载失败",
     "Saved":"已收藏","No saved scores yet":"尚未收藏乐曲","Tap the bookmark on any score to keep it here.":"点击任一乐曲的书签即可收藏。",
     "In progress":"进行中","Settings":"设置","Privacy Policy":"隐私政策","Dark mode":"深色模式","Language":"语言","Keep screen awake":"屏幕保持唤醒","Screen awake":"屏幕唤醒","While app is open":"开启期间一直","5 minutes":"5 分钟","10 minutes":"10 分钟","15 minutes":"15 分钟","30 minutes":"30 分钟","1 hour":"1 小时","Advanced pianist":"进阶钢琴家","Grade":"级","Grading system":"评级系统","Not on this syllabus":"未列入此考纲","Grades are shown only for pieces listed on each board\u2019s official syllabus (RCM 2022, ABRSM 2021\u20132026, MTAC 2012 CM). Syllabi change between editions \u2014 always confirm with the board\u2019s current official syllabus before preparing for an exam. This app is not affiliated with or endorsed by RCM, ABRSM or MTAC.":"仅显示各考试机构官方考纲曲目表收录曲目的级数（RCM 2022、ABRSM 2021–2026、MTAC 2012 CM）。考纲会随版本更新，备考前请以机构现行官方考纲为准。本 App 与 RCM、ABRSM、MTAC 无任何隶属或背书关系。","Share anonymous usage":"分享匿名使用数据","Anonymous data sharing":"匿名数据分享","Exam board used for piece levels":"用于乐曲分级的考试制度","Keep the display on while practicing":"练习时保持屏幕开启","Language for the app interface":"应用程序界面语言","Use a darker color theme":"使用较深的色彩主题","Help improve the app with anonymous usage":"以匿名使用数据帮助改善应用程序","How your data is handled":"我们如何处理你的数据","Usage data":"使用数据","You're offline — some scores and previews may not load.":"目前离线 — 部分乐谱与预览可能无法加载。","Couldn't load this score":"无法加载此乐谱","You appear to be offline. Reconnect to view it.":"你目前似乎离线，请重新连线以查看。","Preview needs an internet connection":"预览需要网络连接",
     "Name":"名称","Level":"考级","Year":"年份","Length":"时长","Key":"调性","Work":"作品",
@@ -4231,17 +4241,19 @@ function renderSheetPane(p, toggleMark){
             <button id="fullBtn" title="Full screen">${full}</button>
           </div>
           ${isPdf?`<div class="fa-edit" hidden>
-            <button class="ann-colorbtn" id="annColorBtn" title="Colour"></button>
-            <button id="annThick" class="ann-tool" title="Thickness">${thickIc}</button>
-            <span class="fa-div"></span>
-            <button id="annPen" class="ann-tool" title="Draw">${penIc}</button>
-            <button id="annText" class="ann-tool" title="Add text">${textIc}</button>
-            <button id="annShape" class="ann-tool" title="Shape">${shapeIc}</button>
-            <button id="annNote" class="ann-tool" title="Music symbols">${noteIc}</button>
-            <span class="fa-div"></span>
-            <button id="annUndo" class="ann-tool" title="Undo">${undoIc}</button>
-            <button id="annEraser" class="ann-tool" title="Eraser">${eraserIc}</button>
-            <button id="annBin" class="ann-tool" title="Delete selected" disabled>${binIc}</button>
+            <div class="fa-edit-scroll">
+              <button class="ann-colorbtn" id="annColorBtn" title="Colour"></button>
+              <button id="annThick" class="ann-tool" title="Thickness">${thickIc}</button>
+              <span class="fa-div"></span>
+              <button id="annPen" class="ann-tool" title="Draw">${penIc}</button>
+              <button id="annText" class="ann-tool" title="Add text">${textIc}</button>
+              <button id="annShape" class="ann-tool" title="Shape">${shapeIc}</button>
+              <button id="annNote" class="ann-tool" title="Music symbols">${noteIc}</button>
+              <span class="fa-div"></span>
+              <button id="annUndo" class="ann-tool" title="Undo">${undoIc}</button>
+              <button id="annEraser" class="ann-tool" title="Eraser">${eraserIc}</button>
+              <button id="annBin" class="ann-tool" title="Delete selected" disabled>${binIc}</button>
+            </div>
             <span class="fa-div ann-donesep"></span>
             <button id="annDone" class="ann-done" title="Done">Done</button>
           </div>`:``}
