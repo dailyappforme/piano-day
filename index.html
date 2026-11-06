@@ -5760,9 +5760,17 @@ bumpWake();
   document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="visible") nudge(); });
 })();
 routeTo(location.hash);
-// reveal the app once the first screen has painted (fade out the boot splash) — smooth launch, no flash/jump
-(function(){ var sp=document.getElementById('boot-splash'); if(!sp) return;
-  requestAnimationFrame(function(){ requestAnimationFrame(function(){ sp.classList.add('hide'); setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); }, 420); }); });
+// Hold the boot splash until the home has actually settled (layout reflow + images), THEN fade it out,
+// so the launch is a clean fade-in instead of a visible content "flash". Reveal once: on window.load
+// (fonts/images done) or after a max wait, whichever comes first — but always after a short settle.
+(function(){
+  var sp=document.getElementById('boot-splash'); if(!sp) return;
+  var done=false;
+  function reveal(){ if(done) return; done=true; sp.classList.add('hide'); setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); }, 420); }
+  function settleThenReveal(delay){ requestAnimationFrame(function(){ setTimeout(reveal, delay); }); }
+  if(document.readyState==='complete') settleThenReveal(260);
+  else window.addEventListener('load', function(){ settleThenReveal(140); });
+  setTimeout(reveal, 2600);   // hard safety cap
 })();
 </script>
 </body>
