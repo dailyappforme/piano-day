@@ -2618,14 +2618,11 @@ function show(view, root, hash) {
       document.querySelectorAll(".tabbtn").forEach(b => b.classList.toggle("is-active", b.dataset.tab === root));
     }
   };
-  // smooth crossfade between pages where supported; instant otherwise.
-  // First render at launch is instant (no crossfade) so the app lands cleanly without a ghost flash.
-  if (_booted && document.startViewTransition) document.startViewTransition(apply);
-  else apply();
-  _booted = true;
+  // Instant switch — no crossfade. The view-transition crossfade overlapped the old + new
+  // screens (two different-length lists), which looked like a ghost "jump" when navigating.
+  apply();
   if (hash !== null) setHash(hash === undefined ? view : hash);
 }
-let _booted = false;
 
 /* ---- hash routing: every page has a #link ---- */
 let suppressRoute = false;
