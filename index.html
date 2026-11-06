@@ -6,8 +6,6 @@
 <title>Piano Day</title>
 <link rel="stylesheet" href="mu-system/mu.css">
 <script src="vendor/opensheetmusicdisplay.min.js"></script>
-<script src="vendor/pdfjs/pdf.min.js"></script>
-<script>try{ if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdfjs/pdf.worker.min.js"; }catch(e){}</script>
 <script src="library/scores-xml.js"></script>
 <script src="library/scores-notes-chopin.js"></script>
 <script src="library/scores-notes-beethoven.js"></script>
@@ -2608,11 +2606,14 @@ function show(view, root, hash) {
       document.querySelectorAll(".tabbtn").forEach(b => b.classList.toggle("is-active", b.dataset.tab === root));
     }
   };
-  // smooth crossfade between pages where supported; instant otherwise
-  if (document.startViewTransition) document.startViewTransition(apply);
+  // smooth crossfade between pages where supported; instant otherwise.
+  // First render at launch is instant (no crossfade) so the app lands cleanly without a ghost flash.
+  if (_booted && document.startViewTransition) document.startViewTransition(apply);
   else apply();
+  _booted = true;
   if (hash !== null) setHash(hash === undefined ? view : hash);
 }
+let _booted = false;
 
 /* ---- hash routing: every page has a #link ---- */
 let suppressRoute = false;
@@ -5357,7 +5358,18 @@ async function deleteUpload(id){
 let editorPages = [];   // [{dataURL}] working set while editing
 function fileToDataURL(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(file); }); }
 const isPdfFile = f => f && (f.type === "application/pdf" || /\.pdf$/i.test(f.name||""));
+let _pdfjsLoad;
+function ensurePdfJs(){   // load pdf.js on demand (keeps it out of the app's launch critical path)
+  if(window.pdfjsLib) return Promise.resolve();
+  if(!_pdfjsLoad) _pdfjsLoad = new Promise((res,rej)=>{
+    const s=document.createElement("script"); s.src="vendor/pdfjs/pdf.min.js";
+    s.onload=()=>{ try{ pdfjsLib.GlobalWorkerOptions.workerSrc="vendor/pdfjs/pdf.worker.min.js"; }catch(e){} res(); };
+    s.onerror=()=>rej(new Error("pdfjs load failed")); document.head.appendChild(s);
+  });
+  return _pdfjsLoad;
+}
 async function pdfToPages(file){   // render each PDF page to an image dataURL (one page per editor page)
+  await ensurePdfJs();
   if(!window.pdfjsLib) throw new Error("pdfjs missing");
   const buf = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
