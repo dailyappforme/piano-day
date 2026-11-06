@@ -42,6 +42,8 @@
   var _s = window.screen || {};
   var _short = Math.min(_s.width || 9999, _s.height || 9999);
   if (_nat && _short >= 600) document.documentElement.classList.add('tablet');
+  /* apply saved theme immediately so the boot splash + first paint aren't a wrong-colour flash */
+  try{ var _st = JSON.parse(localStorage.getItem('pp_v1')||'{}'); if (_st && _st.theme === 'dark') document.documentElement.dataset.theme = 'dark'; }catch(_e){}
 }catch(e){}</script>
 <script src="library/piano-samples.js"></script>
 <script src="library/calendar-data.js"></script>
@@ -53,6 +55,13 @@
      Piano Practice · iPad app · mu-system greyscale
      =============================================================== */
   html, body { height: 100%; }
+  /* boot splash — solid cover over the launch flash/jump; fades out once the first screen paints */
+  #boot-splash { position: fixed; inset: 0; z-index: 99999; background: #fff; display: flex; align-items: center; justify-content: center;
+    transition: opacity .32s ease; }
+  html[data-theme="dark"] #boot-splash { background: #17171b; }
+  #boot-splash.hide { opacity: 0; pointer-events: none; }
+  .boot-mark { font-family: Georgia, "Times New Roman", serif; font-size: 48px; line-height: 1; color: #d2d2d6; }
+  html[data-theme="dark"] .boot-mark { color: #3a3a40; }
   /* stop iOS WebKit from auto-inflating text on launch (content appears "big" for a
      frame, then snaps smaller once the viewport settles). Pin it to the real size. */
   html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -1137,6 +1146,9 @@
 </style>
 </head>
 <body>
+<!-- boot splash: covers the webview until the first screen is painted, so launch has no flash/jump -->
+<div id="boot-splash"><div class="boot-mark">♪</div></div>
+<script>setTimeout(function(){var s=document.getElementById('boot-splash');if(s){s.classList.add('hide');setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},450);}},3000);</script>
 <div class="stage">
   <div class="device">
     <div class="offline-bar" id="offlineBar" hidden><span class="offline-dot"></span><span id="offlineMsg">You're offline — some scores and previews may not load.</span></div>
@@ -5751,6 +5763,10 @@ bumpWake();
   document.addEventListener("visibilitychange", function(){ if(document.visibilityState==="visible") nudge(); });
 })();
 routeTo(location.hash);
+// reveal the app once the first screen has painted (fade out the boot splash) — smooth launch, no flash/jump
+(function(){ var sp=document.getElementById('boot-splash'); if(!sp) return;
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ sp.classList.add('hide'); setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); }, 420); }); });
+})();
 </script>
 </body>
 </html>
